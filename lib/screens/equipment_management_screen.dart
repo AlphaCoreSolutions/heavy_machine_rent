@@ -1,0 +1,470 @@
+import 'package:flutter/material.dart';
+import 'package:heavy_new/core/auth/auth_store.dart';
+import 'package:heavy_new/core/api/api_handler.dart' as api;
+import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:heavy_new/core/models/admin/domain.dart'; // DomainDetail
+import 'package:heavy_new/core/models/organization/organization_user.dart';
+import 'package:heavy_new/foundation/ui/app_icons.dart';
+import 'package:heavy_new/foundation/ui/ui_extras.dart';
+import 'package:heavy_new/foundation/ui/ui_kit.dart';
+
+import 'package:heavy_new/screens/equipment_editor_screen.dart';
+import 'package:heavy_new/screens/equipment_settings_screen.dart';
+import 'package:heavy_new/screens/organization_hub_screen.dart';
+import 'package:heavy_new/screens/phone_auth_screen.dart';
+
+class EquipmentManagementScreen extends StatefulWidget {
+  const EquipmentManagementScreen({super.key});
+  @override
+  State<EquipmentManagementScreen> createState() =>
+      _EquipmentManagementScreenState();
+}
+
+class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
+  // Mapping (by OrganizationUser row)
+  int? _orgUserId; // == vendorId for Equipment (backend wants orgId here)
+  int? _orgId;
+  int? _userId;
+
+  bool _loadingMapping = true;
+  Future<List<Equipment>>? _future;
+
+  // Small domain cache (domainId -> details)
+  final Map<int, List<DomainDetail>> _domCache = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _bootstrap();
+  }
+
+  Future<List<Equipment>> _fetchVendorList() async {
+    final idOrg = _orgId;
+    if (idOrg == null) return const <Equipment>[];
+    return await api.Api.getEquipmentsByVendorId(vendorId: idOrg);
+  }
+
+  Future<void> _bootstrap() async {
+    final auth = AuthStore.instance;
+    if (!auth.isLoggedIn) return;
+
+    try {
+      setState(() {
+        _loadingMapping = true;
+      });
+
+      _userId = auth.user.value?.id;
+
+      // Get all org-users visible to this token
+      final all = await api.Api.getOrganizationUsers();
+      debugPrint('[EquipMgmt] org-users fetched = ${all.length}');
+
+      // Find mapping row: applicationUserId == logged-in id
+      OrganizationUser? me;
+      for (final ou in all) {
+        if (ou.applicationUserId == _userId) {
+          me = ou;
+          break;
+        }
+      }
+
+      if (me != null) {
+        _orgUserId = me.organizationUserId; // vendorId row id
+        _orgId = me.organizationId; // ← used as vendorId for Equipment
+        debugPrint(
+          '[EquipMgmt] mapping: orgUserId=$_orgUserId orgId=$_orgId userId=$_userId',
+        );
+
+        // Seed list using ONLY the vendor endpoint
+        setState(() {
+          _future = _fetchVendorList();
+        });
+      } else {
+        debugPrint(
+          '[EquipMgmt] no OrganizationUser row for applicationUserId=$_userId',
+        );
+        setState(() {
+          _future = Future.value(const <Equipment>[]);
+        });
+      }
+    } catch (e) {
+      debugPrint('[EquipMgmt] bootstrap error: $e');
+      setState(() {
+        _future = Future.error(e);
+      });
+    } finally {
+      if (mounted) {
+        setState(() {
+          _loadingMapping = false;
+        });
+      }
+    }
+  }
+
+  Future<void> _refresh() async {
+    if (_orgId == null && _orgUserId == null) {
+      if (mounted) {
+        setState(() {
+          _future = Future.value(const <Equipment>[]);
+        });
+      }
+      return;
+    }
+
+    debugPrint(
+      '[EquipMgmt] manual refresh (orgId=$_orgId, orgUserId=$_orgUserId)',
+    );
+    try {
+      final list = await _fetchVendorList();
+      debugPrint('[EquipMgmt] vendor list count=${list.length}');
+      for (final e in list) {
+        debugPrint(
+          '[EquipMgmt] · id=${e.equipmentId} vendorId=${e.vendorId} active=${e.isActive} title="${e.title}"',
+        );
+      }
+      if (!mounted) return;
+      setState(() {
+        _future = Future.value(list);
+      });
+    } on api.ApiException catch (ex) {
+      debugPrint('[EquipMgmt] vendor list error: $ex');
+      if (!mounted) return;
+      setState(() {
+        _future = Future.value(const <Equipment>[]);
+      });
+    }
+  }
+
+  // ------- Helpers for nested DomainDetail (server validation requires names)
+  Future<List<DomainDetail>> _loadDomain(int domainId) async {
+    if (_domCache.containsKey(domainId)) return _domCache[domainId]!;
+    final list = await api.Api.getDomainDetailsByDomainId(domainId);
+    _domCache[domainId] = list;
+    return list;
+  }
+
+  Future<DomainDetail?> _getDetailById(int domainId, int? detailId) async {
+    if (detailId == null) return null;
+    final list = await _loadDomain(domainId);
+    for (final d in list) {
+      if (d.domainDetailId == detailId) return d;
+    }
+    return null;
+  }
+
+  Map<String, dynamic>? _asNested(DomainDetail? d) {
+    if (d == null) return null;
+    String en = (d.detailNameEnglish ?? '').trim();
+    String ar = (d.detailNameArabic ?? '').trim();
+    if (en.length < 3) en = 'N/A';
+    if (ar.length < 3) ar = 'غير محدد';
+    return {
+      'domainDetailId': d.domainDetailId,
+      'detailNameArabic': ar,
+      'detailNameEnglish': en,
+    };
+  }
+
+  String? _prettyValidationErrors(Map<String, dynamic>? problem) {
+    if (problem == null) return null;
+    if (problem['errors'] is Map) {
+      final m = problem['errors'] as Map;
+      final lines = m.entries
+          .map((e) {
+            final key = '${e.key}'.trim();
+            final vals = (e.value is List)
+                ? (e.value as List).join('\n  • ')
+                : '${e.value}';
+            return '• $key:\n  • $vals';
+          })
+          .join('\n');
+      return lines.isEmpty ? null : lines;
+    }
+    if (problem['title'] is String) return problem['title'] as String;
+    return problem.toString();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final auth = AuthStore.instance;
+
+    // Not logged in
+    if (!auth.isLoggedIn) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My equipment')),
+        body: Center(
+          child: Glass(
+            radius: 18,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Sign in required',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'You need to sign in to manage your equipment.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  BrandButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const PhoneAuthScreen(),
+                      ),
+                    ),
+                    icon: AIcon(
+                      AppGlyph.login,
+                      color: Colors.white,
+                      selected: true,
+                    ),
+                    child: const Text('Sign in'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Loading mapping
+    if (_loadingMapping) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My equipment')),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    // No organization mapping
+    if (_orgId == null || _orgUserId == null) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('My equipment')),
+        body: Center(
+          child: Glass(
+            radius: 18,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Organization needed',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add your organization before listing or managing equipment.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  BrandButton(
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => const OrganizationScreen(),
+                      ),
+                    ),
+                    icon: AIcon(
+                      AppGlyph.organization,
+                      color: Colors.white,
+                      selected: true,
+                    ),
+                    child: const Text('Add organization'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // Has mapping → list + FAB
+    return Scaffold(
+      appBar: AppBar(title: const Text('My equipment')),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () async {
+          debugPrint('[EquipMgmt] FAB: add flow start');
+
+          // 1) Collect minimal fields from editor
+          final res = await Navigator.of(context).push<Map<String, dynamic>>(
+            MaterialPageRoute(
+              builder: (_) =>
+                  const EquipmentEditorScreen(forceShowPanels: false),
+            ),
+          );
+          debugPrint('[EquipMgmt] editor result=null? ${res == null}');
+          if (res == null || res['equipment'] == null) return;
+
+          final draft = res['equipment'] as Equipment;
+
+          // 2) Resolve nested DomainDetails with names (server validates them)
+          final dCategory = await _getDetailById(9, draft.categoryId);
+          final dTransferType = await _getDetailById(8, draft.transferTypeId);
+          final dFuel = await _getDetailById(7, draft.fuelResponsibilityId);
+          final dTransferResp = await _getDetailById(
+            7,
+            draft.transferResponsibilityId,
+          );
+
+          // 3) Build payload
+          final payload = Map<String, dynamic>.from(draft.toJson())
+            ..removeWhere((k, v) => v == null)
+            ..addAll({
+              // mapping / ownership
+              'vendorId': _orgId, // you confirmed: wants orgId (e.g. 6)
+              'organizationUserId': _orgUserId,
+              'organizationId': _orgId,
+              'applicationUserId': _userId,
+              'organization': {'organizationId': _orgId},
+            });
+
+          if (dCategory != null) payload['category'] = _asNested(dCategory);
+          if (dFuel != null) payload['fuelResponsibility'] = _asNested(dFuel);
+          if (dTransferType != null)
+            payload['transferType'] = _asNested(dTransferType);
+          if (dTransferResp != null)
+            payload['transferResponsibility'] = _asNested(dTransferResp);
+
+          // never send these when creating
+          payload.remove('equipmentId');
+          payload.remove('equipmentPath');
+          payload.remove('rentOutRegion');
+
+          debugPrint('[EquipMgmt] addEquipment payload => $payload');
+
+          // 4) Create once
+          try {
+            final resp = await api.Api.addEquipmentRaw(payload);
+            debugPrint('[EquipMgmt] addEquipment response => $resp');
+            if (!mounted) return;
+            AppSnack.success(
+              context,
+              'Submitted. It may take a moment to appear.',
+            );
+            await _refresh(); // authoritative list
+          } on api.ApiException catch (ex) {
+            final details = _prettyValidationErrors(ex.details);
+            if (!mounted) return;
+            await showDialog(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('Can’t add equipment'),
+                content: SingleChildScrollView(
+                  child: Text(details ?? ex.message),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('OK'),
+                  ),
+                ],
+              ),
+            );
+          } catch (e, st) {
+            debugPrint('[EquipMgmt] addEquipment unexpected: $e\n$st');
+            if (!mounted) return;
+            AppSnack.error(context, 'Unexpected error: $e');
+          }
+        },
+        icon: const Icon(Icons.add),
+        label: const Text('Add equipment'),
+      ),
+      body: RefreshIndicator(
+        onRefresh: _refresh,
+        child: FutureBuilder<List<Equipment>>(
+          future: _future ?? _fetchVendorList(),
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return ListView(
+                children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
+              );
+            }
+            if (snap.hasError) {
+              return ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Failed to load your equipment.\n${snap.error}',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            final items = snap.data ?? const <Equipment>[];
+            if (items.isEmpty) {
+              return ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'No equipment yet. Tap “Add equipment” to create one.',
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            return ListView.builder(
+              itemCount: items.length,
+              itemBuilder: (_, i) {
+                final e = items[i];
+
+                final primaryName = e.coverPath ?? e.equipmentList?.imagePath;
+                final candidates = <String>{
+                  if ((primaryName ?? '').isNotEmpty)
+                    api.Api.fileUrlFromName(primaryName),
+                  ...api.Api.imageCandidates(primaryName),
+                }.toList();
+
+                return SlidableEquipmentTile(
+                  title: e.title,
+                  subtitle:
+                      e.category?.detailNameEnglish ??
+                      e.equipmentList?.primaryUseEnglish ??
+                      '—',
+                  pricePerDay: e.rentPerDayDouble ?? 0,
+                  imageWidget: FallbackNetworkImage(
+                    candidates: candidates,
+                    headers: api.Api.imageAuthHeaders(),
+                    placeholderColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceVariant,
+                    fit: BoxFit.cover,
+                  ),
+                  onTap: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => EquipmentSettingsScreen(
+                          equipmentId: e.equipmentId ?? 0,
+                        ),
+                      ),
+                    );
+                    // reflect any edits when returning
+                    await _refresh();
+                  },
+                  onRent: () =>
+                      AppSnack.info(context, 'Open as customer to rent'),
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+}

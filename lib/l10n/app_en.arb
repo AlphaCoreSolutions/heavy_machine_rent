@@ -1,0 +1,70 @@
+{
+    "@@locale": "en",
+    "langEnglish": "English",
+    "langArabic": "Arabic",
+    "appTitle": "HeavyRent",
+    "actionSignIn": "Sign in",
+    "actionSignOut": "Sign out",
+    "actionRentNow": "Rent now",
+    "actionApply": "Apply",
+    "actionFilter": "Filter",
+    "actionClose": "Close",
+    "actionRetry": "Retry",
+    "searchHint": "Search equipment, brands, cities...",
+    "phone": "Phone",
+    "email": "Email",
+    "password": "Password",
+    "otp": "OTP Code",
+    "sendCode": "Send code",
+    "verifyCode": "Verify",
+    "withDriver": "With driver",
+    "pricePerDay": "{price} / day",
+    "@pricePerDay": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "resultsCount": "{count, plural, =0{No results} =1{1 result} other{{count} results}}",
+    "@resultsCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "validationRequired": "{field} is required",
+    "@validationRequired": {
+        "placeholders": {
+            "field": {
+                "type": "String"
+            }
+        }
+    },
+    "validationEmail": "Enter a valid email",
+    "msgOtpSent": "We sent a code to {phone}",
+    "@msgOtpSent": {
+        "placeholders": {
+            "phone": {
+                "type": "String"
+            }
+        }
+    },
+    "snackSaved": "Saved",
+    "snackError": "Something went wrong",
+    "settingsLanguage": "Language",
+    "homeHeadline": "Heavy gear, light work",
+    "homeSub": "Rent certified machines on‑demand",
+    "discoverTitle": "Discover",
+    "filters": "Filters",
+    "filterBrand": "Brand",
+    "filterCity": "City",
+    "filterPriceDay": "Price/Day",
+    "filterHasCerts": "Has certificates",
+    "filterDistance": "Distance pricing",
+    "filterApply": "Apply Filters",
+    "filterReset": "Reset",
+    "emptyTitle": "No results",
+    "emptyBody": "Try adjusting filters or search keywords"
+}

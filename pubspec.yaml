@@ -1,0 +1,100 @@
+name: heavy_new
+description: "an app that opens opportunities for companies to rent their machines in the construction industry."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: 
+  path: 
+  mime: 
+  go_router: 
+  flutter_riverpod: 
+  flutter_dotenv: 
+  cached_network_image: 
+  octo_image: 
+  shimmer: 
+  http:
+  infinite_scroll_pagination: 
+  form_validator: 
+  intl: 
+  timeago: 
+  url_launcher: 
+  image_picker: 
+  file_picker: 
+  flutter_image_compress: 
+  path_provider: 
+  open_filex: 
+  flutter_secure_storage: 
+  shared_preferences: 
+  permission_handler: 
+  #firebase_core: 
+  #firebase_messaging: 
+  #flutter_local_notifications: 
+  google_maps_flutter: 
+  logger: 
+  sentry_flutter: 
+  google_fonts: 
+  pinput: 
+  mask_text_input_formatter: 
+  modal_bottom_sheet: 
+  overlay_support: 
+  photo_view: 
+  carousel_slider: 
+  dio_cache_interceptor: 
+  dio_cache_interceptor_hive_store: 
+  connectivity_plus: 
+  dio_smart_retry: 
+  pdfx: 
+  share_plus: 
+  geolocator: 
+  geocoding: 
+  #firebase_analytics: 
+  app_links: 
+  equatable: 
+  riverpod_annotation: 
+  workmanager: 
+  iconsax_flutter:
+  flutter_lucide:
+  tabler_icons_next:
+  iconoir_flutter:
+  another_flushbar: 
+  phosphor_flutter: 
+  lucide_icons_flutter: 
+  flex_color_scheme: 
+  flutter_animate: 
+  flutter_slidable: 
+  sensors_plus: 
+  dynamic_color: 
+  provider: 
+  flutter_gen: 
+  #image_compression_flutter: 
+  flutter_localizations:
+    sdk: flutter
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: 
+  flutter_native_splash:
+  flutter_launcher_icons:
+
+  build_runner: 
+  riverpod_generator: 
+
+flutter:
+
+  uses-material-design: true
+  generate: true
+
+  assets:
+    - lib/assets/hero.jpg
+
+
