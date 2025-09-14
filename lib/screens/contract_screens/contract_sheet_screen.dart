@@ -298,6 +298,8 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
                                   );
                                 }
                               },
+
+                              onSave: () => _saveOne(base),
                             );
                           },
                         ))),
@@ -447,28 +449,6 @@ class _ModernSheetCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
 
-                // Accept toggles
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SwitchPill(
-                        label: 'Customer accepted',
-                        value: row.isCustomerAccept ?? false,
-                        onChanged: onToggleCustomerAccept,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SwitchPill(
-                        label: 'Vendor accepted',
-                        value: row.isVendorAccept ?? false,
-                        onChanged: onToggleVendorAccept,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-
                 // Notes
                 _TextField(
                   label: 'Customer note',
@@ -551,36 +531,6 @@ class _TextField extends StatelessWidget {
       maxLines: 3,
       decoration: InputDecoration(labelText: label, filled: true),
       onChanged: onChanged,
-    );
-  }
-}
-
-class _SwitchPill extends StatelessWidget {
-  const _SwitchPill({
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: cs.surfaceVariant.withOpacity(.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outlineVariant.withOpacity(.6)),
-      ),
-      child: Row(
-        children: [
-          Expanded(child: Text(label)),
-          Switch(value: value, onChanged: onChanged),
-        ],
-      ),
     );
   }
 }
