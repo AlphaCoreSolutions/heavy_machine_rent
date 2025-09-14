@@ -20,9 +20,9 @@ import 'package:heavy_new/foundation/widgets/chat_action_button.dart';
 import 'package:heavy_new/foundation/widgets/notification_bell.dart';
 
 // Screens
-import 'package:heavy_new/screens/equipment_list_screen.dart';
-import 'package:heavy_new/screens/equipment_details_screen.dart';
-import 'package:heavy_new/screens/phone_auth_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_list_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 import 'package:heavy_new/screens/super_admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {

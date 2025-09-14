@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:heavy_new/core/api/api_handler.dart' as api;
+import 'package:heavy_new/core/api/envelope.dart';
 import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/admin/request_driver_location.dart';
@@ -21,7 +22,7 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
-import 'package:heavy_new/screens/request_confirmation_screen.dart';
+import 'package:heavy_new/screens/request_screens/request_confirmation_screen.dart';
 
 // -------- Per-unit/total price helper --------
 class _PriceBreakdown {
@@ -78,6 +79,35 @@ class EquipmentDetailsScreen extends StatefulWidget {
 }
 
 class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
+  // Small helper: when server gives you modelId but row isn't visible yet.
+  Future<RequestModel?> _hydrateByIdWithRetry(int id) async {
+    const delays = <Duration>[
+      Duration(milliseconds: 150),
+      Duration(milliseconds: 300),
+      Duration(milliseconds: 600),
+      Duration(milliseconds: 1200),
+      Duration(milliseconds: 2400),
+    ];
+    for (final d in delays) {
+      try {
+        final m = await api.Api.getRequestById(id);
+        if (m.requestId != null && m.requestId! > 0) return m;
+      } catch (_) {
+        /* ignore and retry */
+      }
+      await Future.delayed(d);
+    }
+    return null;
+  }
+
+  // Safe coercion
+  Map<String, dynamic>? _asMap(dynamic any) {
+    if (any == null) return null;
+    if (any is Map<String, dynamic>) return any;
+    if (any is Map) return Map<String, dynamic>.from(any);
+    return null;
+  }
+
   static const double _vatRate = 0.16;
   static const String _ccy = 'SAR';
   static const int _RESP_DOMAIN_ID = 7;
@@ -336,11 +366,11 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       return;
     }
 
-    _computePerUnit(e);
-    final total = _computeTotal(e);
-    final subtotalAll = total.base + total.distance;
+    // Pricing fallback (in case server doesn't echo a model)
+    final totals = _computeTotal(e);
+    final subtotalAll = totals.base + totals.distance;
 
-    // Build embedded RDLs
+    // Build embedded driver-location rows
     final rdl = _locForms.map((f) => f.toEmbedded(equipmentId: eqId)).toList();
 
     final draft = RequestDraft(
@@ -348,11 +378,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       vendorId: vendorId,
       customerId: meOrg,
       equipmentId: eqId,
+      isAgreeTerms: true,
       statusId: 36,
       isVendorAccept: false,
       isCustomerAccept: true,
       requestedQuantity: _qty,
-      requiredDays: _days, // << exact key name per your spec
+      requiredDays: _days,
       fromDate: _from!,
       toDate: _to!,
       rentPricePerDay: e.rentPerDayDouble ?? 0,
@@ -364,41 +395,197 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       driverHousingResponsibilityId: e.driverHousingResponsibilityId ?? 0,
       driverTransResponsibilityId: e.driverTransResponsibilityId ?? 0,
       equipmentWeight: e.equipmentWeight ?? 0,
-      downPayment: total.downPayment,
+      downPayment: totals.downPayment,
       totalPrice: subtotalAll,
-      vatPrice: total.vat,
-      afterVatPrice: total.total,
-      driverNationalityId: 0, // root-level remains 0
+      vatPrice: totals.vat,
+      afterVatPrice: totals.total,
+      driverNationalityId: 0,
       driverId: 0,
       requestDriverLocations: rdl,
     );
 
     setState(() => _submitting = true);
     try {
-      final created = await api.Api.addRequest(
+      // Call whatever your API exposes. It may return:
+      // - RequestModel
+      // - an ApiEnvelope-like map/string/list
+      // - your older AddRequestResult wrapper
+      final raw = await api.Api.addRequest(
         draft,
       ).timeout(const Duration(seconds: 20));
+
+      // 1) If API already returns a RequestModel, we’re done.
+      if (raw is RequestModel) {
+        final created = raw;
+        final reqNo =
+            created.model?.requestNo?.toString() ??
+            (created.model?.requestId != null
+                ? '${created.model?.requestId}'
+                : '—');
+        final fromDt =
+            (created.model?.fromDate != null &&
+                created.model!.fromDate!.isNotEmpty)
+            ? DateTime.tryParse(created.model!.fromDate!) ?? _from!
+            : _from!;
+        final toDt =
+            (created.model?.toDate != null && created.model!.toDate!.isNotEmpty)
+            ? DateTime.tryParse(created.model!.toDate!) ?? _to!
+            : _to!;
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => RequestConfirmationScreen(
+              requestNo: reqNo,
+              statusId: created.model?.statusId ?? 36,
+              totalSar:
+                  (created.model?.afterVatPrice ??
+                          created.model?.totalPrice ??
+                          totals.total)
+                      .toDouble(),
+              from: fromDt,
+              to: toDt,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // 2) If API returns your previous wrapper {success, message, model}, unwrap it.
+      if (raw is! RequestModel && raw is! ApiEnvelope) {
+        final maybeModel = (raw as dynamic).model;
+        ((raw as dynamic).message ?? '').toString().trim();
+
+        if (maybeModel is RequestModel) {
+          final created = maybeModel;
+          final reqNo =
+              created.requestNo?.toString() ??
+              (created.requestId != null ? '${created.requestId}' : '—');
+          final fromDt =
+              (created.fromDate != null && created.fromDate!.isNotEmpty)
+              ? DateTime.tryParse(created.fromDate!) ?? _from!
+              : _from!;
+          final toDt = (created.toDate != null && created.toDate!.isNotEmpty)
+              ? DateTime.tryParse(created.toDate!) ?? _to!
+              : _to!;
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => RequestConfirmationScreen(
+                requestNo: reqNo,
+                statusId: created.statusId ?? 36,
+                totalSar:
+                    (created.afterVatPrice ??
+                            created.totalPrice ??
+                            totals.total)
+                        .toDouble(),
+                from: fromDt,
+                to: toDt,
+              ),
+            ),
+          );
+          return;
+        }
+
+        // fallthrough → treat the whole thing as an envelope-any
+      }
+
+      // 3) Envelope-first path (works if addRequest returns map/string/list/envelope)
+      final env = (raw is ApiEnvelope) ? raw : ApiEnvelope.fromAny(raw);
+
+      // Server explicitly failed?
+      if ((env as ApiEnvelope).flag == false) {
+        final msg = ((env).message?.trim().isNotEmpty ?? false)
+            ? (env).message!.trim()
+            : 'Request/add failed';
+        AppSnack.error(context, msg);
+        return;
+      }
+
+      // Try data → model
+      final mapData = _asMap(env.data);
+      if (mapData != null && mapData.isNotEmpty) {
+        final created = RequestModel.fromJson(mapData);
+        final reqNo =
+            created.requestNo?.toString() ??
+            (created.requestId != null ? '${created.requestId}' : '—');
+        final fromDt =
+            (created.fromDate != null && created.fromDate!.isNotEmpty)
+            ? DateTime.tryParse(created.fromDate!) ?? _from!
+            : _from!;
+        final toDt = (created.toDate != null && created.toDate!.isNotEmpty)
+            ? DateTime.tryParse(created.toDate!) ?? _to!
+            : _to!;
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => RequestConfirmationScreen(
+              requestNo: reqNo,
+              statusId: created.statusId ?? 36,
+              totalSar:
+                  (created.afterVatPrice ?? created.totalPrice ?? totals.total)
+                      .toDouble(),
+              from: fromDt,
+              to: toDt,
+            ),
+          ),
+        );
+        return;
+      }
+
+      // No data, but we have an id → hydrate with small retry
+      final id = env.modelId ?? 0;
+      if (id > 0) {
+        final created = await _hydrateByIdWithRetry(id);
+        if (created != null) {
+          final reqNo = created.requestNo?.toString() ?? '$id';
+          final fromDt =
+              (created.fromDate != null && created.fromDate!.isNotEmpty)
+              ? DateTime.tryParse(created.fromDate!) ?? _from!
+              : _from!;
+          final toDt = (created.toDate != null && created.toDate!.isNotEmpty)
+              ? DateTime.tryParse(created.toDate!) ?? _to!
+              : _to!;
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => RequestConfirmationScreen(
+                requestNo: reqNo,
+                statusId: created.statusId ?? 36,
+                totalSar:
+                    (created.afterVatPrice ??
+                            created.totalPrice ??
+                            totals.total)
+                        .toDouble(),
+                from: fromDt,
+                to: toDt,
+              ),
+            ),
+          );
+          return;
+        }
+      }
+
+      // Last resort: success only, no model
+      AppSnack.success(
+        context,
+        (env.message?.trim().isNotEmpty ?? false)
+            ? env.message!.trim()
+            : 'Request created',
+      );
       if (!mounted) return;
-
-      final reqId = created.requestId ?? 0;
-      final reqNo = created.requestNo?.toString() ?? reqId.toString();
-      final fromStr = created.fromDate ?? _fmtYmd(_from!);
-      final toStr = created.toDate ?? _fmtYmd(_to!);
-
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => RequestConfirmationScreen(
-            requestNo: reqNo,
-            statusId: created.statusId,
-            totalSar:
-                (created.afterVatPrice ?? created.totalPrice ?? total.total)
-                    .toDouble(),
-            from: DateTime.parse(fromStr),
-            to: DateTime.parse(toStr),
+            requestNo: '—',
+            statusId: 36,
+            totalSar: totals.total,
+            from: _from!,
+            to: _to!,
           ),
         ),
       );
     } catch (err) {
+      if (!mounted) return;
       AppSnack.error(context, '$err');
     } finally {
       if (mounted) setState(() => _submitting = false);

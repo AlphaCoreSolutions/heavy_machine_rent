@@ -14,7 +14,7 @@ import 'package:heavy_new/core/models/equipment/equipment.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/screens/equipment_details_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
 
 class EquipmentListScreen extends StatefulWidget {
   const EquipmentListScreen({super.key});

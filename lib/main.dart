@@ -10,25 +10,25 @@ import 'package:heavy_new/foundation/ui/transitions.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 
 // Shell & screens
-import 'package:heavy_new/screens/app_shell.dart';
-import 'package:heavy_new/screens/chat_list_screen.dart';
-import 'package:heavy_new/screens/chat_thread_screen.dart';
-import 'package:heavy_new/screens/contracts_screen.dart';
-import 'package:heavy_new/screens/home_screen.dart';
-import 'package:heavy_new/screens/equipment_list_screen.dart';
-import 'package:heavy_new/screens/equipment_details_screen.dart';
-import 'package:heavy_new/screens/my_requests_screen.dart';
-import 'package:heavy_new/screens/notification_screen.dart';
-import 'package:heavy_new/screens/orders_history_screen.dart';
-import 'package:heavy_new/screens/profile_screen.dart';
-import 'package:heavy_new/screens/settings_screen.dart';
-import 'package:heavy_new/screens/app_settings_screen.dart';
-import 'package:heavy_new/screens/organization_hub_screen.dart';
-import 'package:heavy_new/screens/equipment_management_screen.dart';
-import 'package:heavy_new/screens/employees_screen.dart';
+import 'package:heavy_new/screens/app/app_shell.dart';
+import 'package:heavy_new/screens/chat_screens/chat_list_screen.dart';
+import 'package:heavy_new/screens/chat_screens/chat_thread_screen.dart';
+import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
+import 'package:heavy_new/screens/app/home_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_list_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:heavy_new/screens/request_screens/my_requests_screen.dart';
+import 'package:heavy_new/screens/app/notification_screen.dart';
+import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
+import 'package:heavy_new/screens/app/settings_screen.dart';
+import 'package:heavy_new/screens/app/app_settings_screen.dart';
+import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/employees_screen.dart';
 
 // Auth (login/register via phone + OTP)
-import 'package:heavy_new/screens/phone_auth_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 
 // Models
 import 'package:heavy_new/core/models/equipment/equipment.dart';

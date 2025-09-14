@@ -1,7 +1,7 @@
 // lib/screens/orders_history_screen.dart
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
-import 'package:heavy_new/screens/request_details_screen.dart';
+import 'package:heavy_new/screens/request_screens/request_details_screen.dart';
 import 'package:intl/intl.dart';
 
 import 'package:heavy_new/core/utils/model_utils.dart';

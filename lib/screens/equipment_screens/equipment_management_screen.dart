@@ -8,10 +8,10 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
-import 'package:heavy_new/screens/equipment_editor_screen.dart';
-import 'package:heavy_new/screens/equipment_settings_screen.dart';
-import 'package:heavy_new/screens/organization_hub_screen.dart';
-import 'package:heavy_new/screens/phone_auth_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_editor_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_settings_screen.dart';
+import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 
 class EquipmentManagementScreen extends StatefulWidget {
   const EquipmentManagementScreen({super.key});

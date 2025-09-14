@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/screens/app_prefs.dart';
+import 'package:heavy_new/screens/app/app_prefs.dart';
 import 'package:intl/intl.dart';
 
 class AppSettingsScreen extends StatefulWidget {

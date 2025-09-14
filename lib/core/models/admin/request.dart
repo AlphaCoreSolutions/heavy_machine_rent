@@ -461,6 +461,7 @@ class RequestDraft {
   num totalPrice;
   num vatPrice;
   num afterVatPrice;
+  bool isAgreeTerms;
 
   // NEW: embedded RDL array
   List<RequestDriverLocation> requestDriverLocations;
@@ -468,6 +469,7 @@ class RequestDraft {
   RequestDraft({
     this.requestId = 0,
     this.requestNo = 0,
+    this.isAgreeTerms = true,
     required this.requestDate,
     required this.vendorId,
     required this.customerId,
@@ -507,6 +509,7 @@ class RequestDraft {
   Map<String, dynamic> toApi() => {
     "requestId": requestId,
     "requestNo": requestNo,
+    "isAgreeTerms": true,
     "requestDate": _ymd(requestDate),
     "vendorId": vendorId,
     "customerId": customerId,

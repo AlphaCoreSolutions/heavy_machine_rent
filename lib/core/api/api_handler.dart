@@ -7,6 +7,9 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:heavy_new/core/api/envelope.dart';
 import 'package:heavy_new/core/models/admin/request_driver_location.dart';
+import 'package:heavy_new/core/models/contracts/contract.dart';
+import 'package:heavy_new/core/models/contracts/contract_slice.dart';
+import 'package:heavy_new/core/models/contracts/contract_slice_sheet.dart';
 import 'package:heavy_new/core/models/organization/organization_summary.dart';
 import 'package:http/http.dart' as http;
 
@@ -14,7 +17,6 @@ import 'package:http/http.dart' as http;
 import 'package:heavy_new/core/models/admin/brand.dart';
 import 'package:heavy_new/core/models/admin/domain.dart';
 import 'package:heavy_new/core/models/admin/employee.dart';
-import 'package:heavy_new/core/models/admin/eqContract.dart';
 import 'package:heavy_new/core/models/admin/factory.dart';
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/equipment/equipment.dart';
@@ -421,28 +423,32 @@ class Api {
     throw Exception('POST $path failed: ${resp.statusCode} $text');
   }
 
-  static Future<dynamic> _postJsonRdl(String path, Object? body) async {
+  static Future<dynamic> _postJsonRdl(
+    String path,
+    Object? body, {
+    Map<String, String>? headers,
+  }) async {
+    final uri = _uri(path);
+    final h = _mergeJsonHeaders(headers);
+    final payload = _encodeBody(body);
+
+    // Log outgoing payload (pretty)
     dev.log(
-      '[Api._post] $path  — sending payload:\n${_prettyJson(body)}',
+      '[Api._postJsonRdl] $path — sending payload:\n${_prettyJson(body)}',
       name: 'API',
     );
-    // ... do the real POST
-    // keep your existing response log
-    // return parsed;
-  }
 
-  static Map<String, dynamic>? _tryPickModelMap(Map<String, dynamic> raw) {
-    // Preferred buckets first:
-    final candidates = ['model', 'data', 'result', 'request'];
-    for (final k in candidates) {
-      final v = raw[k];
-      if (v is Map<String, dynamic>) return v;
+    final resp = await http.post(uri, headers: h, body: payload);
+    final text = resp.body;
+
+    if (kDebugMode) {
+      debugPrint('[Api._postJsonRdl] $path <- ${resp.statusCode} $text');
     }
-    // Sometimes API just returns the model as top-level
-    if (raw.containsKey('requestId') || raw.containsKey('requestNo')) {
-      return raw;
+
+    if (resp.statusCode >= 200 && resp.statusCode < 300) {
+      return text.isEmpty ? null : _decodeBody(text);
     }
-    return null;
+    throw Exception('POST $path failed: ${resp.statusCode} $text');
   }
 
   static Future<Map<String, dynamic>> _getJson(String route) async {
@@ -1373,64 +1379,226 @@ class Api {
     return true;
   }
 
-  // -------- EQ CONTRACT --------
-  static Future<List<EqContract>> getEqContracts() async {
-    final raw = await _get('EqContract/all');
+  // ---------- CONTRACT (new domain) ----------
+  static String _dateOnly(DateTime d) => d.toIso8601String().split('T').first;
+
+  static List<Map<String, dynamic>> _buildContractSlices({
+    required DateTime from,
+    required DateTime to,
+    required int vendorUserId,
+    required int customerUserId,
+  }) {
+    // create one slice per day (0h default)
+    final days = to.difference(from).inDays + 1;
+    final out = <Map<String, dynamic>>[];
+    for (var i = 0; i < days; i++) {
+      final d = DateTime(
+        from.year,
+        from.month,
+        from.day,
+      ).add(Duration(days: i));
+      out.add({
+        "contractSliceSheetId": 0,
+        "contractSliceId": 0,
+        "sliceDate": _dateOnly(d),
+        "dailyHours": 0,
+        "actualHours": 0,
+        "overHours": 0,
+        "totalHours": 0,
+        "customerUserId": customerUserId,
+        "isCustomerAccept": true,
+        "vendorUserId": vendorUserId,
+        "isVendorAccept": true,
+        "customerNote": "",
+        "vendorNote": "",
+        "contractSlice": "",
+
+        // NOTE: We intentionally omit nested customerUser/vendorUser objects
+        // to keep payload lean unless your API *requires* them.
+      });
+    }
+    return out;
+  }
+
+  /// Create a Contract from a confirmed Request.
+  /// Returns the created contract's envelope (so you can read modelId / message).
+  static Future<Map<String, dynamic>> addContractFromRequest({
+    required RequestModel request,
+    required List<RequestDriverLocation> rdlsAssigned,
+  }) async {
+    final reqId = request.requestId ?? 0;
+    final eqId = request.equipmentId ?? 0;
+    if (reqId == 0 || eqId == 0) {
+      dev.log(
+        '[API][ERR] addContractFromRequest(): reqId=$reqId eqId=$eqId',
+        name: 'API',
+      );
+      throw ApiException('Missing requestId/equipmentId for Contract/add');
+    }
+
+    // Dates
+    final fromDate = _ymdFromMixed(request.fromDate);
+    final toDate = _ymdFromMixed(request.toDate);
+
+    // Choose a driverId for the contract (first assigned driver if any)
+    final driverId =
+        (rdlsAssigned.isNotEmpty && rdlsAssigned.first.equipmentDriverId > 0)
+        ? rdlsAssigned.first.equipmentDriverId
+        : (request.driverId ?? 0);
+
+    // Resolve any org users to stamp vendorUserId/customerUserId on slices
+    // (pick first active user for each org if available)
+    int vendorUserId = 0;
+    int customerUserId = 0;
+    try {
+      final users = await getOrganizationUsers();
+      final vOrgId = request.vendorId ?? request.vendor?.organizationId ?? 0;
+      final cOrgId =
+          request.customerId ?? request.customer?.organizationId ?? 0;
+      vendorUserId =
+          users
+              .firstWhere(
+                (u) => (u.organizationId == vOrgId && (u.isActive ?? false)),
+                orElse: () => OrganizationUser(),
+              )
+              .organizationUserId ??
+          0;
+      customerUserId =
+          users
+              .firstWhere(
+                (u) => (u.organizationId == cOrgId && (u.isActive ?? false)),
+                orElse: () => OrganizationUser(),
+              )
+              .organizationUserId ??
+          0;
+    } catch (_) {
+      // leave zeros if not found
+    }
+
+    // Build slice sheets (per day)
+    final from = DateTime.parse('${fromDate}T00:00:00.000Z');
+    final to = DateTime.parse('${toDate}T00:00:00.000Z');
+    final slices = _buildContractSlices(
+      from: from,
+      to: to,
+      vendorUserId: vendorUserId,
+      customerUserId: customerUserId,
+    );
+
+    // Expire at end of last day
+    final expire = DateTime(to.year, to.month, to.day, 23, 59, 59);
+
+    // Root flags (mirror the confirmed request)
+    final isVendorAccept = request.isVendorAccept ?? true;
+    final isCustomerAccept = request.isCustomerAccept ?? true;
+
+    // Build payload (matches your sample keys exactly)
+    final model = <String, dynamic>{
+      "contractId": 0,
+      "contractNo": 0,
+      "contractDate": _dateOnly(DateTime.now()),
+      "fromDate": fromDate,
+      "toDate": toDate,
+      "requestId": reqId,
+      "equipmentId": eqId,
+      "statusId": 0, // let backend set initial status if it has a domain
+      "vendorId": request.vendorId ?? request.vendor?.organizationId ?? 0,
+      "customerId": request.customerId ?? request.customer?.organizationId ?? 0,
+      "isVendorAccept": isVendorAccept,
+      "isCustomerAccept": isCustomerAccept,
+      "isDownPayment": ((request.downPayment ?? 0) > 0),
+      "isActive": true,
+      "expireDateTime": expire.toIso8601String(),
+      "createDateTime": DateTime.now().toIso8601String(),
+      "modifyDateTime": DateTime.now().toIso8601String(),
+      "driverId": driverId,
+      "contractSliceSheets": slices,
+    };
+
+    // LOG the exact JSON sent
+    dev.log(
+      '[API] Contract/add — payload:\n${_prettyJson(model)}',
+      name: 'API',
+    );
+
+    final raw = await _post('Contract/add', body: model);
+    dev.log('[API] Contract/add — response:\n${_prettyJson(raw)}', name: 'API');
+
+    // Return the raw map (envelope or direct)
+    if (raw is Map<String, dynamic>) return raw;
+    if (raw is Map) return Map<String, dynamic>.from(raw);
+    return {"data": raw};
+  }
+
+  // ---------- CONTRACTS (browse) ----------
+  static Future<List<ContractModel>> searchContracts(String query) async {
+    final raw = await _post('Contract/AdvanceSearch', body: {'query': query});
     return _unwrapList(raw)
         .whereType<Map>()
-        .map((e) => EqContract.fromJson(Map<String, dynamic>.from(e)))
+        .map((e) => ContractModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
 
-  static Future<List<EqContract>> searchEqContracts(
-    EqContractSearch req,
+  static Future<ContractModel> getContractById(int id) async {
+    final raw = await _getJson('Contract/$id');
+    final map = _unwrapMap(raw, envelope: ApiEnvelope());
+    return ContractModel.fromJson(map);
+  }
+
+  // ---------- CONTRACT SLICES ----------
+  static Future<List<ContractSlice>> getSlicesForContract(
+    int contractId,
+  ) async {
+    final q = 'select * from ContractSlices where ContractId = $contractId';
+    final raw = await _post('ContractSlice/AdvanceSearch', body: {'query': q});
+    return _unwrapList(raw)
+        .whereType<Map>()
+        .map((e) => ContractSlice.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  static Future<ContractSlice> addContractSlice(ContractSlice m) async {
+    final raw = await _post(
+      'ContractSlice/add',
+      body: _stripNullsDeep(m.toJson()),
+    );
+    final map = _unwrapMap(raw, envelope: ApiEnvelope());
+    return ContractSlice.fromJson(map);
+  }
+
+  // ---------- CONTRACT SLICE SHEETS ----------
+  static Future<List<ContractSliceSheet>> getSheetsForSlice(int sliceId) async {
+    final q =
+        'select * from ContractSliceSheets where ContractSliceId = $sliceId';
+    final raw = await _post(
+      'ContractSliceSheet/AdvanceSearch',
+      body: {'query': q},
+    );
+    return _unwrapList(raw)
+        .whereType<Map>()
+        .map((e) => ContractSliceSheet.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  static Future<ContractSliceSheet> addContractSliceSheet(
+    ContractSliceSheet m,
   ) async {
     final raw = await _post(
-      'EqContract/Search',
-      body: _stripNullsDeep(req.toJson()),
+      'ContractSliceSheet/add',
+      body: _stripNullsDeep(m.toJson()),
     );
-    return _unwrapList(raw)
-        .whereType<Map>()
-        .map((e) => EqContract.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
+    final map = _unwrapMap(raw, envelope: ApiEnvelope());
+    return ContractSliceSheet.fromJson(map);
   }
 
-  static Future<List<EqContract>> searchEqContractsAdvanced(
-    String whereQuery,
-  ) async {
-    final raw = await _get(
-      'EqContract/SearchAdvanced?whereQuery=${Uri.encodeComponent(whereQuery)}',
-    );
-    return _unwrapList(raw)
-        .whereType<Map>()
-        .map((e) => EqContract.fromJson(Map<String, dynamic>.from(e)))
-        .toList();
-  }
-
-  static Future<EqContract> getEqContractById(int id) async {
-    final raw = await _get('EqContract/$id');
-    return EqContract.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
-  }
-
-  static Future<EqContract> addEqContract(EqContract c) async {
+  // optional: update sheet if your API supports it:
+  static Future<bool> updateContractSliceSheet(ContractSliceSheet m) async {
     final raw = await _post(
-      'EqContract/add',
-      body: _stripNullsDeep(c.toJson()),
+      'ContractSliceSheet/update',
+      body: _stripNullsDeep(m.toJson()),
     );
-    return EqContract.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
-  }
-
-  static Future<EqContract> updateEqContract(EqContract c) async {
-    final raw = await _put(
-      'EqContract/update',
-      body: _stripNullsDeep(c.toJson()),
-    );
-    return EqContract.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
-  }
-
-  static Future<bool> deleteEqContract(int id) async {
-    await _delete('EqContract/delete/$id');
-    return true;
+    final env = ApiEnvelope.fromAny(raw);
+    return env.flag ?? true;
   }
 
   // -------- EQUIPMENT (incl. images, certs, driver files, terms, lists, locations, rates) --------
@@ -1607,11 +1775,44 @@ class Api {
     await _delete('RequestDriverLocation/delete/$id');
   }
 
-  Future<List<dynamic>> searchRequestDriverLocation(String query) async {
-    final res = await _postJsonRdl('RequestDriverLocation/AdvanceSearch', {
-      "query": query,
-    });
-    return (res as List?) ?? const [];
+  // Returns RDLs via AdvanceSearch SQL
+  static Future<List<RequestDriverLocation>> searchRequestDriverLocation(
+    String query,
+  ) async {
+    // Post body: include both casings just in case
+    final raw = await _post(
+      'RequestDriverLocation/AdvanceSearch',
+      body: {'query': query, 'Query': query},
+    );
+
+    // Prefer using the envelope to normalize shapes
+    final env = ApiEnvelope.fromAny(raw);
+
+    // If API signals failure, surface a friendly error
+    if (env.flag == false) {
+      throw ApiException(env.message ?? 'AdvanceSearch failed', statusCode: 0);
+    }
+
+    // Try to pull a list from envelope.data, otherwise fall back to your helper
+    final dynamic payload = env.data ?? _unwrapList(raw);
+
+    // Normalize to a List<Map<String, dynamic>>
+    final List<Map<String, dynamic>> list;
+    if (payload is List) {
+      list = payload
+          .whereType<Map>() // tolerate dynamic shapes
+          .map((e) => Map<String, dynamic>.from(e))
+          .toList();
+    } else if (payload is Map) {
+      list = [Map<String, dynamic>.from(payload)];
+    } else {
+      list = const [];
+    }
+
+    // Map to models
+    return list
+        .map((m) => RequestDriverLocation.fromJson(m))
+        .toList(growable: false);
   }
 
   static Future<dynamic> getRequestDriverLocationById(int id) async {
@@ -2278,48 +2479,77 @@ class Api {
     return RequestModel.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
   }
 
-  // Assumes you have RequestModel and RequestDraft already defined.
+  static Future<AddRequestResult> addRequest(RequestDraft draft) async {
+    // Log outgoing body
+    _logBig('[API] Request/add → body', draft.toApi());
 
-  // Assumes you have RequestModel and RequestDraft already defined.
-
-  static Future<RequestModel> addRequest(RequestDraft draft) async {
-    // 1) POST
+    // POST
     final raw = await _postJsonRdl('Request/add', draft.toApi());
 
-    // 2) Parse envelope from top-level
-    final env = ApiEnvelope.fromJson(raw);
+    // Log raw response (whatever it is: map/string/list)
+    _logBig('[API] Request/add ← raw', raw);
 
-    _d(
-      '← ENV Request/add: '
-      'flag=${env.flag} type=${env.responseType} '
-      'message="${env.message}" modelId=${env.modelId} '
-      'token?=${(env.token?.isNotEmpty ?? false)}',
-    );
+    // Parse envelope
+    final env = ApiEnvelope.fromAny(raw);
 
-    // 4) Try to decode a RequestModel directly from the response
-    final direct = _tryPickModelMap(raw);
-    if (direct != null) {
-      return RequestModel.fromJson(direct);
+    // Log normalized envelope too (so you can see flag/message/modelId/data)
+    _logBig('[API] Request/add ← envelope', env.toJson());
+
+    // ... your existing logic below ...
+    Map<String, dynamic>? _asModelMap(dynamic any) {
+      if (any == null) return null;
+      if (any is Map<String, dynamic>) return any;
+      if (any is Map) return Map<String, dynamic>.from(any);
+      return null;
     }
 
-    // 5) If no direct model but we got a modelId, optionally fetch it
-    if ((env.modelId ?? 0) > 0) {
+    final directMap = _asModelMap(env.data);
+    if (directMap != null) {
+      return AddRequestResult(
+        success: (env.flag ?? true),
+        message: env.message ?? 'Success',
+        model: RequestModel.fromJson(directMap),
+      );
+    }
+
+    final id = env.modelId ?? 0;
+    if (id > 0) {
       try {
-        final got = await _getJson('Request/${env.modelId}');
-        final modelMap = _tryPickModelMap(got) ?? got;
-        return RequestModel.fromJson(modelMap);
+        final got = await _getJson('Request/$id');
+        _logBig('[API] Request/$id ← raw', got);
+
+        final gotDirect = _asModelMap(got);
+        if (gotDirect != null) {
+          return AddRequestResult(
+            success: (env.flag ?? true),
+            message: env.message ?? 'Success',
+            model: RequestModel.fromJson(gotDirect),
+          );
+        }
+        final gotEnv = ApiEnvelope.fromAny(got);
+        _logBig('[API] Request/$id ← envelope', gotEnv.toJson());
+
+        final gotData = _asModelMap(gotEnv.data);
+        if (gotData != null) {
+          return AddRequestResult(
+            success: (env.flag ?? true),
+            message: env.message ?? 'Success',
+            model: RequestModel.fromJson(gotData),
+          );
+        }
       } catch (e) {
-        // If GET-by-id is not available or fails, rethrow with context
-        throw ApiException(
-          'Request created (modelId=${env.modelId}), but fetching it failed: $e',
-        );
+        dev.log('GET Request/$id failed after POST: $e', name: '[API]');
       }
     }
 
-    // 6) Last resort: we can’t find a model to decode
-    throw ApiException(
-      'Request/add succeeded but no model payload returned.',
-      statusCode: 0,
+    final ok = (env.flag ?? true);
+    if (!ok)
+      throw ApiException(env.message ?? 'Request/add failed', statusCode: 0);
+
+    return AddRequestResult(
+      success: true,
+      message: (env.message?.isNotEmpty ?? false) ? env.message! : 'Success',
+      model: null,
     );
   }
 
@@ -2435,11 +2665,22 @@ class Api {
   // ---------- HELPERS ----------
 
   // Pretty JSON for logs
+
   static String _prettyJson(Object? v) {
     try {
       return const JsonEncoder.withIndent('  ').convert(v);
     } catch (_) {
       return '$v';
+    }
+  }
+
+  /// dev.log can drop very long lines in some consoles; chunk it.
+  static void _logBig(String name, Object? v) {
+    final s = _prettyJson(v);
+    const max = 1000;
+    for (int i = 0; i < s.length; i += max) {
+      final part = s.substring(i, (i + max > s.length) ? s.length : i + max);
+      dev.log(part, name: name);
     }
   }
 
@@ -2464,7 +2705,7 @@ class Api {
   static Future<List<RequestDriverLocation>>
   advanceSearchRequestDriverLocations(String sql) async {
     final raw = await _postJsonRdl('RequestDriverLocation/AdvanceSearch', {
-      "sql": sql,
+      "query": sql,
     });
     if (raw is List) {
       return raw
@@ -2693,4 +2934,12 @@ class Api {
     final raw = await _post('UserAccount/SaveUser', body: body);
     return UserAccount.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
   }
+}
+
+// core/api/api_handler.dart
+class AddRequestResult {
+  final bool success;
+  final String message;
+  final RequestModel? model;
+  AddRequestResult({required this.success, required this.message, this.model});
 }

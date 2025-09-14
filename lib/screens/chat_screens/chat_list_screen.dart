@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/screens/chat_thread_screen.dart';
+import 'package:heavy_new/screens/chat_screens/chat_thread_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});

@@ -4,14 +4,14 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/screens/app_settings_screen.dart';
-import 'package:heavy_new/screens/contracts_screen.dart';
-import 'package:heavy_new/screens/equipment_management_screen.dart';
-import 'package:heavy_new/screens/my_requests_screen.dart';
-import 'package:heavy_new/screens/orders_history_screen.dart';
-import 'package:heavy_new/screens/organization_hub_screen.dart';
-import 'package:heavy_new/screens/phone_auth_screen.dart';
-import 'package:heavy_new/screens/profile_screen.dart';
+import 'package:heavy_new/screens/app/app_settings_screen.dart';
+import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
+import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
+import 'package:heavy_new/screens/request_screens/my_requests_screen.dart';
+import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
+import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
 // ⬇️ import your super admin screen (adjust path if different)
 import 'package:heavy_new/screens/super_admin_screen.dart';
 
