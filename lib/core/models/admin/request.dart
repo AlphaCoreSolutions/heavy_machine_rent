@@ -328,7 +328,7 @@ the request should have this thing with it
     customerId: fint(json['customerId']),
     isVendorAccept: json['isVendorAccept'],
     isCustomerAccept: json['isCustomerAccept'],
-    requestedQuantity: fint(json['requistedQuantity']),
+    requestedQuantity: fint(json['requestedQuantity']),
     numberDays: fint(json['requiredDays']),
     // Keep your model's types as-is (String?) but normalize to string safely:
     fromDate: json['fromDate']?.toString(),

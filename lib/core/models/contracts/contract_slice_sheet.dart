@@ -56,9 +56,9 @@ class ContractSliceSheet {
     'overHours': overHours ?? 0,
     'totalHours': totalHours ?? 0,
     'customerUserId': customerUserId ?? 0,
-    'isCustomerAccept': isCustomerAccept ?? false,
+    'isCustomerAccept': isCustomerAccept ?? true,
     'vendorUserId': vendorUserId ?? 0,
-    'isVendorAccept': isVendorAccept ?? false,
+    'isVendorAccept': isVendorAccept ?? true,
     'customerNote': customerNote ?? '',
     'vendorNote': vendorNote ?? '',
   };

@@ -1591,14 +1591,25 @@ class Api {
     return ContractSliceSheet.fromJson(map);
   }
 
-  // optional: update sheet if your API supports it:
-  static Future<bool> updateContractSliceSheet(ContractSliceSheet m) async {
-    final raw = await _post(
+  static Future<ContractSliceSheet> updateContractSliceSheet(
+    ContractSliceSheet m,
+  ) async {
+    final raw = await _put(
       'ContractSliceSheet/update',
       body: _stripNullsDeep(m.toJson()),
     );
-    final env = ApiEnvelope.fromAny(raw);
-    return env.flag ?? true;
+    /*
+    static Future<Equipment> updateEquipment(Equipment e) async {
+    final raw = await _put(
+      'Equipment/update',
+      body: _stripNullsDeep(e.toJson()),
+    );
+    return Equipment.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
+  }
+    */
+    return ContractSliceSheet.fromJson(
+      _unwrapMap(raw, envelope: ApiEnvelope()),
+    );
   }
 
   // -------- EQUIPMENT (incl. images, certs, driver files, terms, lists, locations, rates) --------

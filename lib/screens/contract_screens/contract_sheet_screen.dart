@@ -1,5 +1,4 @@
 // lib/screens/contract_sheet_screen.dart
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -9,7 +8,6 @@ import 'package:heavy_new/core/models/contracts/contract_slice.dart';
 import 'package:heavy_new/core/models/contracts/contract_slice_sheet.dart';
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
 class ContractSheetScreen extends StatefulWidget {
@@ -32,164 +30,174 @@ class ContractSheetScreen extends StatefulWidget {
 
 class _ContractSheetScreenState extends State<ContractSheetScreen> {
   final _df = DateFormat('yyyy-MM-dd');
-  bool _loading = true;
-  bool _generating = false;
 
-  // The rows we render
-  List<ContractSliceSheet> _rows = [];
+  // We compute days from request/contract dates and render a grid by quantity.
+  late final List<String> _days;
+  int _qty = 1;
 
-  // Per-row pending edits (only what changed)
-  // Keyed by contractSliceSheetId; for new rows (shouldn’t happen here) we fallback to index key.
-  final Map<int, ContractSliceSheet> _pending = {};
-
-  // Which rows are currently saving
-  final Set<int> _saving = {};
+  // Pending edits per-unit & per-day: key = "u{unit}#d{dayIdx}"
+  final Map<String, ContractSliceSheet> _pending = {};
+  // Per-row saving flags (same keys)
+  final Set<String> _saving = {};
 
   @override
   void initState() {
     super.initState();
-    _load(); // no async setState inside
+    _days = _buildDays();
+    _loadQty();
   }
 
-  DateTime? _d(String? isoOrYmd) {
+  // ---- helpers ----
+
+  // 3) Add a helper to load the fresh quantity from the server
+  Future<void> _loadQty() async {
+    try {
+      // Prefer the request id from the widget; fall back to contract/slice if needed
+      final rid =
+          widget.request.requestId ??
+          widget.contract.requestId ??
+          widget.slice.requestId ??
+          0;
+      if (rid <= 0) return; // keep default 1
+
+      final freshReq = await api.Api.getRequestById(rid);
+      final q = (freshReq.requestedQuantity ?? 1);
+      if (!mounted) return;
+      setState(() => _qty = q < 1 ? 1 : q);
+    } catch (_) {
+      // leave _qty as-is (1) on failure
+    }
+  }
+
+  DateTime? _parseIsoOrYmd(String? isoOrYmd) {
     if (isoOrYmd == null || isoOrYmd.isEmpty) return null;
     try {
-      if (isoOrYmd.contains('T')) return DateTime.parse(isoOrYmd);
-      return DateTime.parse('${isoOrYmd}T00:00:00.000Z');
+      return DateTime.parse(
+        isoOrYmd.contains('T') ? isoOrYmd : '${isoOrYmd}T00:00:00.000Z',
+      );
     } catch (_) {
       return null;
     }
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-    });
-
-    try {
-      // Ensure sheets exist once
-      final existing = await api.Api.getSheetsForSlice(
-        widget.slice.contractSliceId ?? 0,
-      );
-      if (existing.isNotEmpty) {
-        _rows = existing;
-      } else {
-        // Generate (days × requestedQuantity)
-        final from =
-            _d(widget.request.fromDate) ??
-            _d(widget.contract.fromDate) ??
-            DateTime.now();
-        final to =
-            _d(widget.request.toDate) ?? _d(widget.contract.toDate) ?? from;
-        final days = to.difference(from).inDays + 1;
-        final qty = widget.request.requestedQuantity ?? 1;
-
-        _generating = true;
-        final created = <ContractSliceSheet>[];
-        for (int i = 0; i < days; i++) {
-          final date = _df.format(from.add(Duration(days: i)));
-          for (int q = 0; q < qty; q++) {
-            final sheet = await api.Api.addContractSliceSheet(
-              ContractSliceSheet(
-                contractSliceSheetId: 0,
-                contractSliceId: widget.slice.contractSliceId,
-                sliceDate: date,
-                dailyHours: 0,
-                actualHours: 0,
-                overHours: 0,
-                totalHours: 0,
-                customerUserId: 0,
-                vendorUserId: 0,
-                isCustomerAccept: false,
-                isVendorAccept: false,
-                customerNote: '',
-                vendorNote: '',
-              ),
-            );
-            created.add(sheet);
-          }
-        }
-        _rows = created;
-      }
-    } finally {
-      if (!mounted) return;
-      setState(() {
-        _generating = false;
-        _loading = false;
-      });
-    }
-  }
-
-  // Merge base row with pending edits (if any)
-  ContractSliceSheet _mergedRow(ContractSliceSheet base) {
-    final id = base.contractSliceSheetId ?? -1;
-    final p = _pending[id];
-    if (p == null) return base;
-    return base.copyWith(
-      sliceDate: p.sliceDate,
-      dailyHours: p.dailyHours,
-      actualHours: p.actualHours,
-      overHours: p.overHours,
-      totalHours: p.totalHours,
-      customerUserId: p.customerUserId,
-      isCustomerAccept: p.isCustomerAccept,
-      vendorUserId: p.vendorUserId,
-      isVendorAccept: p.isVendorAccept,
-      customerNote: p.customerNote,
-      vendorNote: p.vendorNote,
+  List<String> _buildDays() {
+    final from =
+        _parseIsoOrYmd(widget.request.fromDate) ??
+        _parseIsoOrYmd(widget.contract.fromDate) ??
+        DateTime.now();
+    final to =
+        _parseIsoOrYmd(widget.request.toDate) ??
+        _parseIsoOrYmd(widget.contract.toDate) ??
+        from;
+    final n = to.difference(from).inDays + 1;
+    return List<String>.generate(
+      n < 1 ? 1 : n,
+      (i) => _df.format(from.add(Duration(days: i))),
     );
   }
 
-  void _markPending(int id, ContractSliceSheet patch) {
-    final cur = _pending[id];
-    if (cur == null) {
-      _pending[id] = patch;
-    } else {
-      _pending[id] = cur.copyWith(
-        sliceDate: patch.sliceDate ?? cur.sliceDate,
-        dailyHours: patch.dailyHours ?? cur.dailyHours,
-        actualHours: patch.actualHours ?? cur.actualHours,
-        overHours: patch.overHours ?? cur.overHours,
-        totalHours: patch.totalHours ?? cur.totalHours,
-        customerUserId: patch.customerUserId ?? cur.customerUserId,
-        isCustomerAccept: patch.isCustomerAccept ?? cur.isCustomerAccept,
-        vendorUserId: patch.vendorUserId ?? cur.vendorUserId,
-        isVendorAccept: patch.isVendorAccept ?? cur.isVendorAccept,
-        customerNote: patch.customerNote ?? cur.customerNote,
-        vendorNote: patch.vendorNote ?? cur.vendorNote,
-      );
-    }
-    setState(() {}); // only sync UI flags (dirty chip)
+  num _num(String v) => num.tryParse(v.replaceAll(',', '.')) ?? 0;
+
+  // “Random” (but stable) id in 1..60 so it doesn’t jump every rebuild
+  // (unit + day -> id). This matches your “random 1..60” constraint.
+  int _idForUpdate({required int unitIndex, required int dayIndex}) {
+    final seed = (unitIndex * 37 + dayIndex * 13);
+    return (seed % 60) + 1; // 1..60
   }
 
-  num _numParse(String v) => num.tryParse(v.replaceAll(',', '.')) ?? 0;
+  String _key(int unitIndex, int dayIndex) => 'u$unitIndex#d$dayIndex';
 
-  Future<void> _saveOne(ContractSliceSheet base) async {
-    final id = base.contractSliceSheetId ?? -1;
-    final updated = _mergedRow(base);
+  ContractSliceSheet _mergedRow(int unitIndex, int dayIndex) {
+    final k = _key(unitIndex, dayIndex);
+    final base = _pending[k];
 
-    setState(() {
-      _saving.add(id);
-    });
+    // Always send these three:
+    final id = _idForUpdate(unitIndex: unitIndex, dayIndex: dayIndex);
+    final sliceId = widget.slice.contractSliceId;
 
+    if (base == null) {
+      // defaults (zeros/empty)
+      return ContractSliceSheet(
+        contractSliceSheetId: id,
+        contractSliceId: sliceId,
+        sliceDate: _days[dayIndex],
+        dailyHours: 0,
+        actualHours: 0,
+        overHours: 0,
+        totalHours: 0,
+        customerUserId: 0,
+        vendorUserId: 0,
+        isCustomerAccept: false,
+        isVendorAccept: false,
+        customerNote: '',
+        vendorNote: '',
+      );
+    }
+    return base.copyWith(
+      contractSliceSheetId: id,
+      contractSliceId: sliceId,
+      sliceDate: _days[dayIndex],
+    );
+  }
+
+  void _markPending(
+    int unitIndex,
+    int dayIndex, {
+    String? customerNote,
+    String? vendorNote,
+    num? daily,
+    num? actual,
+    num? over,
+    num? total,
+  }) {
+    final k = _key(unitIndex, dayIndex);
+    final cur = _pending[k];
+
+    final next = (cur == null)
+        ? ContractSliceSheet(
+            contractSliceSheetId: null, // will be filled on _mergedRow
+            contractSliceId: widget.slice.contractSliceId,
+            sliceDate: _days[dayIndex],
+            dailyHours: daily ?? 0,
+            actualHours: actual ?? 0,
+            overHours: over ?? 0,
+            totalHours: total ?? 0,
+            customerUserId: 0,
+            vendorUserId: 0,
+            isCustomerAccept: false,
+            isVendorAccept: false,
+            customerNote: customerNote ?? '',
+            vendorNote: vendorNote ?? '',
+          )
+        : cur.copyWith(
+            dailyHours: daily ?? cur.dailyHours,
+            actualHours: actual ?? cur.actualHours,
+            overHours: over ?? cur.overHours,
+            totalHours: total ?? cur.totalHours,
+            customerNote: customerNote ?? cur.customerNote,
+            vendorNote: vendorNote ?? cur.vendorNote,
+          );
+
+    setState(() => _pending[k] = next);
+  }
+
+  Future<void> _saveOne({required int unitIndex, required int dayIndex}) async {
+    final k = _key(unitIndex, dayIndex);
+    final payload = _mergedRow(unitIndex, dayIndex);
+
+    setState(() => _saving.add(k));
     try {
-      final ok = await api.Api.updateContractSliceSheet(updated);
+      final ok = await api.Api.updateContractSliceSheet(payload);
       if (!mounted) return;
 
-      if (ok) {
-        // Replace the base row in _rows with updated values
-        final idx = _rows.indexWhere(
-          (r) => (r.contractSliceSheetId ?? -1) == id,
-        );
-        if (idx >= 0) _rows[idx] = updated;
-        _pending.remove(id);
+      if (ok == true) {
+        // Mark this key as clean (keep the values, drop “unsaved”)
         setState(() {});
         AppSnack.success(context, 'Saved.');
       } else {
         AppSnack.error(context, 'Save failed.');
       }
     } catch (e) {
-      // 405 is backend (Method Not Allowed) — do not alter local state
       final msg = e.toString();
       if (msg.contains('405')) {
         AppSnack.info(
@@ -201,142 +209,153 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
       }
     } finally {
       if (!mounted) return;
-      setState(() {
-        _saving.remove(id);
-      });
+      setState(() => _saving.remove(k));
     }
   }
 
+  // ---------- UI ----------
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final qty = _qty;
+    final crossAxisCount = (qty == 1) ? 1 : 2;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Contract Sheet'),
-        actions: [
-          IconButton(
-            tooltip: 'Refresh',
-            onPressed: _loading ? null : _load,
-            icon: const Icon(Icons.refresh),
-          ),
+      appBar: AppBar(title: const Text('Contract Sheet')),
+      body: LayoutBuilder(
+        builder: (context, bc) {
+          return SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _chip(
+                      cs,
+                      'Contract #${widget.contract.contractNo ?? widget.contract.contractId ?? ''}',
+                      Icons.assignment,
+                    ),
+                    _chip(
+                      cs,
+                      'Req #${widget.request.requestNo ?? widget.request.requestId ?? ''}',
+                      Icons.request_page_outlined,
+                    ),
+                    _chip(cs, 'Qty: $qty', Icons.numbers),
+                    _chip(
+                      cs,
+                      '${_days.first} → ${_days.last}',
+                      Icons.calendar_month,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: qty,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: (bc.maxWidth < 700) ? 0.78 : 0.95,
+                  ),
+                  itemBuilder: (_, unitIdxZero) {
+                    final unitIndex = unitIdxZero + 1;
+                    return _UnitColumn(
+                      cs: cs,
+                      unitIndex: unitIndex,
+                      days: _days,
+                      isDirty: (dayIdx) =>
+                          _pending.containsKey(_key(unitIndex, dayIdx)),
+                      isSaving: (dayIdx) =>
+                          _saving.contains(_key(unitIndex, dayIdx)),
+                      onChangedNumber: (dayIdx, field, value) {
+                        switch (field) {
+                          case 'daily':
+                            _markPending(unitIndex, dayIdx, daily: _num(value));
+                            break;
+                          case 'actual':
+                            _markPending(
+                              unitIndex,
+                              dayIdx,
+                              actual: _num(value),
+                            );
+                            break;
+                          case 'over':
+                            _markPending(unitIndex, dayIdx, over: _num(value));
+                            break;
+                          case 'total':
+                            _markPending(unitIndex, dayIdx, total: _num(value));
+                            break;
+                        }
+                      },
+                      onChangedText: (dayIdx, which, value) {
+                        if (which == 'cust') {
+                          _markPending(unitIndex, dayIdx, customerNote: value);
+                        } else {
+                          _markPending(unitIndex, dayIdx, vendorNote: value);
+                        }
+                      },
+                      onSaveRow: (dayIdx) =>
+                          _saveOne(unitIndex: unitIndex, dayIndex: dayIdx),
+                    );
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _chip(ColorScheme cs, String text, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+      decoration: BoxDecoration(
+        color: cs.surfaceVariant,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: cs.onSurfaceVariant),
+          const SizedBox(width: 6),
+          Text(text, style: TextStyle(color: cs.onSurface)),
         ],
       ),
-      body: _loading
-          ? ListView(
-              children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
-            )
-          : (_generating
-                ? const Center(child: CircularProgressIndicator())
-                : (_rows.isEmpty
-                      ? const Center(child: Text('No rows.'))
-                      : ListView.separated(
-                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-                          itemCount: _rows.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 12),
-                          itemBuilder: (_, i) {
-                            final base = _rows[i];
-                            final id = base.contractSliceSheetId ?? -1;
-                            final merged = _mergedRow(base);
-                            final dirty = _pending.containsKey(id);
-                            final saving = _saving.contains(id);
-
-                            return _ModernSheetCard(
-                              cs: cs,
-                              index: i + 1,
-                              row: merged,
-                              dirty: dirty,
-                              saving: saving,
-                              onChangedNumber: (field, value) {
-                                // store only the changed field
-                                switch (field) {
-                                  case 'daily':
-                                    _markPending(
-                                      id,
-                                      base.copyWith(
-                                        dailyHours: _numParse(value),
-                                      ),
-                                    );
-                                    break;
-                                  case 'actual':
-                                    _markPending(
-                                      id,
-                                      base.copyWith(
-                                        actualHours: _numParse(value),
-                                      ),
-                                    );
-                                    break;
-                                  case 'over':
-                                    _markPending(
-                                      id,
-                                      base.copyWith(
-                                        overHours: _numParse(value),
-                                      ),
-                                    );
-                                    break;
-                                  case 'total':
-                                    _markPending(
-                                      id,
-                                      base.copyWith(
-                                        totalHours: _numParse(value),
-                                      ),
-                                    );
-                                    break;
-                                }
-                              },
-                              onChangedText: (field, value) {
-                                if (field == 'cust') {
-                                  _markPending(
-                                    id,
-                                    base.copyWith(customerNote: value),
-                                  );
-                                } else if (field == 'vend') {
-                                  _markPending(
-                                    id,
-                                    base.copyWith(vendorNote: value),
-                                  );
-                                }
-                              },
-
-                              onSave: () => _saveOne(base),
-                            );
-                          },
-                        ))),
     );
   }
 }
 
-// --------- Presentational modern card ---------
-class _ModernSheetCard extends StatelessWidget {
-  const _ModernSheetCard({
+class _UnitColumn extends StatelessWidget {
+  const _UnitColumn({
     required this.cs,
-    required this.index,
-    required this.row,
-    required this.dirty,
-    required this.saving,
+    required this.unitIndex,
+    required this.days,
+    required this.isDirty,
+    required this.isSaving,
     required this.onChangedNumber,
     required this.onChangedText,
-
-    required this.onSave,
+    required this.onSaveRow,
   });
 
   final ColorScheme cs;
-  final int index;
-  final ContractSliceSheet row;
-  final bool dirty;
-  final bool saving;
+  final int unitIndex;
+  final List<String> days;
 
-  final void Function(String field, String value) onChangedNumber;
-  final void Function(String field, String value) onChangedText;
-
-  final VoidCallback onSave;
+  final bool Function(int dayIdx) isDirty;
+  final bool Function(int dayIdx) isSaving;
+  final void Function(int dayIdx, String field, String value) onChangedNumber;
+  final void Function(int dayIdx, String which, String value) onChangedText;
+  final void Function(int dayIdx) onSaveRow;
 
   @override
   Widget build(BuildContext context) {
-    final headerBg = cs.primaryContainer.withOpacity(.75);
-    final headerFg = cs.onPrimaryContainer;
-
     return Container(
       decoration: BoxDecoration(
         color: cs.surface,
@@ -355,7 +374,7 @@ class _ModernSheetCard extends StatelessWidget {
           // Header
           Container(
             decoration: BoxDecoration(
-              color: headerBg,
+              color: cs.primaryContainer.withOpacity(.85),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(16),
               ),
@@ -368,27 +387,106 @@ class _ModernSheetCard extends StatelessWidget {
                   height: 28,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: headerFg.withOpacity(.15),
+                    color: cs.onPrimaryContainer.withOpacity(.15),
                     borderRadius: BorderRadius.circular(14),
                   ),
                   child: Text(
-                    '$index',
+                    '$unitIndex',
                     style: TextStyle(
-                      color: headerFg,
+                      color: cs.onPrimaryContainer,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                 ),
                 const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    row.sliceDate ?? '—',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: headerFg,
-                      fontWeight: FontWeight.w800,
-                    ),
+                Text(
+                  'Unit #$unitIndex',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onPrimaryContainer,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
+              ],
+            ),
+          ),
+
+          Expanded(
+            child: ListView.separated(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+              itemCount: days.length,
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
+              itemBuilder: (_, i) {
+                final dirty = isDirty(i);
+                final saving = isSaving(i);
+                return _RowCard(
+                  cs: cs,
+                  date: days[i],
+                  dirty: dirty,
+                  saving: saving,
+                  onChangedNumber: (field, v) => onChangedNumber(i, field, v),
+                  onChangedText: (which, v) => onChangedText(i, which, v),
+                  onSave: () => onSaveRow(i),
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RowCard extends StatelessWidget {
+  const _RowCard({
+    required this.cs,
+    required this.date,
+    required this.dirty,
+    required this.saving,
+    required this.onChangedNumber,
+    required this.onChangedText,
+    required this.onSave,
+  });
+
+  final ColorScheme cs;
+  final String date;
+  final bool dirty, saving;
+
+  final void Function(String field, String value) onChangedNumber;
+  final void Function(String which, String value) onChangedText;
+  final VoidCallback onSave;
+
+  @override
+  Widget build(BuildContext context) {
+    final headerBg = cs.secondaryContainer.withOpacity(.75);
+    final headerFg = cs.onSecondaryContainer;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: cs.outlineVariant.withOpacity(.6)),
+      ),
+      child: Column(
+        children: [
+          // Row header
+          Container(
+            decoration: BoxDecoration(
+              color: headerBg,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(14),
+              ),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              children: [
+                Text(
+                  date,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: headerFg,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const Spacer(),
                 if (dirty)
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -411,7 +509,7 @@ class _ModernSheetCard extends StatelessWidget {
             ),
           ),
 
-          // Body
+          // Inputs
           Padding(
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             child: Column(
@@ -420,13 +518,11 @@ class _ModernSheetCard extends StatelessWidget {
                   children: [
                     _NumField(
                       label: 'Planned',
-                      initial: '${row.dailyHours ?? 0}',
                       onChanged: (v) => onChangedNumber('daily', v),
                     ),
                     const SizedBox(width: 8),
                     _NumField(
                       label: 'Actual',
-                      initial: '${row.actualHours ?? 0}',
                       onChanged: (v) => onChangedNumber('actual', v),
                     ),
                   ],
@@ -436,32 +532,25 @@ class _ModernSheetCard extends StatelessWidget {
                   children: [
                     _NumField(
                       label: 'Overtime',
-                      initial: '${row.overHours ?? 0}',
                       onChanged: (v) => onChangedNumber('over', v),
                     ),
                     const SizedBox(width: 8),
                     _NumField(
                       label: 'Total',
-                      initial: '${row.totalHours ?? 0}',
                       onChanged: (v) => onChangedNumber('total', v),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
-
-                // Notes
                 _TextField(
                   label: 'Customer note',
-                  initial: row.customerNote ?? '',
                   onChanged: (v) => onChangedText('cust', v),
                 ),
                 const SizedBox(height: 8),
                 _TextField(
                   label: 'Vendor note',
-                  initial: row.vendorNote ?? '',
                   onChanged: (v) => onChangedText('vend', v),
                 ),
-
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerRight,
@@ -487,26 +576,19 @@ class _ModernSheetCard extends StatelessWidget {
 }
 
 class _NumField extends StatelessWidget {
-  const _NumField({
-    required this.label,
-    required this.initial,
-    required this.onChanged,
-  });
+  const _NumField({required this.label, required this.onChanged});
   final String label;
-  final String initial;
   final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: TextFormField(
-        initialValue: initial,
         keyboardType: TextInputType.number,
-        decoration: InputDecoration(
-          labelText: label,
+        decoration: const InputDecoration(
           filled: true,
           isDense: true,
-        ),
+        ).copyWith(labelText: label),
         onChanged: onChanged,
       ),
     );
@@ -514,22 +596,18 @@ class _NumField extends StatelessWidget {
 }
 
 class _TextField extends StatelessWidget {
-  const _TextField({
-    required this.label,
-    required this.initial,
-    required this.onChanged,
-  });
+  const _TextField({required this.label, required this.onChanged});
   final String label;
-  final String initial;
   final ValueChanged<String> onChanged;
 
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      initialValue: initial,
       minLines: 1,
       maxLines: 3,
-      decoration: InputDecoration(labelText: label, filled: true),
+      decoration: const InputDecoration(
+        filled: true,
+      ).copyWith(labelText: label),
       onChanged: onChanged,
     );
   }
