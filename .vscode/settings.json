@@ -1,3 +1,4 @@
 {
-    "cmake.sourceDirectory": "D:/FLutter applications/heavy_machinery/linux"
+    "cmake.sourceDirectory": "D:/FLutter applications/heavy_machinery/linux",
+    "java.configuration.updateBuildConfiguration": "automatic"
 }

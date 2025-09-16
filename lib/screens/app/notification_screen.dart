@@ -1,7 +1,129 @@
+import 'dart:convert';
+import 'dart:developer';
+
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:go_router/go_router.dart';
+import 'package:heavy_new/main.dart';
+
+class Notifications {
+  static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+
+  //register notification permissions
+  Future<void> init() async {
+    final settings = await _messaging.requestPermission(
+      alert: true,
+      announcement: false,
+      badge: true,
+      carPlay: false,
+      criticalAlert: true,
+      provisional: false,
+      sound: true,
+    );
+    log('message permission: ${settings.authorizationStatus}');
+
+    final token = await _messaging.getToken();
+    if (token != null) {
+      print('FCM Token: $token');
+    }
+  }
+
+  void handleMessage(RemoteMessage message) {
+    log('Message data: ${message.data}');
+    if (message.notification != null) {
+      log('Message also contained a notification: ${message.notification}');
+    }
+
+    final data = message.data;
+    final title = data['title'] ?? message.notification?.title ?? 'no title';
+    final body = data['message'] ?? message.notification?.body ?? 'no message';
+
+    log('Notification: $title / $body');
+  }
+
+  //initialize local notifications
+  Future<void> initLocalNotifications() async {
+    const AndroidInitializationSettings androidinitializationSettings =
+        AndroidInitializationSettings('@mipmap/ic_launcher');
+
+    final DarwinInitializationSettings initializationSettingsDrawIn =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
+
+    const LinuxInitializationSettings linuxInitializationSettings =
+        LinuxInitializationSettings(defaultActionName: 'Open notification');
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: androidinitializationSettings,
+          iOS: initializationSettingsDrawIn,
+          linux: linuxInitializationSettings,
+        );
+
+    _localNotificationsPlugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >()!
+        .requestNotificationsPermission();
+
+    _localNotificationsPlugin.initialize(
+      initializationSettings,
+      onDidReceiveNotificationResponse: onNotificationTap,
+      onDidReceiveBackgroundNotificationResponse: onNotificationTap,
+    );
+  }
+
+  static void onNotificationTap(NotificationResponse response) {
+    final nav = navigatorKey.currentState;
+    if (nav == null) return;
+
+    if (response.payload == null) {
+      nav.pushNamed('/notifications');
+      return;
+    }
+    try {
+      // OK: your NotificationsScreen already jsonDecodes this too.
+      nav.pushNamed('/notifications', arguments: response);
+    } catch (e) {
+      log('payload decode error: $e');
+      nav.pushNamed('/notifications');
+    }
+  }
+
+  static Future showSimpleNotifications({
+    required String title,
+    required String body,
+    required String payload,
+  }) async {
+    const AndroidNotificationDetails androidPlatformChannelSpecifics =
+        AndroidNotificationDetails(
+          'your channel id',
+          'your channel name',
+          channelDescription: 'your channel description',
+          importance: Importance.max,
+          priority: Priority.high,
+          ticker: 'ticker',
+        );
+    const NotificationDetails platformChannelSpecifics = NotificationDetails(
+      android: androidPlatformChannelSpecifics,
+    );
+    await Notifications._localNotificationsPlugin.show(
+      0,
+      title,
+      body,
+      platformChannelSpecifics,
+      payload: payload,
+    );
+  }
+}
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -11,37 +133,14 @@ class NotificationsScreen extends StatefulWidget {
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
   late List<_NotifItem> _items;
+  Map payload = {};
 
   @override
   void initState() {
     super.initState();
-    // Demo data; replace with API list later
-    _items = [
-      _NotifItem(
-        id: 1,
-        title: 'Request approved',
-        body: 'REQ-101 has been approved by the vendor.',
-        type: 'request_updated',
-        createdAt: DateTime.now().subtract(const Duration(minutes: 8)),
-        entityId: 101,
-      ),
-      _NotifItem(
-        id: 2,
-        title: 'New message',
-        body: '“We can deliver tomorrow morning.”',
-        type: 'chat_message',
-        createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-        entityId: 12,
-      ),
-      _NotifItem(
-        id: 3,
-        title: 'Contract opened',
-        body: 'Contract CNT-311 is now active.',
-        type: 'contract_open',
-        createdAt: DateTime.now().subtract(const Duration(days: 1)),
-        entityId: 311,
-      ),
-    ];
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      //   Notifications.instance.wireOpenHandlers();
+    });
   }
 
   void _go(_NotifItem n) {
@@ -63,6 +162,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final data = ModalRoute.of(context)!.settings.arguments;
+    if (data is RemoteMessage) {
+      payload = data.data;
+    }
+    if (data is NotificationResponse) {
+      payload = jsonDecode(data.payload!);
+    }
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
@@ -114,12 +220,13 @@ class _NotifItem {
   final String type;
   final DateTime createdAt;
   final int? entityId;
-  _NotifItem({
+  const _NotifItem({
     required this.id,
     required this.title,
     required this.body,
     required this.type,
     required this.createdAt,
+    // ignore: unused_element_parameter
     this.entityId,
   });
 }

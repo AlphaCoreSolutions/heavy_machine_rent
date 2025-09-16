@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "203931109748",
+    "project_id": "servicesrq-ba4b8",
+    "storage_bucket": "servicesrq-ba4b8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:203931109748:android:c5f9869f4bc6a26e424421",
+        "android_client_info": {
+          "package_name": "com.visioncit.servicesrq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCL0ac7w8Rp43jnu4d_dtTBgozLkPDGHDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:203931109748:android:6549dbab46f88511424421",
+        "android_client_info": {
+          "package_name": "com.visioncit.servicesrqandroid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCL0ac7w8Rp43jnu4d_dtTBgozLkPDGHDM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

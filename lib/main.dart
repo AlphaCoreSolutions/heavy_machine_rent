@@ -1,9 +1,15 @@
 // lib/main.dart
+import 'dart:convert';
+import 'dart:developer' show log;
+
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:heavy_new/core/api/api_handler.dart';
+import 'package:heavy_new/firebase_options.dart';
 import 'package:heavy_new/foundation/ui/app_theme.dart';
 import 'package:heavy_new/foundation/ui/scroll_behavior.dart';
 import 'package:heavy_new/foundation/ui/transitions.dart';
@@ -27,16 +33,57 @@ import 'package:heavy_new/screens/organization_screens/organization_hub_screen.d
 import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/employees_screen.dart';
 
-// Auth (login/register via phone + OTP)
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 
 // Models
 import 'package:heavy_new/core/models/equipment/equipment.dart';
 
+final navigatorKey = GlobalKey<NavigatorState>();
+Future _firebaseBackgroundMessage(RemoteMessage message) async {
+  await Firebase.initializeApp();
+  if (message.notification != null) {
+    log('Handling a background message: ${message.messageId}');
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  const androidEmuBase = '';
+  await Notifications().init();
+
+  await Notifications().initLocalNotifications();
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
+
+  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+    if (message.notification != null) {
+      log('Background message clicked!');
+      navigatorKey.currentState?.pushNamed(
+        '/notifications',
+        arguments: message,
+      );
+    }
+  });
+
+  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    final hasNotif = message.notification != null;
+    final payloadData = message.data.isEmpty ? null : jsonEncode(message.data);
+
+    if (hasNotif) {
+      try {
+        await Notifications.showSimpleNotifications(
+          title: message.notification!.title ?? 'Notification',
+          body: message.notification!.body ?? '',
+          payload: payloadData ?? '{}', // plugin expects a String
+        );
+      } catch (e) {
+        log('local notif error: $e');
+      }
+    }
+  });
+
+  const androidEmuBase = 'https://sr.visioncit.com/api/';
   const prodBase = 'https://sr.visioncit.com/api/';
 
   Api.init(
@@ -53,6 +100,8 @@ class HeavyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    navigatorKey;
+
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
       title: 'Heavy Rental',
@@ -190,7 +239,7 @@ final GoRouter _router = GoRouter(
           },
         ),
         GoRoute(
-          path: 'notifications',
+          path: '/notifications',
           name: 'notifications',
           pageBuilder: (context, state) =>
               sharedAxisX(child: const NotificationsScreen()),

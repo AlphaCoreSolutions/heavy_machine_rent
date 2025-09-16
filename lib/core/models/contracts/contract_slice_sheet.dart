@@ -62,4 +62,32 @@ class ContractSliceSheet {
     'customerNote': customerNote ?? '',
     'vendorNote': vendorNote ?? '',
   };
+
+  ContractSliceSheet copyWith({
+    required int contractSliceSheetId,
+    int? contractSliceId,
+    required String sliceDate,
+    num? dailyHours,
+    num? actualHours,
+    num? overHours,
+    num? totalHours,
+    String? customerNote,
+    String? vendorNote,
+  }) {
+    return ContractSliceSheet(
+      contractSliceSheetId: contractSliceSheetId,
+      contractSliceId: contractSliceId ?? this.contractSliceId,
+      sliceDate: sliceDate,
+      dailyHours: dailyHours ?? this.dailyHours,
+      actualHours: actualHours ?? this.actualHours,
+      overHours: overHours ?? this.overHours,
+      totalHours: totalHours ?? this.totalHours,
+      customerUserId: this.customerUserId,
+      isCustomerAccept: this.isCustomerAccept,
+      vendorUserId: this.vendorUserId,
+      isVendorAccept: this.isVendorAccept,
+      customerNote: customerNote ?? this.customerNote,
+      vendorNote: vendorNote ?? this.vendorNote,
+    );
+  }
 }
