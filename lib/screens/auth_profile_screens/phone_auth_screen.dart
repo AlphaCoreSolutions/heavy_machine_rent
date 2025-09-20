@@ -6,6 +6,7 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
+import 'package:heavy_new/screens/app/notification_screen.dart';
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key, this.onDone});
@@ -69,6 +70,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       AppSnack.success(context, 'Signed in');
 
       if (!mounted) return;
+      await Notifications().sendNotification();
       Navigator.of(context).pop(true);
     } catch (e) {
       AppSnack.error(context, 'Invalid or expired code');

@@ -1,15 +1,20 @@
 import 'dart:convert';
 import 'dart:developer';
 
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:heavy_new/core/api/api_handler.dart';
+import 'package:heavy_new/core/models/admin/notifications_model.dart';
+import 'package:heavy_new/core/models/firebase/crud_service.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:go_router/go_router.dart';
 import 'package:heavy_new/main.dart';
 
 class Notifications {
+  final api = Api();
   static final FirebaseMessaging _messaging = FirebaseMessaging.instance;
   static final FlutterLocalNotificationsPlugin _localNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
@@ -31,6 +36,48 @@ class Notifications {
     if (token != null) {
       print('FCM Token: $token');
     }
+  }
+
+  Future getDeviceToken() async {
+    String? token = await _messaging.getToken();
+    log('device Token: $token');
+    await CrudService.saveUserToken(token ?? '');
+    log('token saved to database');
+
+    _messaging.onTokenRefresh.listen((event) async {
+      log('device Token refreshed: $event');
+      await CrudService.saveUserToken(event);
+      log('refreshed token saved to database');
+    });
+  }
+
+  Future<UserMessage> sendNotification() async {
+    final token = await _messaging.getToken();
+    if (token == null || token.isEmpty) {
+      throw Exception('No FCM token available for this device.');
+    }
+    User? user = FirebaseAuth.instance.currentUser;
+
+    final msg = UserMessage(
+      userId: int.tryParse(user?.uid ?? '0'),
+      messageArabic: 'من زمان عنك!',
+      messageEnglish: 'It\'s been a long time, welcome back!',
+      titleArabic: 'أهلاً وسهلاً',
+      titleEnglish: 'Welcome Back!',
+      token: token,
+      screenId: 1,
+      screenPath: 'home',
+      senderId: 1,
+      modelId: 0,
+      platformId: 1,
+      userMessageId: 0,
+      imagePath: '',
+      mainMessageId: 0,
+      screenArabic: '',
+      screenEnglish: '',
+    );
+
+    return Api.sendNotif(msg);
   }
 
   void handleMessage(RemoteMessage message) {

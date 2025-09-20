@@ -18,6 +18,7 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 // Actions
 import 'package:heavy_new/foundation/widgets/chat_action_button.dart';
 import 'package:heavy_new/foundation/widgets/notification_bell.dart';
+import 'package:heavy_new/screens/app/notification_screen.dart';
 
 // Screens
 import 'package:heavy_new/screens/equipment_screens/equipment_list_screen.dart';
@@ -37,6 +38,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void initState() {
+    Notifications().getDeviceToken();
     super.initState();
     _futureTop = api.Api.getEquipments();
   }
@@ -91,7 +93,9 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _refresh() async {
-    setState(() => _futureTop = api.Api.getEquipments());
+    setState(() {
+      _futureTop = api.Api.getEquipments();
+    });
   }
 
   @override

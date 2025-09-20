@@ -6,6 +6,7 @@ import 'dart:io';
 import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:heavy_new/core/api/envelope.dart';
+import 'package:heavy_new/core/models/admin/notifications_model.dart';
 import 'package:heavy_new/core/models/admin/request_driver_location.dart';
 import 'package:heavy_new/core/models/contracts/contract.dart';
 import 'package:heavy_new/core/models/contracts/contract_slice.dart';
@@ -468,7 +469,6 @@ class Api {
         : <String, dynamic>{'data': decoded};
   }
 
-  // --- FIXED: JSON-aware PUT (still static) ---
   static Future<dynamic> _put(
     String path, {
     Object? body,
@@ -534,7 +534,6 @@ class Api {
     }
   }
 
-  // === In Api class ===
   static bool _refreshInFlight = false;
 
   // Call this once from AuthStore.init()
@@ -938,6 +937,52 @@ class Api {
   // ENDPOINTS
   // ---------------------------------------------------------------------------
 
+  // -------- NOTIFICATIONS --------
+  static Future<List<NotificationsModel>> getNotfTokenById(int userId) async {
+    final raw = await _get('TokenFirebase/$userId');
+    final list = _unwrapList(raw);
+    return list
+        .map((e) => NotificationsModel.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
+  }
+
+  static Future<NotificationsModel> addNotfToken(
+    NotificationsModel token,
+  ) async {
+    final raw = await _post(
+      'TokenFirebase/add',
+      body: _stripNullsDeep(token.toJson()),
+    );
+    return NotificationsModel.fromJson(
+      _unwrapMap(raw, envelope: ApiEnvelope()),
+    );
+  }
+
+  static Future<UserMessage> sendNotif(UserMessage message) async {
+    final raw = await _post('UserMessage/sendfcm', body: message.toJson());
+
+    // If your API wraps data, unwrap here; otherwise parse directly:
+    final data = _unwrapMap(
+      raw,
+      envelope: ApiEnvelope(),
+    ); // if you have envelopes
+    return UserMessage.fromJson(data);
+  }
+
+  // -------- NOTIF MESSAGE --------
+  static Future<UserMessage> getNotifMessageById(UserMessage id) async {
+    final raw = await _get('UserMessage/${id}');
+    return UserMessage.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
+  }
+
+  static Future<UserMessage> addNotifMessage(UserMessage message) async {
+    final raw = await _post(
+      'UserMessage/add',
+      body: _stripNullsDeep(message.toJson()),
+    );
+    return UserMessage.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
+  }
+
   // -------- AUTH --------
 
   // Toggleable debug flag
@@ -1004,7 +1049,6 @@ class Api {
     }
   }
 
-  // ✔ Verifies OTP and returns tokens (and sets bearer on success)
   // ✔ Verifies OTP and returns tokens (and sets bearer on success)
   static Future<AuthTokens> checkOtpCode({
     required String mobile,

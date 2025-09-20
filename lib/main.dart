@@ -75,13 +75,23 @@ void main() async {
         await Notifications.showSimpleNotifications(
           title: message.notification!.title ?? 'Notification',
           body: message.notification!.body ?? '',
-          payload: payloadData ?? '{}', // plugin expects a String
+          payload: payloadData ?? '{}',
         );
       } catch (e) {
         log('local notif error: $e');
       }
     }
   });
+
+  // handling terminated state
+  final remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
+  if (remoteMessage != null) {
+    log('App opened from terminated state via notification');
+    navigatorKey.currentState?.pushNamed(
+      '/notifications',
+      arguments: remoteMessage,
+    );
+  }
 
   const androidEmuBase = 'https://sr.visioncit.com/api/';
   const prodBase = 'https://sr.visioncit.com/api/';

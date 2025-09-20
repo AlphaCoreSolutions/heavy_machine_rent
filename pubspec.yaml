@@ -35,6 +35,7 @@ dependencies:
   shared_preferences: 
   permission_handler: 
   firebase_core: 
+  firebase_auth:
   firebase_messaging: 
   flutter_local_notifications: 
   google_maps_flutter: 
