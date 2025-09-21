@@ -70,7 +70,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       AppSnack.success(context, 'Signed in');
 
       if (!mounted) return;
-      await Notifications().sendNotification();
+      Notifications().sendNotification();
       Navigator.of(context).pop(true);
     } catch (e) {
       AppSnack.error(context, 'Invalid or expired code');
@@ -93,15 +93,15 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             final wide = w >= 900;
 
             // Common paddings & max widths
-            const screenHPad = 16.0;
-            const screenVPad = 24.0;
-            const formMaxWidth = 520.0; // clamp fields on desktop
-            const pageMaxWidth = 1100.0; // clamp whole page on desktop
+            const screenHPad = 1.0;
+            const screenVPad = 1.0;
+            const formMaxWidth = 600.0;
+            const pageMaxWidth = 1100.0;
 
             final formColumn = ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: formMaxWidth),
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                padding: const EdgeInsets.fromLTRB(5, 16, 5, 24),
                 children: [
                   // ====== Phone form ======
                   Glass(

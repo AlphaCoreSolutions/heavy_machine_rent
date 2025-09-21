@@ -492,6 +492,7 @@ class _StatusChip extends StatelessWidget {
           color: color,
           fontWeight: FontWeight.w700,
           letterSpacing: .3,
+          fontSize: 9.30,
         ),
       ),
     );

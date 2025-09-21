@@ -206,7 +206,7 @@ class BrandButton extends StatelessWidget {
     this.height = 52,
     this.radius = 16,
     this.gradient,
-    this.padding = const EdgeInsets.symmetric(horizontal: 18),
+    this.padding = const EdgeInsets.symmetric(horizontal: 8),
   });
 
   final VoidCallback? onPressed;
@@ -239,7 +239,7 @@ class BrandButton extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (icon != null) ...[icon!, const SizedBox(width: 10)],
+            if (icon != null) ...[icon!, const SizedBox(width: 5)],
             DefaultTextStyle.merge(
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
                 color: Colors.white,

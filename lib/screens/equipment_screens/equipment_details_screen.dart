@@ -616,7 +616,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           final avail = _availableQty(e);
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+            padding: const EdgeInsets.fromLTRB(3, 12, 3, 28),
             children: [
               // Gallery
               _Gallery(
@@ -1132,7 +1132,7 @@ class _Gallery extends StatefulWidget {
 class _GalleryState extends State<_Gallery> {
   static const _kMinH = 180.0;
   static const _kMaxH = 420.0;
-  static const _kAspect = 16 / 9;
+  static const _kAspect = 16 / 10;
 
   late final PageController _pc;
   Timer? _timer;

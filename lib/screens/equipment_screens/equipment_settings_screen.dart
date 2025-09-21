@@ -1148,7 +1148,6 @@ class _TermsTabState extends State<_TermsTab> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          // subtle glassy gradient
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -1168,7 +1167,7 @@ class _TermsTabState extends State<_TermsTab> {
         ),
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _edit(t), // quick edit on tap
+          onTap: () => _edit(t),
           child: Padding(
             padding: const EdgeInsets.fromLTRB(14, 12, 10, 12),
             child: Row(
@@ -1250,10 +1249,15 @@ class _TermsTabState extends State<_TermsTab> {
                   runSpacing: 8,
                   crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    _StatusChip(active: active),
-                    _ActionsPill(
-                      onEdit: () => _edit(t),
-                      onDelete: () => _delete(t),
+                    Column(
+                      children: [
+                        _StatusChip(active: active),
+                        SizedBox(height: 5),
+                        _ActionsPill(
+                          onEdit: () => _edit(t),
+                          onDelete: () => _delete(t),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -1280,7 +1284,7 @@ class _TermsTabState extends State<_TermsTab> {
         ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
 
         return AlertDialog(
-          title: const Text('Terms (preview)'),
+          title: const Text('Terms'),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640, maxHeight: 500),
             child: SingleChildScrollView(
@@ -1370,6 +1374,12 @@ class _TermsTabState extends State<_TermsTab> {
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
           child: Row(
             children: [
+              IconButton.filledTonal(
+                tooltip: 'Refresh',
+                onPressed: _reload,
+                icon: const Icon(Icons.refresh),
+              ),
+              const SizedBox(width: 3),
               FilledButton.icon(
                 onPressed: () => _edit(null),
                 icon: const Icon(Icons.add),
@@ -1380,14 +1390,6 @@ class _TermsTabState extends State<_TermsTab> {
                 onPressed: _saveOrder,
                 icon: const Icon(Icons.save),
                 label: const Text('Save order'),
-              ),
-              const SizedBox(width: 10),
-
-              const Spacer(),
-              IconButton.filledTonal(
-                tooltip: 'Refresh',
-                onPressed: _reload,
-                icon: const Icon(Icons.refresh),
               ),
             ],
           ),
@@ -1828,19 +1830,23 @@ class _DriversTabState extends State<_DriversTab> {
                           trailing: Wrap(
                             spacing: 6,
                             children: [
+                              Row(
+                                children: [
+                                  IconButton.filledTonal(
+                                    onPressed: () => _editDriver(d),
+                                    icon: const Icon(Icons.edit),
+                                  ),
+                                  IconButton.filledTonal(
+                                    onPressed: () => _deleteDriver(d),
+                                    icon: const Icon(Icons.delete_outline),
+                                    color: cs.error,
+                                  ),
+                                ],
+                              ),
                               FilledButton.icon(
                                 onPressed: () => _addDriverFile(d),
                                 icon: const Icon(Icons.add),
                                 label: const Text('Add file'),
-                              ),
-                              IconButton.filledTonal(
-                                onPressed: () => _editDriver(d),
-                                icon: const Icon(Icons.edit),
-                              ),
-                              IconButton.filledTonal(
-                                onPressed: () => _deleteDriver(d),
-                                icon: const Icon(Icons.delete_outline),
-                                color: cs.error,
                               ),
                             ],
                           ),

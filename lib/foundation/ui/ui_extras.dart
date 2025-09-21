@@ -608,7 +608,7 @@ class _TiltHeroCardState extends State<TiltHeroCard> {
           if (widget.image != null)
             Positioned.fill(
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(15),
                 child: ColorFiltered(
                   colorFilter: ColorFilter.mode(
                     Colors.black.withOpacity(0.12),

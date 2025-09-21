@@ -43,6 +43,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
   List<DomainDetail> _typeOpts = []; // Domain 13
   final List<DomainDetail> _fileTypeOpts = []; // Domain 10 – file types
   List<OrganizationFileModel> _files = [];
+  // ignore: unused_field
   List<OrganizationUser> _members = [];
 
   // Cache for on-server image existence checks
@@ -743,7 +744,6 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
   }
 
   // Expired ⇢ end < today (date-only)
-  // Expired = end < today (date-only)
   bool _computeExpired(String endYmd) {
     final end = _parseYMD(endYmd);
     if (end == null) return false;
@@ -1040,7 +1040,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                       Glass(
                         radius: 18,
                         child: Padding(
-                          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+                          padding: const EdgeInsets.fromLTRB(0, 10, 0, 12),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1053,7 +1053,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                         .titleMedium
                                         ?.copyWith(fontWeight: FontWeight.w800),
                                   ),
-                                  const Spacer(),
+                                  SizedBox(width: 35),
                                   TextButton.icon(
                                     onPressed: _orgId == null
                                         ? null
@@ -1087,7 +1087,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       f.fileName ?? '',
                                     );
                                     return Container(
-                                      padding: const EdgeInsets.all(10),
+                                      padding: const EdgeInsets.all(9),
                                       decoration: BoxDecoration(
                                         color: Theme.of(
                                           context,
@@ -1099,7 +1099,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                             CrossAxisAlignment.center,
                                         children: [
                                           SizedBox(
-                                            width: 20,
+                                            width: 1,
                                             child: Text(
                                               '${i + 1}',
                                               style: Theme.of(
@@ -1113,7 +1113,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                               8,
                                             ),
                                             child: SizedBox(
-                                              width: 54,
+                                              width: 40,
                                               height: 54,
                                               child: isImg
                                                   ? _buildFileThumb(f)
@@ -1122,7 +1122,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                                     ),
                                             ),
                                           ),
-                                          const SizedBox(width: 12),
+                                          const SizedBox(width: 5),
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
@@ -1155,6 +1155,10 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                                       ).textTheme.labelMedium,
                                                     ),
                                                     const SizedBox(width: 10),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
                                                     Text(
                                                       'Expire: ${f.enDate ?? '—'}',
                                                       style: Theme.of(
@@ -1192,6 +1196,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                       const SizedBox(height: 16),
 
                       // ——— Users ———
+                      /*
                       Glass(
                         radius: 18,
                         child: Padding(
@@ -1261,6 +1266,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                           ),
                         ),
                       ),
+                    */
                     ],
                   ),
                 );

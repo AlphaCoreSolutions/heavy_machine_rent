@@ -25,9 +25,9 @@ class EquipmentListScreen extends StatefulWidget {
 class _EquipmentListScreenState extends State<EquipmentListScreen> {
   final _searchCtrl = TextEditingController();
   final _searchFocus = FocusNode();
-  Future<List<Equipment>>? _future;
-  final ScrollController _scrollCtrl = ScrollController();
+  final _scrollCtrl = ScrollController();
 
+  Future<List<Equipment>>? _future;
   Timer? _debounce;
 
   @override
@@ -35,12 +35,11 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
     super.initState();
     _future = api.Api.getEquipments();
 
-    // Debounce typing for desktop feel
     _searchCtrl.addListener(() {
       _debounce?.cancel();
       _debounce = Timer(const Duration(milliseconds: 320), () {
         if (!mounted) return;
-        _doSearch();
+        _doSearch(); // always drive _future
       });
     });
   }
@@ -48,32 +47,55 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
   @override
   void dispose() {
     _debounce?.cancel();
-    _searchCtrl.dispose();
     _searchFocus.dispose();
     _scrollCtrl.dispose();
     super.dispose();
   }
 
-  void _doSearch() {
-    final q = _searchCtrl.text.trim();
+  String _escapeSql(String input) {
+    // Minimal escape so single quotes don't break the SQL string
+    return input.replaceAll("'", "''");
+  }
+
+  String _buildSqlLike(String term) {
+    final t = _escapeSql(term.trim());
+    return "SELECT * FROM Equipments WHERE descEnglish LIKE '%$t%'";
+  }
+
+  void _onChanged(String value) {
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 320), () {
+      _doSearch(value);
+    });
+  }
+
+  void _doSearch([String? raw]) {
+    final term = (raw ?? _searchCtrl.text).trim();
+
     setState(() {
-      _future = q.isEmpty
-          ? api.Api.getEquipments()
-          : api.Api.advanceSearchEquipments(q);
+      if (term.isEmpty) {
+        _future = api.Api.getEquipments();
+      } else {
+        final sql = _buildSqlLike(term); // or _buildSqlEquals(term)
+        _future = api.Api.advanceSearchEquipments(sql);
+      }
     });
   }
 
   void _clearSearch() {
-    if (_searchCtrl.text.isEmpty) return;
+    _debounce?.cancel();
     _searchCtrl.clear();
-    _doSearch();
-    _searchFocus.requestFocus();
+
+    final next = api.Api.getEquipments(); // compute outside (optional)
+    setState(() {
+      _future = next; // assign inside a block (returns void)
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final searchRowH = 90.0; // TextField + buttons row
+    final searchRowH = 50.0; // TextField + buttons row
     final filterRowH = 40.0; // "Filters" button row
     const topPad = 12.0, bottomPad = 45.0, gap = 8.0;
     final headerHeight =
@@ -151,22 +173,44 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                         radius: 16,
                                         child: Row(
                                           children: [
-                                            Expanded(child: AInput(/* … */)),
-                                            const SizedBox(width: 8),
-                                            FilledButton.icon(
-                                              onPressed: _doSearch,
-                                              icon: const Icon(Icons.search),
-                                              label: const Text('Search'),
+                                            // AInput with icons
+                                            Expanded(
+                                              child: TextField(
+                                                controller: _searchCtrl,
+                                                focusNode: _searchFocus,
+                                                onChanged:
+                                                    _onChanged, // ← important
+                                                decoration: InputDecoration(
+                                                  hintText:
+                                                      'Search by description…',
+                                                  prefixIcon: const Icon(
+                                                    Icons.search,
+                                                  ),
+                                                  suffixIcon:
+                                                      (_searchCtrl.text.isEmpty)
+                                                      ? null
+                                                      : IconButton(
+                                                          onPressed:
+                                                              _clearSearch,
+                                                          icon: const Icon(
+                                                            Icons.clear,
+                                                          ),
+                                                        ),
+                                                  border: OutlineInputBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                ),
+                                              ),
                                             ),
+
                                             const SizedBox(width: 8),
-                                            OutlinedButton.icon(
-                                              onPressed: _clearSearch,
-                                              icon: const Icon(Icons.clear),
-                                              label: const Text('Clear'),
-                                            ),
                                           ],
                                         ),
                                       ),
+
                                       const SizedBox(height: gap),
                                       Align(
                                         alignment: Alignment.centerLeft,
@@ -194,7 +238,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
 
                             // Results
                             SliverToBoxAdapter(
-                              child: const SizedBox(height: 6),
+                              child: const SizedBox(height: 1),
                             ),
                             FutureBuilder<List<Equipment>>(
                               future: _future,
@@ -277,12 +321,22 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                     delegate: SliverChildBuilderDelegate(
                                       (context, index) {
                                         if (index.isOdd) {
-                                          return const SizedBox(
-                                            height: 8,
-                                          ); // separator
+                                          return const SizedBox(height: 0);
                                         }
+
                                         final i = index ~/ 2;
-                                        return _EquipmentListTile(e: items[i]);
+                                        return ListTileTheme(
+                                          dense: true,
+                                          minVerticalPadding: 0,
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 8,
+                                                vertical: 2,
+                                              ),
+                                          child: _EquipmentListTile(
+                                            e: items[i],
+                                          ),
+                                        );
                                       },
                                       childCount: items.isEmpty
                                           ? 0
@@ -318,7 +372,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                             SliverToBoxAdapter(
                               child: SizedBox(
                                 height:
-                                    MediaQuery.of(context).padding.bottom + 20,
+                                    MediaQuery.of(context).padding.bottom + 5,
                               ),
                             ),
                           ],

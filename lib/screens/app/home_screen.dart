@@ -110,29 +110,27 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
-          actions: [
-            IconButton(
-              tooltip: AuthStore.instance.isLoggedIn ? 'Logout' : 'Login',
-              icon: AIcon(
-                AuthStore.instance.isLoggedIn
-                    ? AppGlyph.logout
-                    : AppGlyph.login,
-              ),
-              onPressed: () async {
-                if (AuthStore.instance.isLoggedIn) {
-                  await AuthStore.instance.logout();
-                  if (!context.mounted) return;
-                  AppSnack.info(context, 'Signed out');
-                } else {
-                  final ok = await Navigator.of(context).push<bool>(
-                    MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
-                  );
-                  if (ok == true && context.mounted) {
-                    AppSnack.success(context, 'Signed in');
-                  }
-                }
-              },
+          leading: IconButton(
+            tooltip: AuthStore.instance.isLoggedIn ? 'Logout' : 'Login',
+            icon: AIcon(
+              AuthStore.instance.isLoggedIn ? AppGlyph.logout : AppGlyph.login,
             ),
+            onPressed: () async {
+              if (AuthStore.instance.isLoggedIn) {
+                await AuthStore.instance.logout();
+                if (!context.mounted) return;
+                AppSnack.info(context, 'Signed out');
+              } else {
+                final ok = await Navigator.of(context).push<bool>(
+                  MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
+                );
+                if (ok == true && context.mounted) {
+                  AppSnack.success(context, 'Signed in');
+                }
+              }
+            },
+          ),
+          actions: [
             // Admin button (conditionally visible)
             ValueListenableBuilder<AuthUser?>(
               valueListenable: AuthStore.instance.user,
@@ -202,7 +200,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           );
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 15),
                       SectionHeader(
                         title: 'Popular equipment',
                         action: GhostButton(
@@ -298,7 +296,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               } else {
                                 // phones
                                 cols = 1;
-                                aspect = 1.45;
+                                aspect = 1.85;
                               }
 
                               return GridView.builder(

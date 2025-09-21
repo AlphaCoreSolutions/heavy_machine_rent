@@ -154,17 +154,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Profile'),
-        actions: [
-          if (!_busy)
-            IconButton(
-              tooltip: 'Save',
-              icon: const Icon(Icons.save),
-              onPressed: _save,
-            ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('Profile')),
       body: AbsorbPointer(
         absorbing: _busy,
         child: Stack(
@@ -291,8 +281,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     AppGlyph.save,
                                     color: Colors.white,
                                     selected: true,
+                                    size: 22,
                                   ),
-                                  child: const Text('Save changes'),
+                                  child: const Text(
+                                    'Save changes',
+                                    style: TextStyle(fontSize: 12),
+                                  ),
                                 ),
                               ),
                               const SizedBox(width: 10),
@@ -304,6 +298,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     color: Theme.of(
                                       context,
                                     ).colorScheme.primary,
+                                    size: 22,
                                   ),
                                   child: const Text('Reset'),
                                 ),
