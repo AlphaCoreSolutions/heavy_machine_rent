@@ -133,12 +133,60 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
   final List<_LocUnitForm> _locForms = [];
 
+  final Set<int> _allowedNatIds = <int>{};
+  bool _loadingAllowedNats = false;
+  // ignore: unused_field
+  String? _allowedNatError;
+
+  Future<void> _loadAllowedNationalitiesForEquipment() async {
+    if (_loadingAllowedNats) return;
+    setState(() {
+      _loadingAllowedNats = true;
+      _allowedNatError = null;
+    });
+    try {
+      final drivers = await api.Api.getEquipmentDriversByEquipmentId(
+        widget.equipmentId,
+      );
+      // Collect unique, valid nationality IDs
+      final ids = drivers
+          .map(
+            (d) => d.driverNationalityId ?? d.driverNationalityId,
+          ) // depending on your model field name
+          .where((id) => (id ?? 0) > 0)
+          .cast<int>()
+          .toSet();
+
+      // If any selected nationality is now invalid, clear it
+      for (final f in _locForms) {
+        if (f.nationalityId != null && !ids.contains(f.nationalityId)) {
+          f.nationalityId = null;
+        }
+      }
+
+      if (!mounted) return;
+      setState(() {
+        _allowedNatIds
+          ..clear()
+          ..addAll(ids);
+        _loadingAllowedNats = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _allowedNatError = 'Could not load equipment driver nationalities.';
+        _loadingAllowedNats = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _future = api.Api.getEquipmentById(widget.equipmentId);
     _loadResponsibilityNames();
     _loadNationalities();
+    _loadAllowedNationalitiesForEquipment();
     _ensureLocForms(1);
   }
 
@@ -811,27 +859,53 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                       switchOutCurve: Curves.easeIn,
                       child: Column(
                         key: ValueKey(_locForms.length),
-                        children: List.generate(_locForms.length, (i) {
-                          final form = _locForms[i];
-                          return Padding(
-                            padding: EdgeInsets.only(
-                              bottom: i == _locForms.length - 1 ? 0 : 12,
+                        children: [
+                          if (_loadingAllowedNats) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'Loading available driver nationalities…',
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                            child: _LocCard(
-                              index: i + 1,
-                              form: form,
-                              nationalities: _nats,
-                              onRemove: _locForms.length > 1
-                                  ? () => setState(() {
-                                      form.dispose();
-                                      _locForms.removeAt(i);
-                                      _qty = _locForms.length;
-                                      _qtyCtrl.text = '$_qty';
-                                    })
-                                  : null,
+                          ] else if (_allowedNatIds.isEmpty) ...[
+                            const SizedBox(height: 8),
+                            Text(
+                              'No driver nationalities available for this equipment.',
+                              style: Theme.of(context).textTheme.bodySmall,
                             ),
-                          );
-                        }),
+                          ],
+                          ...List.generate(_locForms.length, (i) {
+                            final form = _locForms[i];
+
+                            // Filtered nationalities for this equipment
+                            final allowedNats = _nats.where((n) {
+                              final id = n.nationalityId ?? 0;
+                              return _allowedNatIds.contains(id);
+                            }).toList();
+
+                            // If nothing allowed, we’ll disable the dropdown inside the card
+                            //final hasAllowed = allowedNats.isNotEmpty;
+
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                bottom: i == _locForms.length - 1 ? 0 : 12,
+                              ),
+                              child: _LocCard(
+                                index: i + 1,
+                                form: form,
+                                nationalities:
+                                    allowedNats, // ← pass the filtered list
+                                onRemove: _locForms.length > 1
+                                    ? () => setState(() {
+                                        form.dispose();
+                                        _locForms.removeAt(i);
+                                        _qty = _locForms.length;
+                                        _qtyCtrl.text = '$_qty';
+                                      })
+                                    : null,
+                              ),
+                            );
+                          }),
+                        ],
                       ),
                     ),
                   ],
@@ -995,7 +1069,7 @@ class _MiniPill extends StatelessWidget {
 }
 
 class _LocCard extends StatelessWidget {
-  const _LocCard({
+  _LocCard({
     required this.index,
     required this.form,
     required this.nationalities,
@@ -1006,6 +1080,7 @@ class _LocCard extends StatelessWidget {
   final _LocUnitForm form;
   final List<Nationality> nationalities;
   final VoidCallback? onRemove;
+  bool get hasOptions => nationalities.isNotEmpty;
 
   @override
   Widget build(BuildContext context) {
@@ -1064,7 +1139,7 @@ class _LocCard extends StatelessWidget {
           const SizedBox(height: 10),
 
           DropdownButtonFormField<int>(
-            value: form.nationalityId,
+            value: hasOptions ? form.nationalityId : null,
             decoration: const InputDecoration(
               labelText: 'Driver nationality *',
             ),
@@ -1080,9 +1155,10 @@ class _LocCard extends StatelessWidget {
                 child: Text(label),
               );
             }).toList(),
-            onChanged: (v) => form.nationalityId = v,
+            onChanged: hasOptions ? (v) => form.nationalityId = v : null,
           ),
-          const SizedBox(height: 8),
+
+          SizedBox(height: 8),
 
           AInput(
             controller: form.dAddr,

@@ -1,5 +1,38 @@
 {
     "@@locale": "en",
+    "appName": "HeavyRent",
+    "tooltipLogin": "Login",
+    "tooltipLogout": "Logout",
+    "admin": "Admin",
+    "signedIn": "Signed in",
+    "signedOut": "Signed out",
+    "heroTitle": "Heavy gear, light work",
+    "heroSubtitle": "Rent certified machines with drivers, on-demand.",
+    "findEquipment": "Find equipment",
+    "popularEquipment": "Popular equipment",
+    "seeMore": "See more",
+    "couldNotLoadEquipment": "Could not load equipment",
+    "retry": "Retry",
+    "noEquipmentYet": "No equipment yet.",
+    "rent": "Rent",
+    "fromPerDay": "From {price} / day",
+    "@fromPerDay": {
+        "description": "Price line shown under equipment cards",
+        "placeholders": {
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "distanceKm": "{km} km",
+    "@distanceKm": {
+        "description": "Distance label",
+        "placeholders": {
+            "km": {
+                "type": "String"
+            }
+        }
+    },
     "langEnglish": "English",
     "langArabic": "Arabic",
     "appTitle": "HeavyRent",
@@ -66,5 +99,528 @@
     "filterApply": "Apply Filters",
     "filterReset": "Reset",
     "emptyTitle": "No results",
-    "emptyBody": "Try adjusting filters or search keywords"
+    "emptyBody": "Try adjusting filters or search keywords",
+    "appSettings": "App settings",
+    "selectTime": "Select time",
+    "settingsTheme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "settingsNotifications": "Notifications",
+    "test": "Test",
+    "testNotificationMessage": "This is a test notification",
+    "pushNotifications": "Push notifications",
+    "inAppBanners": "In-app banners",
+    "emailUpdates": "Email updates",
+    "sound": "Sound",
+    "quietHours": "Quiet hours",
+    "from": "From",
+    "to": "To",
+    "quietHoursHint": "During quiet hours, sounds are muted. (Demo—wire to your push provider later.)",
+    "settingsTitle": "Settings",
+    "notAvailableTitle": "Not available",
+    "signInRequiredTitle": "Sign in required",
+    "restrictedPageMessage": "This page is only available for accounts with user type #17 or #20.",
+    "signInPrompt": "Please sign in to continue.",
+    "accountTitle": "Account",
+    "statusCompleted": "Completed",
+    "statusIncomplete": "Incomplete",
+    "logoutConfirmTitle": "Log out?",
+    "logoutConfirmBody": "You can sign in again anytime.",
+    "cancel": "Cancel",
+    "completeYourAccountBody": "Complete your account to unlock Organization and My equipment.",
+    "completeAction": "Complete",
+    "accountSection": "Account",
+    "manageSection": "Manage",
+    "activitySection": "Activity",
+    "profileTitle": "Profile",
+    "profileSubtitle": "Your personal & company details",
+    "appSettingsSubtitle": "Theme, language, notifications",
+    "organizationTitle": "Organization",
+    "organizationSubtitle": "Company info & compliance",
+    "myEquipmentTitle": "My equipment",
+    "myEquipmentSubtitle": "View and manage your fleet",
+    "requestsTitle": "Requests",
+    "requestsSubtitle": "Manage your requests",
+    "superAdminTitle": "Super Admin",
+    "superAdminSubtitle": "Open super admin panel (debug)",
+    "contractsTitle": "Contracts",
+    "contractsSubtitle": "Pending, open, finished, closed",
+    "ordersHistoryTitle": "Orders (history)",
+    "ordersHistorySubtitle": "Past orders & receipts",
+    "mobileNumber": "Mobile number",
+    "codeLabel": "Code",
+    "codeHint": "966",
+    "mobile9DigitsLabel": "Mobile (9 digits)",
+    "mobile9DigitsHint": "5XX XXX XXX",
+    "enterNineDigits": "Enter 9 digits",
+    "resendCode": "Resend code",
+    "devOtpHint": "DEV OTP: {code}",
+    "@devOtpHint": {
+        "placeholders": {
+            "code": {
+                "type": "String"
+            }
+        }
+    },
+    "enterCodeTitle": "Enter code",
+    "verifyAndContinue": "Verify & continue",
+    "didntGetItTapResend": "Didn't get it? Tap \"Resend code\".",
+    "welcomeBack": "Welcome back",
+    "signInWithMobileBlurb": "Sign in with your mobile number.\nFast, secure, OTP-based login.",
+    "neverShareNumber": "We’ll never share your number.",
+    "otpSent": "OTP sent",
+    "couldNotStartVerification": "Could not start verification",
+    "enterFourDigitCode": "Enter the 4-digit code",
+    "invalidOrExpiredCode": "Invalid or expired code",
+    "fullName": "Full name",
+    "passwordKeep": "Password",
+    "validationMinChars": "Minimum {min} characters",
+    "@validationMinChars": {
+        "placeholders": {
+            "min": {
+                "type": "int"
+            }
+        }
+    },
+    "actionSaveChanges": "Save changes",
+    "actionReset": "Reset",
+    "profileCompletePrompt": "Complete your profile",
+    "failedToLoadProfile": "Failed to load profile",
+    "couldNotSaveProfile": "Could not save profile",
+    "profileSaved": "Profile saved",
+    "orgTitle": "Organization",
+    "orgCreateTitle": "Create organization",
+    "orgType": "Type",
+    "orgStatus": "Status",
+    "orgNameArabic": "Name (Arabic)",
+    "orgNameEnglish": "Name (English)",
+    "orgBriefArabic": "Brief (Arabic)",
+    "orgBriefEnglish": "Brief (English)",
+    "orgCountry": "Country",
+    "orgCity": "City",
+    "orgAddress": "Address",
+    "orgCrNumber": "C.R. Number",
+    "orgVatNumber": "VAT Number",
+    "orgMainMobile": "Main mobile",
+    "orgSecondMobile": "Second mobile",
+    "orgMainEmail": "Main email",
+    "orgSecondEmail": "Second email",
+    "actionCreate": "Create",
+    "actionSave": "Save",
+    "edit": "edit",
+    "orgFilesTitle": "Files • Attachments",
+    "orgAddFile": "Add file",
+    "orgCreateToManageFiles": "Create organization to manage files.",
+    "orgNoFilesYet": "No files yet.",
+    "attachmentTitle": "Attachment",
+    "fileType": "File type",
+    "addFileNameRequired": "Add file name *",
+    "pickFile": "Pick file *",
+    "descriptionOptional": "Description (optional)",
+    "issueDate": "Issue date",
+    "expireDate": "Expire date",
+    "image": "Image",
+    "active": "Active",
+    "expired": "Expired",
+    "orgEnterNameMin3": "Please enter a name (≥ 3 chars)",
+    "orgChooseTypeStatusCity": "Please choose Status, Type and City",
+    "createFailed": "Create failed",
+    "updateFailed": "Update failed",
+    "orgCreated": "Organization created",
+    "orgUpdated": "Organization updated",
+    "orgCouldNotSave": "Could not save organization",
+    "failedToLoadOrganization": "Failed to load organization",
+    "orgCreateFirst": "Create organization first",
+    "chooseFileType": "Choose a file type",
+    "pickFileNameRequired": "Pick a file — name is required",
+    "fileAdded": "File added",
+    "fileUpdated": "File updated",
+    "couldNotSaveFile": "Could not save file",
+    "deleteFileTitle": "Delete file",
+    "deleteFileBody": "Are you sure you want to delete this file?",
+    "delete": "Delete",
+    "deleteMissingId": "Could not delete: missing file id",
+    "fileDeleted": "File deleted",
+    "couldNotDeleteFile": "Could not delete file",
+    "myEquipSignInBody": "You need to sign in to manage your equipment.",
+    "orgNeededTitle": "Organization needed",
+    "orgNeededBody": "Add your organization before listing or managing equipment.",
+    "actionAddOrganization": "Add organization",
+    "submittedMayTakeMoment": "Submitted. It may take a moment to appear.",
+    "cantAddEquipment": "Can’t add equipment",
+    "actionOk": "OK",
+    "unexpectedErrorWithMsg": "Unexpected error: {msg}",
+    "@unexpectedErrorWithMsg": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "actionAddEquipment": "Add equipment",
+    "failedToLoadYourEquipment": "Failed to load your equipment.\n{error}",
+    "@failedToLoadYourEquipment": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "noEquipmentYetTapAdd": "No equipment yet. Tap “Add equipment” to create one.",
+    "openAsCustomerToRent": "Open as customer to rent",
+    "signInRequired": "Sign In Required",
+    "equipSettingsTitle": "Equipment settings",
+    "tabOverview": "Overview",
+    "tabImages": "Images",
+    "tabTerms": "Terms",
+    "tabDrivers": "Drivers",
+    "tabCertificates": "Certificates",
+    "basicInfo": "Basic info",
+    "nameEn": "Name (EN)",
+    "nameAr": "Name (AR)",
+    "exampleExcavator": "e.g. Excavator 22T",
+    "exampleExcavatorAr": "e.g. حفار ٢٢ طن",
+    "pricing": "Pricing",
+    "pricePerHour": "Price / hour",
+    "downPaymentPct": "Down payment: {pct}% → {amount}",
+    "@downPaymentPct": {
+        "placeholders": {
+            "pct": {},
+            "amount": {}
+        }
+    },
+    "quantityAndStatus": "Quantity & Status",
+    "quantity": "Quantity",
+    "equipmentWeight": "Equipment weight",
+    "activeVisible": "Active (visible)",
+    "inactiveHidden": "Inactive (hidden)",
+    "saveChanges": "Save changes",
+    "noteSendsFullObject": "Note: saving sends a full object (IDs only for domains) to PUT /Equipment/update.",
+    "saved": "Saved",
+    "saveFailedWithMsg": "Save failed: {msg}",
+    "@saveFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "uploading": "Uploading…",
+    "actionAddImage": "Add image",
+    "actionRefresh": "Refresh",
+    "noImagesYet": "No images yet.",
+    "imageUploaded": "Image uploaded",
+    "uploadFailedWithMsg": "Upload failed: {msg}",
+    "@uploadFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "imageDeleted": "Image deleted",
+    "deleteFailedWithMsg": "Delete failed: {msg}",
+    "@deleteFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "actionDelete": "Delete",
+    "actionEdit": "Edit",
+    "actionAddTerm": "Add term",
+    "actionSaveOrder": "Save order",
+    "noTermsYetCreateFirst": "No terms yet. Click “Add term” to create your first item.",
+    "addTerm": "Add term",
+    "editTerm": "Edit term",
+    "english": "English",
+    "arabic": "Arabic",
+    "order": "Order",
+    "actionCancel": "Cancel",
+    "deleted": "Deleted",
+    "orderSaved": "Order saved",
+    "orderSaveFailedWithMsg": "Order save failed: {msg}",
+    "@orderSaveFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "driver": "Driver",
+    "nationalityIdLabel": "Nationality id:",
+    "actionAddDriver": "Add driver",
+    "noDriversYet": "No drivers yet.",
+    "noFiles": "No files",
+    "fromDate": "From",
+    "toDate": "To",
+    "actionAddFile": "Add file",
+    "deleteFileQ": "Delete file?",
+    "allFieldsRequired": "All fields are required",
+    "fileAndTypeRequired": "File and Type ID are required",
+    "actionAddCertificate": "Add certificate",
+    "noCertificatesYet": "No certificates yet.",
+    "addCertificate": "Add certificate",
+    "editCertificate": "Edit certificate",
+    "chooseFile": "Choose file",
+    "pdfSelected": "PDF selected",
+    "nameEnReq": "Name (EN) *",
+    "nameArReq": "Name (AR) *",
+    "typeDomain10Req": "Type (Domain 10) *",
+    "issueDateReq": "Issue date *",
+    "expireDateReq": "Expire date *",
+    "isImage": "Is image",
+    "saving": "Saving…",
+    "pleasePickIssueAndExpire": "Please pick both Issue and Expire dates.",
+    "pleaseChooseType": "Please choose a Type.",
+    "pleaseChooseDocument": "Please choose a document file.",
+    "deleteCertificateQ": "Delete certificate?",
+    "noPastOrdersYet": "No past orders yet",
+    "failedToLoadOrders": "Failed to load orders",
+    "myRequestsTitle": "My requests",
+    "signInToViewRequests": "Sign in to view your requests",
+    "signInToViewRequestsBody": "You need to be logged in to see your request history and details.",
+    "failedToLoadRequests": "Failed to load requests",
+    "noRequestsYet": "No requests yet.",
+    "requestNumber": "Request #",
+    "asVendor": "As Vendor",
+    "asCustomer": "As Customer",
+    "daysSuffix": "days",
+    "requestDetailsTitle": "Request details",
+    "failedToLoadRequest": "Failed to load request",
+    "sectionDuration": "Duration",
+    "sectionPriceBreakdown": "Price breakdown",
+    "priceBase": "Base",
+    "priceDistance": "Distance",
+    "priceVat": "VAT",
+    "priceTotal": "Total",
+    "priceDownPayment": "Down payment",
+    "sectionAssignDrivers": "Assign drivers",
+    "errorLoadDriverLocations": "Could not load driver locations.",
+    "emptyNoDriverLocations": "No driver locations for this request.",
+    "errorNoDriversForNationality": "Some units have no available drivers for the requested nationality.",
+    "errorAssignDriverEachUnit": "Select a driver for every unit.",
+    "actionCreateContract": "Create contract",
+    "creatingEllipsis": "Creating…",
+    "actionCancelRequest": "Cancel request",
+    "unitLabel": "Unit",
+    "requestedNationality": "Requested nationality",
+    "dropoffLabel": "Drop-off",
+    "coordinatesLabel": "Coords",
+    "emptyNoDriversForThisNationality": "No drivers available for this nationality.",
+    "labelAssignDriverFiltered": "Assign driver (filtered by nationality)",
+    "hintSelectDriver": "Select driver",
+    "orderNumber": "Order #",
+    "requestListLeadingLabel": "Request #",
+    "currencySar": "SAR",
+    "pending": "Pending",
+    "daySingular": "day",
+    "toDateSep": "to",
+    "detailsCopied": "Details copied",
+    "requestSubmittedTitle": "Request submitted",
+    "successTitle": "Success!",
+    "numberPendingChip": "Number pending",
+    "requestSubmittedBody": "Your request has been submitted.",
+    "requestLabel": "Request:",
+    "requestHashPrefix": "Request #",
+    "statusLabel": "Status",
+    "dateRangeLabel": "Date range",
+    "totalLabel": "Total",
+    "actionCopyDetails": "Copy details",
+    "actionDone": "Done",
+    "@daysCount": {
+        "description": "Pluralized day label used when needed"
+    },
+    "daysCount": "{count, plural, one {# day} other {# days}}",
+    "equipmentTitle": "Equipment",
+    "searchByDescriptionHint": "Search by description…",
+    "failedToLoadEquipmentList": "Failed to load equipment list",
+    "noResults": "No results",
+    "equipEditorTitleNew": "New equipment",
+    "actionContinue": "Continue",
+    "errorCouldNotLoadFactories": "Could not load factories",
+    "errorChooseEquipmentType": "Choose an equipment type",
+    "errorChooseFactory": "Choose a factory",
+    "errorEnterDescription": "Enter a description (EN or AR)",
+    "errorFailedToLoadOptions": "Failed to load options",
+    "sectionType": "Type",
+    "labelEquipmentList": "Equipment list",
+    "selectedPrefix": "Selected:",
+    "sectionOwnershipStatus": "Ownership & Status",
+    "labelFactory": "Factory",
+    "hintSelectFactory": "Select a factory",
+    "tooltipRefreshFactories": "Refresh factories",
+    "labelStatusD11": "Status (Domain 11)",
+    "sectionLogistics": "Logistics",
+    "labelCategoryD9": "Category (Domain 9)",
+    "labelFuelRespD7": "Fuel responsibility (Domain 7)",
+    "labelTransferTypeD8": "Transfer type (Domain 8)",
+    "labelTransferRespD7": "Transfer responsibility (Domain 7)",
+    "sectionDriverRespD7": "Driver responsibilities (Domain 7)",
+    "labelTransport": "Transport",
+    "labelFood": "Food",
+    "labelHousing": "Housing",
+    "sectionDescriptions": "Descriptions",
+    "labelDescEnglish": "Description (English)",
+    "hintDescEnglish": "e.g. Excavator 22T",
+    "labelDescArabic": "Description (Arabic)",
+    "hintDescArabic": "e.g. 22T Excavator (Arabic)",
+    "sectionPricing": "Pricing",
+    "labelPricePerDay": "Price per day",
+    "hintPricePerDay": "e.g. 1600",
+    "labelPricePerHour": "Price per hour",
+    "hintPricePerHour": "e.g. 160",
+    "ruleHoursPerDayAndDp": "Rule: 1 day = {hours} hours. Down payment = {percent}%.",
+    "downPaymentAuto": "Down payment (auto): {amount}",
+    "sectionQuantity": "Quantity",
+    "labelQuantityAlsoAvailable": "Quantity (also used as Available)",
+    "hintQuantity": "e.g. 1",
+    "noteAvailableReserved": "Available = Quantity, Reserved starts at 0 (both updated later).",
+    "unnamedFactory": "Unnamed factory",
+    "contractTitle": "Contract",
+    "actionOpenContractSheet": "Open Contract Sheet",
+    "actionPrint": "Print",
+    "printingStubMessage": "Printing stub — wire up printing/pdf here.",
+    "errorFailedToLoadContractDetails": "Failed to load contract details",
+    "errorNoContractSlice": "No contract slice found/created.",
+    "rentalAgreementHeader": "RENTAL AGREEMENT",
+    "contractNumber": "Contract #{num}",
+    "@contractNumber": {
+        "placeholders": {
+            "num": {}
+        }
+    },
+    "sectionParties": "Parties",
+    "sectionRequestSummary": "Request Summary",
+    "sectionEquipment": "Equipment",
+    "sectionResponsibilities": "Responsibilities (Domain 7)",
+    "sectionTerms": "Terms",
+    "sectionDriverAssignments": "Driver Assignments (per requested unit)",
+    "sectionSignatures": "Signatures",
+    "vendorLabel": "Vendor",
+    "customerLabel": "Customer",
+    "requestNumberLabel": "Request No.",
+    "quantityLabel": "Quantity",
+    "daysLabel": "Days",
+    "rentPerDayLabel": "Rent / Day",
+    "subtotalLabel": "Subtotal",
+    "vatLabel": "VAT",
+    "downPaymentLabel": "Down Payment",
+    "titleLabel": "Title",
+    "categoryLabel": "Category",
+    "fuelResponsibilityLabel": "Fuel Responsibility",
+    "driverFoodLabel": "Driver Food",
+    "driverHousingLabel": "Driver Housing",
+    "driverTransportLabel": "Driver Transport",
+    "responsibilityValue": "{label} (ID #{id})",
+    "@responsibilityValue": {
+        "placeholders": {
+            "label": {},
+            "id": {}
+        }
+    },
+    "termDownPayment": "Down payment before mobilization; remaining as per agreed schedule.",
+    "termManufacturerGuidelines": "All equipment to be used according to manufacturer guidelines.",
+    "termCustomerSiteAccess": "Customer is responsible for site access and safe working environment.",
+    "termLiability": "Damages and liability per company terms and applicable law.",
+    "equipmentTermsHeading": "Equipment Terms:",
+    "noDriverLocations": "No driver locations found for this request.",
+    "requestedNationalityLabel": "Requested nationality",
+    "coordsLabel": "Coords",
+    "assignedDriverLabel": "Assigned driver",
+    "companyLogo": "VISION CIT",
+    "detailHash": "Detail #{id}",
+    "@detailHash": {
+        "placeholders": {
+            "id": {}
+        }
+    },
+    "contractSheetTitle": "Contract Sheet",
+    "contractChip": "Contract #{id}",
+    "@contractChip": {
+        "placeholders": {
+            "id": {}
+        }
+    },
+    "requestChip": "Req #{id}",
+    "@requestChip": {
+        "placeholders": {
+            "id": {}
+        }
+    },
+    "qtyChip": "Qty: {qty}",
+    "@qtyChip": {
+        "placeholders": {
+            "qty": {
+                "type": "int"
+            }
+        }
+    },
+    "dateRangeChip": "{from} \u2192 {to}",
+    "@dateRangeChip": {
+        "placeholders": {
+            "from": {},
+            "to": {}
+        }
+    },
+    "roleVendor": "Role: Vendor",
+    "roleCustomer": "Role: Customer",
+    "rowNothingToSave": "Nothing to save for this row.",
+    "rowLabel": "u{unit} {date}",
+    "@rowLabel": {
+        "placeholders": {
+            "unit": {},
+            "date": {}
+        }
+    },
+    "rowSaved": "Saved ({label}).",
+    "@rowSaved": {
+        "placeholders": {
+            "label": {}
+        }
+    },
+    "rowSaveFailed": "Save failed ({label}).",
+    "@rowSaveFailed": {
+        "placeholders": {
+            "label": {}
+        }
+    },
+    "endpoint405Noop": "Update endpoint not enabled (405). Nothing changed on the server.",
+    "savedChip": "Saved",
+    "unsavedChip": "Unsaved",
+    "plannedLabel": "Planned",
+    "actualLabel": "Actual",
+    "overtimeLabel": "Overtime",
+    "customerNoteLabel": "Customer note",
+    "vendorNoteLabel": "Vendor note",
+    "savingEllipsis": "Saving…",
+    "infoCreateActivateOrg": "Please create/activate your Organization first.",
+    "noContractsYet": "No contracts yet.",
+    "notificationsTitle": "Notifications",
+    "noNotificationsYet": "No notifications yet.",
+    "chatsTitle": "Chats",
+    "searchChats": "Search chats",
+    "noChatsYet": "No chats yet.",
+    "chatTitle": "Chat #{id}",
+    "@chatTitle": {
+        "placeholders": {
+            "id": {}
+        }
+    },
+    "threadActionsSoon": "Thread actions coming soon",
+    "messageHint": "Message",
+    "actionSend": "Send",
+    "sendingEllipsis": "Sending…",
+    "timeNow": "now",
+    "timeMinutesShort": "{m}m",
+    "@timeMinutesShort": {
+        "placeholders": {
+            "m": {}
+        }
+    },
+    "timeHoursShort": "{h}h",
+    "@timeHoursShort": {
+        "placeholders": {
+            "h": {}
+        }
+    },
+    "timeDaysShort": "{d}d",
+    "@timeDaysShort": {
+        "placeholders": {
+            "d": {}
+        }
+    }
 }

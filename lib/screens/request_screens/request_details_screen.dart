@@ -2,6 +2,7 @@
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 import 'package:heavy_new/core/api/api_handler.dart' as api;
@@ -17,6 +18,10 @@ import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
 import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class RequestDetailsScreen extends StatefulWidget {
   const RequestDetailsScreen({super.key, required this.requestId});
@@ -294,10 +299,10 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request details'),
+        title: Text(context.l10n.requestDetailsTitle),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: context.l10n.actionRefresh,
             onPressed: () {
               setState(() {
                 _reqFuture = api.Api.getRequestById(widget.requestId);
@@ -315,7 +320,12 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
             return ListView(children: const [ShimmerTile(), ShimmerTile()]);
           }
           if (snap.hasError || !snap.hasData) {
-            return const Center(child: Text('Failed to load request'));
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(context.l10n.failedToLoadRequest),
+              ),
+            );
           }
 
           final r = snap.data!;
@@ -347,53 +357,71 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              // Header
+              // ---------- Header (wraps nicely on small screens) ----------
               Glass(
                 radius: 18,
                 child: Padding(
                   padding: const EdgeInsets.all(12),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          'Request #$reqNo',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w800),
+                      CircleAvatar(
+                        radius: 18,
+                        backgroundColor: cs.surfaceVariant,
+                        child: Icon(
+                          Icons.request_page_outlined,
+                          color: cs.onSurfaceVariant,
                         ),
                       ),
-                      if (statusStr.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: cs.primaryContainer,
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            statusStr,
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(color: cs.onPrimaryContainer),
-                          ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            // Title gets all horizontal space, chips wrap beneath if needed
+                            Text(
+                              '${context.l10n.requestNumber} $reqNo',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 8),
+                            if (statusStr.isNotEmpty)
+                              Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: cs.primaryContainer,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    statusStr,
+                                    softWrap: false,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(
+                                          color: cs.onPrimaryContainer,
+                                        ),
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
+                      ),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 12),
 
-              // Duration
-              Glass(
-                radius: 18,
-                child: ListTile(
-                  title: const Text('Duration'),
-                  subtitle: Text('From $from  •  To $to  •  $days day(s)'),
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Price
+              // ---------- Duration (uses Wrap so it never overflows) ----------
               Glass(
                 radius: 18,
                 child: Padding(
@@ -402,24 +430,63 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Price breakdown',
+                        context.l10n.sectionDuration,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 10),
-                      _row('Base', _money(base)),
-                      if (distance > 0) _row('Distance', _money(distance)),
-                      _row('VAT', _money(vat)),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 6,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          _iconText(
+                            Icons.calendar_today_outlined,
+                            '${context.l10n.fromDate} $from',
+                          ),
+                          _iconText(
+                            Icons.arrow_forward,
+                            '${context.l10n.toDate} $to',
+                          ),
+                          _iconText(
+                            Icons.schedule_outlined,
+                            '$days ${context.l10n.daysSuffix}',
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---------- Price breakdown ----------
+              Glass(
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sectionPriceBreakdown,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 10),
+                      _row(context.l10n.priceBase, _money(base)),
+                      if (distance > 0)
+                        _row(context.l10n.priceDistance, _money(distance)),
+                      _row(context.l10n.priceVat, _money(vat)),
                       const Divider(height: 20),
-                      _rowBold('Total', _money(total)),
+                      _rowBold(context.l10n.priceTotal, _money(total)),
                       const SizedBox(height: 4),
-                      _row('Down payment', _money(dp)),
+                      _row(context.l10n.priceDownPayment, _money(dp)),
                     ],
                   ),
                 ),
               ),
               const SizedBox(height: 16),
 
-              // ---- DRIVER LOCATION SECTION (split load via AdvanceSearch) ----
+              // ---------- Assign drivers (vendor) ----------
               if (canConfirm) ...[
                 Glass(
                   radius: 18,
@@ -429,7 +496,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Assign drivers',
+                          context.l10n.sectionAssignDrivers,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
@@ -450,14 +517,14 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    'Could not load driver locations.',
+                                    context.l10n.errorLoadDriverLocations,
                                     style: TextStyle(color: cs.error),
                                   ),
                                   const SizedBox(height: 6),
                                   OutlinedButton.icon(
                                     onPressed: _refreshRdl,
                                     icon: const Icon(Icons.refresh),
-                                    label: const Text('Retry'),
+                                    label: Text(context.l10n.actionRetry),
                                   ),
                                 ],
                               );
@@ -465,9 +532,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                             final rdls =
                                 rdlSnap.data ?? const <RequestDriverLocation>[];
                             if (rdls.isEmpty) {
-                              return const Text(
-                                'No driver locations for this request.',
-                              );
+                              return Text(context.l10n.emptyNoDriverLocations);
                             }
 
                             return FutureBuilder<List<EquipmentDriver>>(
@@ -500,7 +565,6 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                                     : '#${n.nationalityId}')),
                                     };
 
-                                    // compute guards for button
                                     final hasChoiceForEach =
                                         _everyRdlHasAtLeastOneChoice(
                                           rdls,
@@ -550,7 +614,9 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                               bottom: 2,
                                             ),
                                             child: Text(
-                                              'Some units have no available drivers for the requested nationality.',
+                                              context
+                                                  .l10n
+                                                  .errorNoDriversForNationality,
                                               style: TextStyle(color: cs.error),
                                             ),
                                           ),
@@ -561,7 +627,9 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                               bottom: 2,
                                             ),
                                             child: Text(
-                                              'Select a driver for every unit.',
+                                              context
+                                                  .l10n
+                                                  .errorAssignDriverEachUnit,
                                               style: TextStyle(color: cs.error),
                                             ),
                                           ),
@@ -590,8 +658,10 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                                               : const Icon(Icons.description),
                                           label: Text(
                                             _confirmSubmitting
-                                                ? 'Creating…'
-                                                : 'Create contract',
+                                                ? context.l10n.creatingEllipsis
+                                                : context
+                                                      .l10n
+                                                      .actionCreateContract,
                                           ),
                                         ),
                                       ],
@@ -609,7 +679,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                 const SizedBox(height: 16),
               ],
 
-              // Cancel (only when pending)
+              // ---------- Cancel (pending only) ----------
               Row(
                 children: [
                   Expanded(
@@ -621,7 +691,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                               // TODO: cancel flow
                             }
                           : null,
-                      child: const Text('Cancel request'),
+                      child: Text(context.l10n.actionCancelRequest),
                     ),
                   ),
                 ],
@@ -645,12 +715,10 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     final ridShown = u.requestDriverLocationId;
 
     final natId = u.driverNationalityId;
-    final natName = natNameById[natId] ?? '#${natId}';
+    final natName = natNameById[natId] ?? '#$natId';
 
-    // filter + dedupe
     final drivers = _driversForNat(allDrivers, natId);
 
-    // selected value (map → fallback to existing)
     int? sel = _assignDriverByTileKey[keyForTile];
     if (sel == null || sel == 0) {
       final uId = u.equipmentDriverId;
@@ -660,8 +728,10 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
         .map((d) => d.equipmentDriverId)
         .whereType<int>()
         .toSet();
-    if (sel != null && !validIds.contains(sel))
-      sel = null; // keep Dropdown happy
+    if (sel != null && !validIds.contains(sel)) sel = null;
+
+    // Long addresses/coords can overflow; use Wrap and limit line lengths.
+    final drop = u.dropoffAddress.trim();
 
     return Container(
       key: ValueKey('tile_$keyForTile'),
@@ -675,21 +745,45 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Unit #$ridShown',
+            '${context.l10n.unitLabel} #$ridShown',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(
               context,
             ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
-          Text('Requested nationality: $natName'),
-          if (u.dropoffAddress.trim().isNotEmpty)
-            Text('Drop-off: ${u.dropoffAddress.trim()}'),
-          Text('Coords: ${u.dLatitude}, ${u.dLongitude}'),
-          const SizedBox(height: 8),
+
+          // Meta as wrap to avoid overflow
+          Wrap(
+            spacing: 12,
+            runSpacing: 4,
+            children: [
+              _metaChip(
+                context,
+                Icons.flag_outlined,
+                '${context.l10n.requestedNationality}: $natName',
+              ),
+              if (drop.isNotEmpty)
+                _metaChip(
+                  context,
+                  Icons.place_outlined,
+                  '${context.l10n.dropoffLabel}: $drop',
+                  maxWidthFraction: 0.65,
+                ),
+              _metaChip(
+                context,
+                Icons.gps_fixed,
+                '${context.l10n.coordinatesLabel}: ${u.dLatitude}, ${u.dLongitude}',
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 10),
 
           if (drivers.isEmpty)
             Text(
-              'No drivers available for this nationality.',
+              context.l10n.emptyNoDriversForThisNationality,
               style: TextStyle(color: cs.error),
             )
           else
@@ -710,12 +804,61 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
               }).toList(),
               onChanged: (v) =>
                   setState(() => _assignDriverByTileKey[keyForTile] = v ?? 0),
-              decoration: const InputDecoration(
-                labelText: 'Assign driver (filtered by nationality)',
-                prefixIcon: Icon(Icons.badge_outlined),
+              decoration: InputDecoration(
+                labelText: context.l10n.labelAssignDriverFiltered,
+                prefixIcon: const Icon(Icons.badge_outlined),
               ),
-              hint: const Text('Select driver'),
+              hint: Text(context.l10n.hintSelectDriver),
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _iconText(IconData icon, String text) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16),
+        const SizedBox(width: 6),
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 260),
+          child: Text(text, overflow: TextOverflow.ellipsis),
+        ),
+      ],
+    );
+  }
+
+  Widget _metaChip(
+    BuildContext context,
+    IconData icon,
+    String text, {
+    double maxWidthFraction = 0.9,
+  }) {
+    final maxWidth = MediaQuery.of(context).size.width * maxWidthFraction;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surface.withOpacity(.6),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(.6),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14),
+          const SizedBox(width: 6),
+          ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: Theme.of(context).textTheme.labelMedium,
+            ),
+          ),
         ],
       ),
     );

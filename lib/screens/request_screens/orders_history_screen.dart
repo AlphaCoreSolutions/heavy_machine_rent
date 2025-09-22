@@ -1,6 +1,7 @@
 // lib/screens/orders_history_screen.dart
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/screens/request_screens/request_details_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -13,6 +14,10 @@ import 'package:heavy_new/core/models/organization/organization_user.dart';
 
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class OrdersHistoryScreen extends StatefulWidget {
   const OrdersHistoryScreen({super.key});
@@ -116,13 +121,34 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
       r.status?.detailNameEnglish ??
       r.status?.detailNameArabic ??
       (r.statusId?.toString() ?? '');
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
+    // tiny helper for the status chip (local to build)
+    Widget _statusPill(String label) {
+      final showDash = label.trim().isEmpty;
+      final text = showDash ? '—' : label.trim();
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: cs.secondaryContainer,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: cs.outlineVariant.withOpacity(0.6)),
+        ),
+        child: Text(
+          text,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: cs.onSecondaryContainer,
+            fontWeight: FontWeight.w700,
+          ),
+          overflow: TextOverflow.ellipsis,
+        ),
+      );
+    }
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Orders (history)')),
+      appBar: AppBar(title: Text(context.l10n.ordersHistoryTitle)),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<RequestModel>>(
@@ -142,7 +168,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Failed to load orders',
+                          context.l10n.failedToLoadOrders,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
@@ -155,7 +181,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                         const SizedBox(height: 12),
                         FilledButton(
                           onPressed: _reload,
-                          child: const Text('Retry'),
+                          child: Text(context.l10n.actionRetry),
                         ),
                       ],
                     ),
@@ -171,7 +197,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'No past orders yet',
+                      context.l10n.noPastOrdersYet,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
@@ -182,7 +208,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
             return ListView.separated(
               padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 10),
+              separatorBuilder: (_, __) => const SizedBox(height: 12),
               itemBuilder: (_, i) {
                 final o = items[i];
                 final s = _status(o);
@@ -192,29 +218,90 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
 
                 return Glass(
                   radius: 16,
-                  child: ListTile(
-                    leading: CircleAvatar(
-                      backgroundColor: cs.surfaceVariant,
-                      child: AIcon(
-                        AppGlyph.invoice,
-                        color: cs.onSurfaceVariant,
-                      ),
-                    ),
-                    title: Text(
-                      'Order #$titleNo',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text('$from → $to  •  ${s.isEmpty ? '—' : s}'),
-                    trailing: const Icon(Icons.chevron_right),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) => RequestDetailsScreen(
                           requestId: o.requestId ?? titleNo,
                         ),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(12, 12, 12, 10),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header: icon + order number + status chip + chevron
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: cs.surfaceVariant,
+                                child: AIcon(
+                                  AppGlyph.invoice,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  '${context.l10n.order} #$titleNo',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              _statusPill(s),
+                              const SizedBox(width: 6),
+                              const Icon(Icons.chevron_right),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+                          const Divider(height: 1),
+
+                          // Dates row
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10, bottom: 6),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today_outlined,
+                                  size: 16,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    '${context.l10n.fromDate} $from',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: cs.onSurfaceVariant),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                const Icon(Icons.arrow_forward, size: 16),
+                                const SizedBox(width: 10),
+                                Flexible(
+                                  child: Text(
+                                    '${context.l10n.toDate} $to',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(color: cs.onSurfaceVariant),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

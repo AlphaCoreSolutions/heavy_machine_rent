@@ -3,7 +3,7 @@ import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 extension L10nX on BuildContext {
-  AppLocalizations get l10n => AppLocalizations.of(this);
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
   Locale get locale => Localizations.localeOf(this);
   bool get isArabic => locale.languageCode == 'ar';
 }

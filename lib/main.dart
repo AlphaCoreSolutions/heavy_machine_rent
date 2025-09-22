@@ -14,6 +14,7 @@ import 'package:heavy_new/foundation/ui/app_theme.dart';
 import 'package:heavy_new/foundation/ui/scroll_behavior.dart';
 import 'package:heavy_new/foundation/ui/transitions.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 
 // Shell & screens
 import 'package:heavy_new/screens/app/app_shell.dart';
@@ -32,11 +33,14 @@ import 'package:heavy_new/screens/app/app_settings_screen.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/employees_screen.dart';
-
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 
 // Models
 import 'package:heavy_new/core/models/equipment/equipment.dart';
+
+// ===== NEW: localization + prefs bindings =====
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:heavy_new/screens/app/app_prefs.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 Future _firebaseBackgroundMessage(RemoteMessage message) async {
@@ -51,7 +55,6 @@ void main() async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await Notifications().init();
-
   await Notifications().initLocalNotifications();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
@@ -69,7 +72,6 @@ void main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final hasNotif = message.notification != null;
     final payloadData = message.data.isEmpty ? null : jsonEncode(message.data);
-
     if (hasNotif) {
       try {
         await Notifications.showSimpleNotifications(
@@ -110,18 +112,39 @@ class HeavyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    navigatorKey;
+    final prefs = AppPrefs.instance; // ← get your app prefs singleton
 
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'Heavy Rental',
-      theme: AppTheme.light(),
-      darkTheme: AppTheme.dark(),
-      scrollBehavior: const AppScrollBehavior(),
-      themeMode: ThemeMode.system,
-      routerConfig: _router,
-      builder: (context, child) =>
-          OfflineBanner(child: child ?? const SizedBox.shrink()),
+    // Rebuild MaterialApp when theme OR locale changes
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: prefs.themeMode,
+      builder: (_, themeMode, __) {
+        return ValueListenableBuilder<Locale?>(
+          valueListenable: prefs.locale,
+          builder: (_, locale, __) {
+            return MaterialApp.router(
+              debugShowCheckedModeBanner: false,
+              // Use onGenerateTitle so it localizes with current context
+              onGenerateTitle: (ctx) =>
+                  AppLocalizations.of(ctx)?.appName ?? 'HeavyRent',
+              theme: AppTheme.light(),
+              darkTheme: AppTheme.dark(),
+              themeMode: themeMode, // ← driven by settings
+              locale: locale, // ← driven by settings
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
+              supportedLocales: const [Locale('en'), Locale('ar')],
+
+              // Directionality (RTL/LTR) is handled automatically by locale
+              scrollBehavior: const AppScrollBehavior(),
+              routerConfig: _router,
+              builder: (context, child) =>
+                  OfflineBanner(child: child ?? const SizedBox.shrink()),
+            );
+          },
+        );
+      },
     );
   }
 }
@@ -178,21 +201,18 @@ final GoRouter _router = GoRouter(
           pageBuilder: (context, state) =>
               sharedAxisX(child: const SettingsScreen()),
         ),
-        // App settings (general app prefs)
         GoRoute(
           path: '/settings/app',
           name: AppRoutes.settingsApp,
           pageBuilder: (context, state) =>
               fadeThroughPage(child: const AppSettingsScreen()),
         ),
-        // Profile lives under settings but keep a direct path for convenience
         GoRoute(
           path: '/profile',
           name: AppRoutes.profile,
           pageBuilder: (context, state) =>
               sharedAxisX(child: const ProfileScreen()),
         ),
-        // Employees is reachable from Settings (kept for now)
         GoRoute(
           path: '/employees',
           name: AppRoutes.employees,
@@ -222,26 +242,27 @@ final GoRouter _router = GoRouter(
               fadeThroughPage(child: const PhoneAuthScreen()),
         ),
 
+        // ===== FIXED: give these leading slashes for consistency =====
         GoRoute(
-          path: 'orders',
+          path: '/orders',
           name: 'orders',
           pageBuilder: (context, state) =>
               fadeThroughPage(child: const OrdersHistoryScreen()),
         ),
         GoRoute(
-          path: 'contracts',
+          path: '/contracts',
           name: 'contracts',
           pageBuilder: (context, state) =>
               fadeThroughPage(child: const ContractsScreen()),
         ),
         GoRoute(
-          path: 'chats',
+          path: '/chats',
           name: 'chats',
           pageBuilder: (context, state) =>
               sharedAxisX(child: const ChatListScreen()),
         ),
         GoRoute(
-          path: 'chats/:id',
+          path: '/chats/:id',
           name: 'chatThread',
           pageBuilder: (context, state) {
             final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
@@ -311,7 +332,8 @@ extension AppNav on BuildContext {
 
   // Settings hub + subpages
   void goToSettings() => go('/settings');
-  void goToSettingsApp() => go('/settings/app');
+  // Use push so the back button returns from App Settings:
+  void goToSettingsApp() => push('/settings/app'); // ← changed to push()
   void goToProfile() => go('/profile');
   void goToEmployees() => go('/employees');
 

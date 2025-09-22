@@ -2,6 +2,8 @@
 
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:heavy_new/core/models/user/nationality.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 // Auth & API
@@ -21,6 +23,11 @@ import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 
 const _ORG_FILE_BASE = 'https://sr.visioncit.com/StaticFiles/orgfileFiles/';
+
+extension _L10nX on BuildContext {
+  // ignore: unused_element
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class OrganizationScreen extends StatefulWidget {
   const OrganizationScreen({super.key, this.organizationId});
@@ -48,6 +55,36 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
 
   // Cache for on-server image existence checks
   final Map<String, Future<bool>> _existsCache = {};
+
+  Future<void> _refreshCountryRO() async {
+    // First: try your existing label logic
+    final label = _countryLabel();
+    if (label != '—') {
+      _countryRO.text = label;
+      return;
+    }
+
+    // If we still don't have a label and have a countryId, fetch it.
+    final id =
+        _orgSummary?.countryId ??
+        _selCity?.country?.nationalityId ??
+        _selCity?.nationalityId;
+    if (id != null && id > 0) {
+      try {
+        final Nationality nat = await api.Api.getNationalityById(id);
+        final name = (nat.nationalityNameEnglish?.trim().isNotEmpty ?? false)
+            ? nat.nationalityNameEnglish!.trim()
+            : (nat.nationalityNameArabic?.trim().isNotEmpty ?? false)
+            ? nat.nationalityNameArabic!.trim()
+            : '—';
+        _countryRO.text = name;
+      } catch (_) {
+        _countryRO.text = '—';
+      }
+    } else {
+      _countryRO.text = '—';
+    }
+  }
 
   // Selected (form)
   City? _selCity;
@@ -129,6 +166,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
           _loadOrgSummary(_orgId!),
           _loadFiles(),
           _loadMembers(),
+          _refreshCountryRO(),
         ]);
 
         // Selections from summary (defensive)
@@ -166,7 +204,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       }
     } catch (e, st) {
       _log('boot error: $e\n$st');
-      if (mounted) AppSnack.error(context, 'Failed to load organization');
+      if (mounted)
+        AppSnack.error(context, context.l10n.failedToLoadOrganization);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -283,7 +322,11 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       _orgSummary = org;
 
       _applySummaryToForm(org);
-      if (mounted) setState(() {}); // reflect selects/country text
+      if (mounted)
+        setState(() {
+          _countryRO.text = _countryLabel();
+          _refreshCountryRO();
+        }); // reflect selects/country text
     } catch (e) {
       _log('getOrganizationById failed: $e');
     }
@@ -302,11 +345,11 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     final nameOk =
         (_nameEn.text.trim().length >= 3) || (_nameAr.text.trim().length >= 3);
     if (!nameOk) {
-      AppSnack.error(context, 'Please enter a name (≥ 3 chars)');
+      AppSnack.error(context, context.l10n.orgEnterNameMin3);
       return;
     }
     if (_selType == null || _selStatus == null || _selCity == null) {
-      AppSnack.error(context, 'Please choose Status, Type and City');
+      AppSnack.error(context, context.l10n.orgChooseTypeStatusCity);
       return;
     }
 
@@ -340,16 +383,13 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
         // CREATE (envelope path)
         final env = await api.Api.addOrganizationEnvelope(payload);
         if (env.flag != true) {
-          AppSnack.error(context, env.message ?? 'Create failed');
+          AppSnack.error(context, env.message ?? context.l10n.createFailed);
           return;
         }
         // resolve id
         final newId = env.modelId ?? await _resolveMyOrgId();
         if (newId == null) {
-          AppSnack.error(
-            context,
-            env.message ?? 'Created, but id not resolved',
-          );
+          AppSnack.error(context, env.message ?? context.l10n.orgCreated);
           return;
         }
         _orgId = newId;
@@ -371,22 +411,22 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
 
         await _loadOrgSummary(_orgId!);
         await Future.wait([_loadFiles(), _loadMembers()]);
-        AppSnack.success(context, env.message ?? 'Organization created');
+        AppSnack.success(context, env.message ?? context.l10n.orgCreated);
         if (mounted) setState(() {});
       } else {
         final env = await api.Api.updateOrganizationEnvelope(payload);
         if (env.flag == false) {
-          AppSnack.error(context, env.message ?? 'Update failed');
+          AppSnack.error(context, env.message ?? context.l10n.updateFailed);
           return;
         }
         await _loadOrgSummary(_orgId!);
         await Future.wait([_loadFiles(), _loadMembers()]);
-        AppSnack.success(context, env.message ?? 'Organization updated');
+        AppSnack.success(context, env.message ?? context.l10n.orgUpdated);
         if (mounted) setState(() {});
       }
     } catch (e, st) {
       _log('save error: $e\n$st');
-      AppSnack.error(context, 'Could not save organization');
+      AppSnack.error(context, context.l10n.orgCouldNotSave);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -395,7 +435,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
   // ---------- files CRUD ----------
   Future<void> _addOrEditFile({OrganizationFileModel? existing}) async {
     if (_orgId == null) {
-      AppSnack.info(context, 'Create organization first');
+      AppSnack.info(context, context.l10n.orgCreateFirst);
       return;
     }
     if (_fileTypeOpts.isEmpty) {
@@ -467,7 +507,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Attachment',
+                      context.l10n.attachmentTitle,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
@@ -492,8 +532,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                   )
                                   .toList(),
                               onChanged: (v) => setModal(() => _localSel = v),
-                              decoration: const InputDecoration(
-                                labelText: 'File type',
+                              decoration: InputDecoration(
+                                labelText: context.l10n.fileType,
                               ),
                             ),
                             const SizedBox(height: 8),
@@ -502,7 +542,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 Expanded(
                                   child: AInput(
                                     controller: fileName,
-                                    label: 'add file name *',
+                                    label: context.l10n.addFileNameRequired,
                                     hint: 'e.g. cr_2025.pdf',
                                     glyph: AppGlyph.attachment,
                                     readOnly: true,
@@ -512,14 +552,14 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 FilledButton.icon(
                                   onPressed: pickFile,
                                   icon: const Icon(Icons.upload_file),
-                                  label: const Text('Pick file *'),
+                                  label: Text(context.l10n.pickFile),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             AInput(
                               controller: desc,
-                              label: 'Description (optional)',
+                              label: context.l10n.descriptionOptional,
                               glyph: AppGlyph.note,
                             ),
                             const SizedBox(height: 8),
@@ -528,7 +568,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 Expanded(
                                   child: AInput(
                                     controller: issue,
-                                    label: 'Issue date',
+                                    label: context.l10n.issueDate,
                                     glyph: AppGlyph.calendar,
                                     readOnly: true,
                                     onTap: () => pickDate(issue),
@@ -538,7 +578,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 Expanded(
                                   child: AInput(
                                     controller: expire,
-                                    label: 'Expire date',
+                                    label: context.l10n.expireDate,
                                     glyph: AppGlyph.calendar,
                                     readOnly: true,
                                     onTap: () => pickDate(expire),
@@ -551,10 +591,14 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                               spacing: 8,
                               runSpacing: 8,
                               children: [
-                                _chipComputed('Image', isImage, cs),
-                                _chipComputed('Active', isActive, cs),
+                                _chipComputed(context.l10n.image, isImage, cs),
                                 _chipComputed(
-                                  'Expired',
+                                  context.l10n.active,
+                                  isActive,
+                                  cs,
+                                ),
+                                _chipComputed(
+                                  context.l10n.expired,
                                   isExpired,
                                   cs,
                                   danger: isExpired,
@@ -576,7 +620,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                               color: cs.primary,
                               selected: true,
                             ),
-                            child: const Text('Cancel'),
+                            child: Text(context.l10n.cancel),
                           ),
                         ),
                         const SizedBox(width: 10),
@@ -584,13 +628,16 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                           child: BrandButton(
                             onPressed: () {
                               if (_localSel == null) {
-                                AppSnack.error(context, 'Choose a file type');
+                                AppSnack.error(
+                                  context,
+                                  context.l10n.chooseFileType,
+                                );
                                 return;
                               }
                               if (fileName.text.trim().isEmpty) {
                                 AppSnack.error(
                                   context,
-                                  'Pick a file — name is required',
+                                  context.l10n.pickFileNameRequired,
                                 );
                                 return;
                               }
@@ -638,16 +685,16 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
         setState(() => _busy = true);
         if (existing == null) {
           await api.Api.addOrganizationFile(model);
-          AppSnack.success(context, 'File added');
+          AppSnack.success(context, context.l10n.fileAdded);
         } else {
           await api.Api.updateOrganizationFile(model);
-          AppSnack.success(context, 'File updated');
+          AppSnack.success(context, context.l10n.fileUpdated);
         }
         await _loadFiles();
         if (mounted) setState(() {});
       } catch (e, st) {
         _log('file save error: $e\n$st');
-        AppSnack.error(context, 'Could not save file');
+        AppSnack.error(context, context.l10n.couldNotSaveFile);
       } finally {
         if (mounted) setState(() => _busy = false);
       }
@@ -660,16 +707,16 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: const Text('Delete file'),
-        content: const Text('Are you sure you want to delete this file?'),
+        title: Text(context.l10n.deleteFileTitle),
+        content: Text(context.l10n.deleteFileBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.delete),
           ),
         ],
       ),
@@ -679,7 +726,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     // 2) Validate id (avoid crash on null `!`)
     final id = f.organizationFileId;
     if (id == null || id <= 0) {
-      AppSnack.error(context, 'Could not delete: missing file id');
+      AppSnack.error(context, context.l10n.deleteMissingId);
       return;
     }
 
@@ -707,7 +754,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       // Re-fetch to be authoritative in case server applied side-effects
       await _loadFiles();
       if (mounted) setState(() {});
-      AppSnack.success(context, 'File deleted');
+      AppSnack.success(context, context.l10n.fileDeleted);
     } catch (e, st) {
       _log('file delete error: $e\n$st');
 
@@ -716,7 +763,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
         _files.insert(idx, removed);
         if (mounted) setState(() {});
       }
-      AppSnack.error(context, 'Could not delete file');
+      AppSnack.error(context, context.l10n.couldNotDeleteFile);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -814,7 +861,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Organization')),
+      appBar: AppBar(title: Text(context.l10n.orgTitle)),
       body: AbsorbPointer(
         absorbing: _busy,
         child: Stack(
@@ -839,8 +886,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                             children: [
                               Text(
                                 _orgId == null
-                                    ? 'Create organization'
-                                    : 'Organization',
+                                    ? context.l10n.orgCreateTitle
+                                    : context.l10n.orgTitle,
                                 style: Theme.of(context).textTheme.titleLarge
                                     ?.copyWith(fontWeight: FontWeight.w800),
                               ),
@@ -863,8 +910,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       .toList(),
                                   onChanged: (v) =>
                                       setState(() => _selType = v),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Type',
+                                  decoration: InputDecoration(
+                                    labelText: context.l10n.orgType,
                                   ),
                                 ),
                                 right: DropdownButtonFormField<DomainDetail>(
@@ -883,8 +930,8 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       .toList(),
                                   onChanged: (v) =>
                                       setState(() => _selStatus = v),
-                                  decoration: const InputDecoration(
-                                    labelText: 'Status',
+                                  decoration: InputDecoration(
+                                    labelText: context.l10n.orgStatus,
                                   ),
                                 ),
                               ),
@@ -893,12 +940,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 twoCol,
                                 left: AInput(
                                   controller: _nameAr,
-                                  label: 'Name arabic',
+                                  label: context.l10n.orgNameArabic,
                                   glyph: AppGlyph.edit,
                                 ),
                                 right: AInput(
                                   controller: _nameEn,
-                                  label: 'Name english',
+                                  label: context.l10n.orgNameEnglish,
                                   glyph: AppGlyph.edit,
                                 ),
                               ),
@@ -907,13 +954,13 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 twoCol,
                                 left: AInput(
                                   controller: _briefAr,
-                                  label: 'Brief arabic',
+                                  label: context.l10n.orgBriefArabic,
                                   glyph: AppGlyph.note,
                                   maxLines: 3,
                                 ),
                                 right: AInput(
                                   controller: _briefEn,
-                                  label: 'Brief english',
+                                  label: context.l10n.orgBriefEnglish,
                                   glyph: AppGlyph.note,
                                   maxLines: 3,
                                 ),
@@ -922,7 +969,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                               _row2(
                                 twoCol,
                                 left: AInput(
-                                  label: 'Country',
+                                  label: context.l10n.orgCountry,
                                   glyph: AppGlyph.globe,
                                   readOnly: true,
                                   controller: _countryRO,
@@ -945,17 +992,18 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                   onChanged: (v) => setState(() {
                                     _selCity = v;
                                     _countryRO.text = _countryLabel();
+                                    _refreshCountryRO();
                                   }),
 
-                                  decoration: const InputDecoration(
-                                    labelText: 'City',
+                                  decoration: InputDecoration(
+                                    labelText: context.l10n.orgCity,
                                   ),
                                 ),
                               ),
                               const SizedBox(height: 10),
                               AInput(
                                 controller: _address,
-                                label: 'Address',
+                                label: context.l10n.orgAddress,
                                 glyph: AppGlyph.mapPin,
                               ),
                               const SizedBox(height: 10),
@@ -963,12 +1011,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 twoCol,
                                 left: AInput(
                                   controller: _cr,
-                                  label: 'C.R. Number',
+                                  label: context.l10n.orgCrNumber,
                                   glyph: AppGlyph.info,
                                 ),
                                 right: AInput(
                                   controller: _vat,
-                                  label: 'VAT Number',
+                                  label: context.l10n.orgVatNumber,
                                   glyph: AppGlyph.info,
                                 ),
                               ),
@@ -977,12 +1025,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 twoCol,
                                 left: AInput(
                                   controller: _mainMobile,
-                                  label: 'Main mobile',
+                                  label: context.l10n.orgMainMobile,
                                   glyph: AppGlyph.phone,
                                 ),
                                 right: AInput(
                                   controller: _secondMobile,
-                                  label: 'Second mobile',
+                                  label: context.l10n.orgSecondMobile,
                                   glyph: AppGlyph.phone,
                                 ),
                               ),
@@ -991,12 +1039,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 twoCol,
                                 left: AInput(
                                   controller: _mainEmail,
-                                  label: 'Main email',
+                                  label: context.l10n.orgMainEmail,
                                   glyph: AppGlyph.mail,
                                 ),
                                 right: AInput(
                                   controller: _secondEmail,
-                                  label: 'Second email',
+                                  label: context.l10n.orgSecondEmail,
                                   glyph: AppGlyph.mail,
                                 ),
                               ),
@@ -1010,7 +1058,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                         AppGlyph.refresh,
                                         color: cs.primary,
                                       ),
-                                      child: const Text('Reset'),
+                                      child: Text(context.l10n.actionReset),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -1023,7 +1071,9 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                         selected: true,
                                       ),
                                       child: Text(
-                                        _orgId == null ? 'Create' : 'Save',
+                                        _orgId == null
+                                            ? context.l10n.actionCreate
+                                            : context.l10n.actionSave,
                                       ),
                                     ),
                                   ),
@@ -1047,7 +1097,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    'Files • Attachments',
+                                    context.l10n.orgFilesTitle,
                                     style: Theme.of(context)
                                         .textTheme
                                         .titleMedium
@@ -1059,19 +1109,19 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                         ? null
                                         : () => _addOrEditFile(),
                                     icon: const Icon(Icons.add),
-                                    label: const Text('Add file'),
+                                    label: Text(context.l10n.orgAddFile),
                                   ),
                                 ],
                               ),
                               const SizedBox(height: 8),
                               if (_orgId == null)
                                 Text(
-                                  'Create organization to manage files.',
+                                  context.l10n.orgCreateToManageFiles,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 )
                               else if (_files.isEmpty)
                                 Text(
-                                  'No files yet.',
+                                  context.l10n.orgNoFilesYet,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 )
                               else
@@ -1171,13 +1221,13 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                             ),
                                           ),
                                           IconButton(
-                                            tooltip: 'Edit',
+                                            tooltip: context.l10n.edit,
                                             icon: const Icon(Icons.edit),
                                             onPressed: () =>
                                                 _addOrEditFile(existing: f),
                                           ),
                                           IconButton(
-                                            tooltip: 'Delete',
+                                            tooltip: context.l10n.delete,
                                             icon: const Icon(
                                               Icons.delete_outline,
                                             ),

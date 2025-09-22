@@ -12,6 +12,11 @@ import 'package:heavy_new/core/models/admin/domain.dart'; // DomainDetail
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class EquipmentEditorScreen extends StatefulWidget {
   const EquipmentEditorScreen({super.key, this.forceShowPanels = false});
@@ -213,7 +218,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
     final en = (m.nameEnglish ?? '').trim();
     final ar = (m.nameArabic ?? '').trim();
     if (en.isNotEmpty && ar.isNotEmpty) return '$en — $ar';
-    return en.isNotEmpty ? en : (ar.isNotEmpty ? ar : 'Unnamed factory');
+    return en.isNotEmpty
+        ? en
+        : (ar.isNotEmpty ? ar : context.l10n.unnamedFactory);
   }
 
   String _labelDomain(DomainDetail d) =>
@@ -293,7 +300,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('New equipment')),
+      appBar: AppBar(title: Text(context.l10n.equipEditorTitleNew)),
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
@@ -301,7 +308,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
           child: BrandButton(
             onPressed: _save,
             icon: AIcon(AppGlyph.check, color: Colors.white, selected: true),
-            child: const Text('Continue'),
+            child: Text(context.l10n.actionContinue),
           ),
         ),
       ),
@@ -320,7 +327,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Text('Failed to load options'),
+                      Text(context.l10n.errorFailedToLoadOptions),
                       const SizedBox(height: 8),
                       Text(
                         '${snap.error}',
@@ -332,7 +339,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       const SizedBox(height: 12),
                       FilledButton(
                         onPressed: () => setState(() => _future = _loadAll()),
-                        child: const Text('Retry'),
+                        child: Text(context.l10n.actionRetry),
                       ),
                     ],
                   ),
@@ -354,15 +361,15 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Type',
+                        context.l10n.sectionType,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       DropdownButtonFormField<elist.EquipmentListModel>(
                         value: _selList,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Equipment list',
+                          labelText: context.l10n.labelEquipmentList,
                           isDense: true,
                         ),
                         isExpanded: true,
@@ -403,7 +410,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       if (_selList != null) ...[
                         const SizedBox(height: 8),
                         Text(
-                          'Selected: ${_selList!.nameEnglish ?? _selList!.nameArabic ?? '—'}',
+                          '${context.l10n.selectedPrefix} ${_selList!.nameEnglish ?? _selList!.nameArabic ?? '—'}',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: cs.onSurfaceVariant),
                         ),
@@ -423,7 +430,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Ownership & Status',
+                        context.l10n.sectionOwnershipStatus,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
@@ -439,12 +446,12 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                                         _factoryId, // may be null (that’s fine)
                                     isExpanded: true,
                                     menuMaxHeight: 360,
-                                    decoration: const InputDecoration(
+                                    decoration: InputDecoration(
                                       border: OutlineInputBorder(),
-                                      labelText: 'Factory',
+                                      labelText: context.l10n.labelFactory,
                                       isDense: true,
                                     ),
-                                    hint: const Text('Select a factory'),
+                                    hint: Text(context.l10n.hintSelectFactory),
                                     // IMPORTANT: build from _factories, not from data.factories
                                     items: _factories.map((m) {
                                       return DropdownMenuItem<int>(
@@ -481,7 +488,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                                 const SizedBox(width: 8),
                                 // Small refresh button to re-pull factories if needed
                                 IconButton(
-                                  tooltip: 'Refresh factories',
+                                  tooltip: context.l10n.tooltipRefreshFactories,
                                   onPressed: _loadFactories,
                                   icon: _loadingFactories
                                       ? const SizedBox(
@@ -498,9 +505,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
 
                         right: DropdownButtonFormField<DomainDetail>(
                           value: _selStatus,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Status (Domain 11)',
+                            labelText: context.l10n.labelStatusD11,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -528,16 +535,16 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Logistics',
+                        context.l10n.sectionLogistics,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       _TwoCol(
                         left: DropdownButtonFormField<DomainDetail>(
                           value: _selCategory,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Category (Domain 9)',
+                            labelText: context.l10n.labelCategoryD9,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -551,9 +558,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                         ),
                         right: DropdownButtonFormField<DomainDetail>(
                           value: _selFuel,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Fuel responsibility (Domain 7)',
+                            labelText: context.l10n.labelFuelRespD7,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -570,9 +577,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       _TwoCol(
                         left: DropdownButtonFormField<DomainDetail>(
                           value: _selTransferType,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Transfer type (Domain 8)',
+                            labelText: context.l10n.labelTransferTypeD8,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -586,9 +593,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                         ),
                         right: DropdownButtonFormField<DomainDetail>(
                           value: _selTransferResp,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Transfer responsibility (Domain 7)',
+                            labelText: context.l10n.labelTransferRespD7,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -616,16 +623,16 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Driver responsibilities (Domain 7)',
+                        context.l10n.sectionDriverRespD7,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       _TwoCol(
                         left: DropdownButtonFormField<DomainDetail>(
                           value: _selDriverTrans,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Transport',
+                            labelText: context.l10n.labelTransport,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -639,9 +646,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                         ),
                         right: DropdownButtonFormField<DomainDetail>(
                           value: _selDriverFood,
-                          decoration: const InputDecoration(
+                          decoration: InputDecoration(
                             border: OutlineInputBorder(),
-                            labelText: 'Food',
+                            labelText: context.l10n.labelFood,
                             isDense: true,
                           ),
                           isExpanded: true,
@@ -657,9 +664,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       const SizedBox(height: 10),
                       DropdownButtonFormField<DomainDetail>(
                         value: _selDriverHousing,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           border: OutlineInputBorder(),
-                          labelText: 'Housing',
+                          labelText: context.l10n.labelHousing,
                           isDense: true,
                         ),
                         isExpanded: true,
@@ -686,21 +693,21 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Descriptions',
+                        context.l10n.sectionDescriptions,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       AInput(
                         controller: _descEn,
-                        label: 'Description (English)',
-                        hint: 'e.g. Excavator 22T',
+                        label: context.l10n.labelDescEnglish,
+                        hint: context.l10n.hintDescEnglish,
                         glyph: AppGlyph.edit,
                       ),
                       const SizedBox(height: 10),
                       AInput(
                         controller: _descAr,
-                        label: 'الوصف (عربي)',
-                        hint: 'مثال: حفّار ٢٢ طن',
+                        label: context.l10n.labelDescArabic,
+                        hint: context.l10n.hintDescArabic,
                         glyph: AppGlyph.edit,
                       ),
                     ],
@@ -718,23 +725,23 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Pricing',
+                        context.l10n.sectionPricing,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       _TwoCol(
                         left: AInput(
                           controller: _priceDay,
-                          label: 'Price per day',
-                          hint: 'e.g. 1600',
+                          label: context.l10n.labelPricePerDay,
+                          hint: context.l10n.hintPricePerDay,
                           glyph: AppGlyph.money,
                           keyboardType: TextInputType.number,
                           onChanged: (_) => setState(() {}),
                         ),
                         right: AInput(
                           controller: _priceHour,
-                          label: 'Price per hour',
-                          hint: 'e.g. 160',
+                          label: context.l10n.labelPricePerHour,
+                          hint: context.l10n.hintPricePerHour,
                           glyph: AppGlyph.money,
                           keyboardType: TextInputType.number,
                           onChanged: (_) => setState(() {}),
@@ -742,15 +749,19 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Rule: 1 day = ${kHoursPerDay.toStringAsFixed(0)} hours. '
-                        'Down payment = $kDownPaymentPercent%.',
+                        context.l10n.ruleHoursPerDayAndDp(
+                          kHoursPerDay.toStringAsFixed(0),
+                          kDownPaymentPercent.toString(),
+                        ),
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Down payment (auto): ${_fmt(_downPaymentAmount())}',
+                        context.l10n.downPaymentAuto(
+                          _fmt(_downPaymentAmount()),
+                        ),
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ],
@@ -768,20 +779,20 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Quantity',
+                        context.l10n.sectionQuantity,
                         style: Theme.of(context).textTheme.titleMedium,
                       ),
                       const SizedBox(height: 8),
                       AInput(
                         controller: _qtyCtrl,
-                        label: 'Quantity (also used as Available)',
-                        hint: 'e.g. 1',
+                        label: context.l10n.labelQuantityAlsoAvailable,
+                        hint: context.l10n.hintQuantity,
                         glyph: AppGlyph.info,
                         keyboardType: TextInputType.number,
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'Available = Quantity, Reserved starts at 0 (both updated later).',
+                        context.l10n.noteAvailableReserved,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

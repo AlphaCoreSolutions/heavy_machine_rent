@@ -13,6 +13,11 @@ import 'package:heavy_new/core/models/user/nationality.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class EquipmentSettingsScreen extends StatefulWidget {
   const EquipmentSettingsScreen({super.key, required this.equipmentId});
@@ -265,7 +270,7 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
     try {
       await api.Api.updateEquipment(put);
       if (!mounted) return false;
-      AppSnack.success(context, 'Saved');
+      AppSnack.success(context, context.l10n.saved);
       setState(() {
         _dirtyOverview = false;
       });
@@ -273,7 +278,7 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
       return true;
     } catch (e) {
       if (!mounted) return false;
-      AppSnack.error(context, 'Save failed: $e');
+      AppSnack.error(context, context.l10n.saveFailedWithMsg('$e'));
       return false;
     }
   }
@@ -310,8 +315,8 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
   Widget build(BuildContext context) {
     if (!_loggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Equipment settings')),
-        body: const Center(child: Text('Sign in required')),
+        appBar: AppBar(title: Text(context.l10n.equipSettingsTitle)),
+        body: Center(child: Text(context.l10n.signInRequired)),
       );
     }
 
@@ -322,25 +327,23 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
         behavior: const _DesktopScrollBehavior(),
         child: Scaffold(
           appBar: AppBar(
-            title: const Text('Equipment settings'),
+            title: Text(context.l10n.equipSettingsTitle),
             bottom: TabBar(
               controller: _tabs,
               isScrollable: true,
               onTap: (i) {
-                // block tap if dirty; we’ll handle in listener
-                if (_anyDirty) {
-                  _handleTabChange(i);
-                }
+                if (_anyDirty) _handleTabChange(i);
               },
-              tabs: const [
-                Tab(text: 'Overview'),
-                Tab(text: 'Images'),
-                Tab(text: 'Terms'),
-                Tab(text: 'Drivers'),
-                Tab(text: 'Certificates'),
+              tabs: [
+                Tab(text: context.l10n.tabOverview),
+                Tab(text: context.l10n.tabImages),
+                Tab(text: context.l10n.tabTerms),
+                Tab(text: context.l10n.tabDrivers),
+                Tab(text: context.l10n.tabCertificates),
               ],
             ),
           ),
+
           body: FutureBuilder<Equipment>(
             future: _future,
             builder: (context, snap) {
@@ -365,7 +368,7 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
                         const SizedBox(height: 12),
                         FilledButton(
                           onPressed: _reload,
-                          child: const Text('Retry'),
+                          child: Text(context.l10n.actionRetry),
                         ),
                       ],
                     ),
@@ -445,7 +448,6 @@ class _OverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     Widget title(String t) => Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Text(t, style: Theme.of(context).textTheme.headlineSmall),
@@ -459,19 +461,19 @@ class _OverviewTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              title('Basic info'),
+              title(context.l10n.basicInfo),
               _TwoCol(
                 left: AInput(
                   controller: enCtrl,
-                  label: 'Name (EN)',
+                  label: context.l10n.nameEn,
                   glyph: AppGlyph.edit,
-                  hint: 'e.g. Excavator 22T',
+                  hint: context.l10n.exampleExcavator,
                 ),
                 right: AInput(
                   controller: arCtrl,
-                  label: 'Name (AR)',
+                  label: context.l10n.nameAr,
                   glyph: AppGlyph.edit,
-                  hint: 'e.g. حفار ٢٢ طن',
+                  hint: context.l10n.exampleExcavatorAr,
                 ),
               ),
             ],
@@ -483,17 +485,17 @@ class _OverviewTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              title('Pricing'),
+              title(context.l10n.pricing),
               _TwoCol(
                 left: AInput(
                   controller: priceDayCtrl,
-                  label: 'Price / day',
+                  label: context.l10n.filterPriceDay,
                   glyph: AppGlyph.money,
                   keyboardType: TextInputType.number,
                 ),
                 right: AInput(
                   controller: priceHourCtrl,
-                  label: 'Price / hour',
+                  label: context.l10n.pricePerHour,
                   glyph: AppGlyph.money,
                   keyboardType: TextInputType.number,
                 ),
@@ -511,7 +513,10 @@ class _OverviewTab extends StatelessWidget {
                         double.tryParse(priceDayCtrl.text.trim()) ?? 0.0;
                     final amt = day * (dpPercent / 100.0);
                     return Text(
-                      'Down payment: ${dpPercent.toStringAsFixed(0)}%  →  ${amt.toStringAsFixed(2)}',
+                      context.l10n.downPaymentPct(
+                        dpPercent.toStringAsFixed(0),
+                        amt.toStringAsFixed(2),
+                      ),
                       style: Theme.of(context).textTheme.bodyMedium,
                     );
                   },
@@ -526,17 +531,17 @@ class _OverviewTab extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              title('Quantity & Status'),
+              title(context.l10n.quantityAndStatus),
               _TwoCol(
                 left: AInput(
                   controller: qtyCtrl,
-                  label: 'Quantity',
+                  label: context.l10n.quantity,
                   glyph: AppGlyph.info,
                   keyboardType: TextInputType.number,
                 ),
                 right: AInput(
                   controller: weightCtrl,
-                  label: 'Equipment weight',
+                  label: context.l10n.equipmentWeight,
                   glyph: AppGlyph.info,
                   keyboardType: TextInputType.number,
                 ),
@@ -547,7 +552,9 @@ class _OverviewTab extends StatelessWidget {
                   Switch.adaptive(value: isActive, onChanged: onToggleActive),
                   const SizedBox(width: 8),
                   Text(
-                    isActive ? 'Active (visible)' : 'Inactive (hidden)',
+                    isActive
+                        ? context.l10n.activeVisible
+                        : context.l10n.inactiveHidden,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ],
@@ -566,18 +573,12 @@ class _OverviewTab extends StatelessWidget {
                   color: Colors.white,
                   selected: true,
                 ),
-                child: const Text('Save changes'),
+                child: Text(context.l10n.saveChanges),
               ),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        Text(
-          'Note: saving sends a full object (IDs only for domains) to PUT /Equipment/update.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-        ),
       ],
     );
   }
@@ -676,11 +677,11 @@ class _ImagesTabState extends State<_ImagesTab> {
 
       debugPrint('[images] uploaded -> ${up.publicUrl}');
       if (!mounted) return;
-      AppSnack.success(context, 'Image uploaded');
+      AppSnack.success(context, context.l10n.imageUploaded);
       await _reload();
     } catch (e) {
       if (!mounted) return;
-      AppSnack.error(context, 'Upload failed: $e');
+      AppSnack.error(context, context.l10n.uploadFailedWithMsg('$e'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -710,11 +711,11 @@ class _ImagesTabState extends State<_ImagesTab> {
     try {
       await api.Api.deleteEquipmentImage(img.equipmentImageId ?? 0);
       if (!mounted) return;
-      AppSnack.success(context, 'Image deleted');
+      AppSnack.success(context, context.l10n.imageDeleted);
       await _reload();
     } catch (e) {
       if (!mounted) return;
-      AppSnack.error(context, 'Delete failed: $e');
+      AppSnack.error(context, context.l10n.deleteFailedWithMsg('$e'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -808,11 +809,15 @@ class _ImagesTabState extends State<_ImagesTab> {
                   FilledButton.icon(
                     onPressed: _busy ? null : _addImage,
                     icon: const Icon(Icons.add),
-                    label: Text(_busy ? 'Uploading…' : 'Add image'),
+                    label: Text(
+                      _busy
+                          ? context.l10n.uploading
+                          : context.l10n.actionAddImage,
+                    ),
                   ),
                   const Spacer(),
                   IconButton.filledTonal(
-                    tooltip: 'Refresh',
+                    tooltip: context.l10n.actionRefresh,
                     onPressed: _busy ? null : _reload,
                     icon: const Icon(Icons.refresh),
                   ),
@@ -826,7 +831,7 @@ class _ImagesTabState extends State<_ImagesTab> {
                   child: Padding(
                     padding: const EdgeInsets.all(16),
                     child: Text(
-                      'No images yet.',
+                      context.l10n.noImagesYet,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
@@ -912,7 +917,7 @@ class _ImagesTabState extends State<_ImagesTab> {
                                 right: 8,
                                 top: 8,
                                 child: IconButton.filledTonal(
-                                  tooltip: 'Delete',
+                                  tooltip: context.l10n.actionDelete,
                                   onPressed: _busy
                                       ? null
                                       : () => _deleteImage(row),
@@ -1284,7 +1289,7 @@ class _TermsTabState extends State<_TermsTab> {
         ).textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant);
 
         return AlertDialog(
-          title: const Text('Terms'),
+          title: Text(context.l10n.tabTerms),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 640, maxHeight: 500),
             child: SingleChildScrollView(
@@ -1292,9 +1297,9 @@ class _TermsTabState extends State<_TermsTab> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (sorted.isEmpty)
-                    const Padding(
+                    Padding(
                       padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Text('No terms yet.'),
+                      child: Text(context.l10n.noTermsYetCreateFirst),
                     )
                   else
                     ...List.generate(sorted.length, (i) {
@@ -1350,7 +1355,7 @@ class _TermsTabState extends State<_TermsTab> {
             TextButton(
               onPressed: () =>
                   Navigator.of(dialogCtx, rootNavigator: true).pop(),
-              child: const Text('Close'),
+              child: Text(context.l10n.actionClose),
             ),
           ],
         );
@@ -1375,7 +1380,7 @@ class _TermsTabState extends State<_TermsTab> {
           child: Row(
             children: [
               IconButton.filledTonal(
-                tooltip: 'Refresh',
+                tooltip: context.l10n.actionRefresh,
                 onPressed: _reload,
                 icon: const Icon(Icons.refresh),
               ),
@@ -1383,13 +1388,13 @@ class _TermsTabState extends State<_TermsTab> {
               FilledButton.icon(
                 onPressed: () => _edit(null),
                 icon: const Icon(Icons.add),
-                label: const Text('Add term'),
+                label: Text(context.l10n.actionAddTerm),
               ),
               const SizedBox(width: 10),
               OutlinedButton.icon(
                 onPressed: _saveOrder,
                 icon: const Icon(Icons.save),
-                label: const Text('Save order'),
+                label: Text(context.l10n.actionSaveOrder),
               ),
             ],
           ),
@@ -1409,7 +1414,7 @@ class _TermsTabState extends State<_TermsTab> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'No terms yet. Click “Add term” to create your first item.',
+                        context.l10n.noTermsYetCreateFirst,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
                     ),
@@ -1771,13 +1776,16 @@ class _DriversTabState extends State<_DriversTab> {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+
     return FutureBuilder<List<EquipmentDriver>>(
       future: _future,
       builder: (context, snap) {
         if (snap.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());
         }
+
         final drivers = snap.data ?? const <EquipmentDriver>[];
+
         return ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
@@ -1786,18 +1794,19 @@ class _DriversTabState extends State<_DriversTab> {
                 FilledButton.icon(
                   onPressed: () => _editDriver(null),
                   icon: const Icon(Icons.add),
-                  label: const Text('Add driver'),
+                  label: Text(context.l10n.actionAddDriver),
                 ),
               ],
             ),
             const SizedBox(height: 12),
+
             if (drivers.isEmpty)
               Glass(
                 radius: 16,
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: Text(
-                    'No drivers yet.',
+                    context.l10n.noDriversYet,
                     style: Theme.of(context).textTheme.bodyLarge,
                   ),
                 ),
@@ -1805,104 +1814,155 @@ class _DriversTabState extends State<_DriversTab> {
             else
               ...drivers.map((d) {
                 final files = d.equipmentDriverFiles ?? const [];
-                return Glass(
-                  radius: 18,
-                  child: Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        ListTile(
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                          ),
-                          leading: const Icon(Icons.person_outline),
-                          title: Text(
-                            d.driverNameEnglish ??
-                                d.driverNameArabic ??
-                                'Driver',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          subtitle: Text(
-                            'Nationality id: ${d.driverNationalityId ?? '—'}',
-                          ),
-                          trailing: Wrap(
-                            spacing: 6,
+
+                return Padding(
+                  // <<—— spacing between items
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: Glass(
+                    radius: 18,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Header row (icon + titles)
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Row(
+                              const Padding(
+                                padding: EdgeInsets.only(top: 2),
+                                child: Icon(Icons.person_outline),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      d.driverNameEnglish ??
+                                          d.driverNameArabic ??
+                                          context.l10n.driver,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '${context.l10n.nationalityIdLabel}: ${d.driverNationalityId ?? '—'}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+                          const Divider(height: 1),
+
+                          // Files list
+                          if (files.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: Text(
+                                context.l10n.noFiles,
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: cs.onSurfaceVariant),
+                              ),
+                            )
+                          else
+                            ...files.map((f) {
+                              final expired =
+                                  (f.endDate?.isNotEmpty == true) &&
+                                      DateTime.tryParse(
+                                            '${f.endDate}T00:00:00',
+                                          ) !=
+                                          null
+                                  ? DateTime.parse(
+                                      '${f.endDate}T00:00:00',
+                                    ).isBefore(DateTime.now())
+                                  : false;
+
+                              return ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: const Icon(
+                                  Icons.insert_drive_file_outlined,
+                                ),
+                                title: Text(
+                                  (f.fileDescription?.trim().isNotEmpty ??
+                                          false)
+                                      ? f.fileDescription!
+                                      : (f.filePath ?? '—'),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                subtitle: Text(
+                                  [
+                                    if (f.startDate?.isNotEmpty == true)
+                                      '${context.l10n.fromDate} ${f.startDate}',
+                                    if (f.endDate?.isNotEmpty == true)
+                                      '${context.l10n.toDate} ${f.endDate}',
+                                    if (expired) context.l10n.expired,
+                                  ].join(' • '),
+                                ),
+                                trailing: IconButton.filledTonal(
+                                  tooltip: context.l10n.actionDelete,
+                                  onPressed: () => _deleteDriverFile(
+                                    f.equipmentDriverFileId,
+                                  ),
+                                  icon: const Icon(Icons.delete_outline),
+                                ),
+                              );
+                            }),
+
+                          const SizedBox(height: 8),
+
+                          // Bottom action row
+                          Row(
+                            children: [
+                              FilledButton.icon(
+                                onPressed: () => _addDriverFile(d),
+                                icon: const Icon(Icons.add),
+                                label: Text(context.l10n.actionAddFile),
+                              ),
+                              const Spacer(),
+                              Wrap(
+                                spacing: 6,
                                 children: [
                                   IconButton.filledTonal(
                                     onPressed: () => _editDriver(d),
                                     icon: const Icon(Icons.edit),
+                                    tooltip: context.l10n.actionEdit,
                                   ),
                                   IconButton.filledTonal(
                                     onPressed: () => _deleteDriver(d),
                                     icon: const Icon(Icons.delete_outline),
-                                    color: cs.error,
+                                    tooltip: context.l10n.actionDelete,
+                                    style: ButtonStyle(
+                                      foregroundColor: WidgetStateProperty.all(
+                                        cs.error,
+                                      ),
+                                    ),
                                   ),
                                 ],
                               ),
-                              FilledButton.icon(
-                                onPressed: () => _addDriverFile(d),
-                                icon: const Icon(Icons.add),
-                                label: const Text('Add file'),
-                              ),
                             ],
                           ),
-                        ),
-                        const Divider(height: 4),
-                        if (files.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.all(12),
-                            child: Text(
-                              'No files',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(color: cs.onSurfaceVariant),
-                            ),
-                          )
-                        else
-                          ...files.map((f) {
-                            final expired =
-                                (f.endDate?.isNotEmpty == true) &&
-                                    DateTime.tryParse(
-                                          '${f.endDate}T00:00:00',
-                                        ) !=
-                                        null
-                                ? DateTime.tryParse(
-                                    '${f.endDate}T00:00:00',
-                                  )!.isBefore(DateTime.now())
-                                : false;
-                            return ListTile(
-                              dense: true,
-                              leading: const Icon(
-                                Icons.insert_drive_file_outlined,
-                              ),
-                              title: Text(
-                                f.fileDescription?.trim().isNotEmpty == true
-                                    ? f.fileDescription!
-                                    : (f.filePath ?? '—'),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                [
-                                  if (f.startDate?.isNotEmpty == true)
-                                    'From ${f.startDate}',
-                                  if (f.endDate?.isNotEmpty == true)
-                                    'To ${f.endDate}',
-                                  if (expired) 'Expired',
-                                ].join(' • '),
-                              ),
-                              trailing: IconButton.filledTonal(
-                                tooltip: 'Delete',
-                                onPressed: () =>
-                                    _deleteDriverFile(f.equipmentDriverFileId),
-                                icon: const Icon(Icons.delete_outline),
-                              ),
-                            );
-                          }),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 );
@@ -2444,22 +2504,55 @@ class _CertificatesTabState extends State<_CertificatesTab> {
   @override
   Widget build(BuildContext context) {
     final items = widget.certs;
+    final cs = Theme.of(context).colorScheme;
+
+    Widget _statusChip(bool expired) {
+      final bg = expired ? cs.errorContainer : cs.secondaryContainer;
+      final fg = expired ? cs.onErrorContainer : cs.onSecondaryContainer;
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: fg.withOpacity(.25)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              expired ? Icons.warning_amber_rounded : Icons.verified_outlined,
+              size: 16,
+              color: fg,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              expired ? context.l10n.expired : context.l10n.active,
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(color: fg),
+            ),
+          ],
+        ),
+      );
+    }
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
         FilledButton.icon(
           onPressed: () => _edit(null),
           icon: const Icon(Icons.add),
-          label: const Text('Add certificate'),
+          label: Text(context.l10n.actionAddCertificate),
         ),
         const SizedBox(height: 12),
+
         if (items.isEmpty)
           Glass(
             radius: 16,
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
-                'No certificates yet.',
+                context.l10n.noCertificatesYet,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
             ),
@@ -2472,65 +2565,149 @@ class _CertificatesTabState extends State<_CertificatesTab> {
             );
             final showImg = (c.isImage == true) && url.isNotEmpty;
 
+            final expired =
+                (c.expireDate?.isNotEmpty == true) &&
+                DateTime.tryParse('${c.expireDate}T00:00:00') != null &&
+                DateTime.parse(
+                  '${c.expireDate}T00:00:00',
+                ).isBefore(DateTime.now());
+
             return Glass(
               radius: 16,
-              child: ListTile(
-                onTap: showImg ? () => _previewImageUrl(context, url) : null,
-                leading: showImg
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8),
-                        child: CachedNetworkImage(
-                          imageUrl: url,
-                          width: 56,
-                          height: 56,
-                          fit: BoxFit.cover,
-                          placeholder: (_, __) => Container(
-                            width: 56,
-                            height: 56,
-                            color: Theme.of(context).colorScheme.surfaceVariant,
-                            child: const Center(
-                              child: SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (_, __, ___) => Container(
-                            width: 56,
-                            height: 56,
-                            color: Theme.of(context).colorScheme.surfaceVariant,
-                            child: const Icon(Icons.broken_image_outlined),
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Thumbnail
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: SizedBox(
+                            width: 72,
+                            height: 72,
+                            child: showImg
+                                ? InkWell(
+                                    onTap: () => _previewImageUrl(context, url),
+                                    child: CachedNetworkImage(
+                                      imageUrl: url,
+                                      fit: BoxFit.cover,
+                                      placeholder: (_, __) => Container(
+                                        color: cs.surfaceVariant,
+                                        child: const Center(
+                                          child: SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      errorWidget: (_, __, ___) => Container(
+                                        color: cs.surfaceVariant,
+                                        child: const Icon(
+                                          Icons.broken_image_outlined,
+                                        ),
+                                      ),
+                                    ),
+                                  )
+                                : Container(
+                                    color: cs.surfaceVariant,
+                                    child: const Center(
+                                      child: Icon(Icons.verified_outlined),
+                                    ),
+                                  ),
                           ),
                         ),
-                      )
-                    : const Icon(Icons.verified_outlined),
-                title: Text(c.nameEnglish ?? c.nameArabic ?? '—'),
-                subtitle: Text(
-                  [
-                    if (c.issueDate?.isNotEmpty == true) 'Issue ${c.issueDate}',
-                    if (c.expireDate?.isNotEmpty == true)
-                      'Expire ${c.expireDate}',
-                    if ((c.expireDate?.isNotEmpty == true) &&
-                        DateTime.tryParse('${c.expireDate}T00:00:00') != null &&
-                        DateTime.parse(
-                          '${c.expireDate}T00:00:00',
-                        ).isBefore(DateTime.now()))
-                      'Expired',
-                  ].join(' • '),
-                ),
-                trailing: Wrap(
-                  spacing: 6,
-                  children: [
-                    IconButton.filledTonal(
-                      onPressed: () => _edit(c),
-                      icon: const Icon(Icons.edit),
+                        const SizedBox(width: 12),
+
+                        // Text + meta
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Title
+                              Text(
+                                c.nameEnglish ?? c.nameArabic ?? '—',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(height: 6),
+
+                              // Dates
+                              Row(
+                                children: [
+                                  const Icon(Icons.event_outlined, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${context.l10n.issueDate} ${c.issueDate ?? '—'}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Row(
+                                children: [
+                                  const Icon(Icons.schedule_outlined, size: 16),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      '${context.l10n.expireDate} ${c.expireDate ?? '—'}',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+
+                              const SizedBox(height: 8),
+                              _statusChip(expired),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    IconButton.filledTonal(
-                      onPressed: () => _delete(c),
-                      icon: const Icon(Icons.delete_outline),
+
+                    const SizedBox(height: 10),
+                    const Divider(height: 1),
+
+                    // Bottom actions (right aligned)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: Wrap(
+                        spacing: 6,
+                        children: [
+                          IconButton.filledTonal(
+                            onPressed: () => _edit(c),
+                            icon: const Icon(Icons.edit),
+                            tooltip: context.l10n.actionEdit,
+                          ),
+                          IconButton.filledTonal(
+                            onPressed: () => _delete(c),
+                            icon: const Icon(Icons.delete_outline),
+                            tooltip: context.l10n.actionDelete,
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

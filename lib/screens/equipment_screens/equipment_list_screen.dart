@@ -14,7 +14,12 @@ import 'package:heavy_new/core/models/equipment/equipment.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class EquipmentListScreen extends StatefulWidget {
   const EquipmentListScreen({super.key});
@@ -130,7 +135,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
         },
 
         child: Scaffold(
-          appBar: AppBar(title: const Text('Equipment')),
+          appBar: AppBar(title: Text(context.l10n.equipmentTitle)),
           body: ScrollConfiguration(
             behavior: const _DesktopScrollBehavior(),
             child: RefreshIndicator(
@@ -181,8 +186,9 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                                 onChanged:
                                                     _onChanged, // ← important
                                                 decoration: InputDecoration(
-                                                  hintText:
-                                                      'Search by description…',
+                                                  hintText: context
+                                                      .l10n
+                                                      .searchByDescriptionHint,
                                                   prefixIcon: const Icon(
                                                     Icons.search,
                                                   ),
@@ -224,7 +230,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                               context,
                                             ).colorScheme.primary,
                                           ),
-                                          child: const Text('Filters'),
+                                          child: Text(context.l10n.filters),
                                         ),
                                       ),
                                     ],
@@ -271,7 +277,9 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            'Failed to load equipment list',
+                                            context
+                                                .l10n
+                                                .failedToLoadEquipmentList,
                                             style: Theme.of(
                                               context,
                                             ).textTheme.titleMedium,
@@ -292,7 +300,9 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                               () => _future =
                                                   api.Api.getEquipments(),
                                             ),
-                                            child: const Text('Retry'),
+                                            child: Text(
+                                              context.l10n.actionRetry,
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -306,7 +316,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                     child: Padding(
                                       padding: const EdgeInsets.all(24),
                                       child: Text(
-                                        'No results',
+                                        context.l10n.noResults,
                                         style: Theme.of(
                                           context,
                                         ).textTheme.bodyLarge,

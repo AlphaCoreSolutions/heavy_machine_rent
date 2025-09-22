@@ -7,11 +7,16 @@ import 'package:heavy_new/core/models/organization/organization_user.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 
 import 'package:heavy_new/screens/equipment_screens/equipment_editor_screen.dart';
 import 'package:heavy_new/screens/equipment_screens/equipment_settings_screen.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class EquipmentManagementScreen extends StatefulWidget {
   const EquipmentManagementScreen({super.key});
@@ -192,7 +197,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     // Not logged in
     if (!auth.isLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My equipment')),
+        appBar: AppBar(title: Text(context.l10n.myEquipmentTitle)),
         body: Center(
           child: Glass(
             radius: 18,
@@ -202,12 +207,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Sign in required',
+                    context.l10n.signInRequired,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'You need to sign in to manage your equipment.',
+                    context.l10n.myEquipSignInBody,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
@@ -225,7 +230,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                       color: Colors.white,
                       selected: true,
                     ),
-                    child: const Text('Sign in'),
+                    child: Text(context.l10n.actionSignIn),
                   ),
                 ],
               ),
@@ -238,7 +243,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     // Loading mapping
     if (_loadingMapping) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My equipment')),
+        appBar: AppBar(title: Text(context.l10n.myEquipmentTitle)),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
@@ -246,7 +251,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     // No organization mapping
     if (_orgId == null || _orgUserId == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My equipment')),
+        appBar: AppBar(title: Text(context.l10n.myEquipmentTitle)),
         body: Center(
           child: Glass(
             radius: 18,
@@ -256,12 +261,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Organization needed',
+                    context.l10n.orgNeededTitle,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Add your organization before listing or managing equipment.',
+                    context.l10n.orgNeededBody,
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: cs.onSurfaceVariant,
@@ -279,7 +284,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                       color: Colors.white,
                       selected: true,
                     ),
-                    child: const Text('Add organization'),
+                    child: Text(context.l10n.actionAddOrganization),
                   ),
                 ],
               ),
@@ -291,7 +296,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
     // Has mapping → list + FAB
     return Scaffold(
-      appBar: AppBar(title: const Text('My equipment')),
+      appBar: AppBar(title: Text(context.l10n.myEquipmentTitle)),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           debugPrint('[EquipMgmt] FAB: add flow start');
@@ -322,7 +327,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
             ..removeWhere((k, v) => v == null)
             ..addAll({
               // mapping / ownership
-              'vendorId': _orgId, // you confirmed: wants orgId (e.g. 6)
+              'vendorId': _orgId, // backend expects orgId here
               'organizationUserId': _orgUserId,
               'organizationId': _orgId,
               'applicationUserId': _userId,
@@ -331,10 +336,12 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
           if (dCategory != null) payload['category'] = _asNested(dCategory);
           if (dFuel != null) payload['fuelResponsibility'] = _asNested(dFuel);
-          if (dTransferType != null)
+          if (dTransferType != null) {
             payload['transferType'] = _asNested(dTransferType);
-          if (dTransferResp != null)
+          }
+          if (dTransferResp != null) {
             payload['transferResponsibility'] = _asNested(dTransferResp);
+          }
 
           // never send these when creating
           payload.remove('equipmentId');
@@ -348,10 +355,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
             final resp = await api.Api.addEquipmentRaw(payload);
             debugPrint('[EquipMgmt] addEquipment response => $resp');
             if (!mounted) return;
-            AppSnack.success(
-              context,
-              'Submitted. It may take a moment to appear.',
-            );
+            AppSnack.success(context, context.l10n.submittedMayTakeMoment);
             await _refresh(); // authoritative list
           } on api.ApiException catch (ex) {
             final details = _prettyValidationErrors(ex.details);
@@ -359,14 +363,14 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
             await showDialog(
               context: context,
               builder: (_) => AlertDialog(
-                title: const Text('Can’t add equipment'),
+                title: Text(context.l10n.cantAddEquipment),
                 content: SingleChildScrollView(
                   child: Text(details ?? ex.message),
                 ),
                 actions: [
                   TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text('OK'),
+                    child: Text(context.l10n.actionOk),
                   ),
                 ],
               ),
@@ -374,11 +378,11 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
           } catch (e, st) {
             debugPrint('[EquipMgmt] addEquipment unexpected: $e\n$st');
             if (!mounted) return;
-            AppSnack.error(context, 'Unexpected error: $e');
+            AppSnack.error(context, context.l10n.unexpectedErrorWithMsg('$e'));
           }
         },
         icon: const Icon(Icons.add),
-        label: const Text('Add equipment'),
+        label: Text(context.l10n.actionAddEquipment),
       ),
       body: RefreshIndicator(
         onRefresh: _refresh,
@@ -396,7 +400,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Failed to load your equipment.\n${snap.error}',
+                      context.l10n.failedToLoadYourEquipment('${snap.error}'),
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
@@ -411,7 +415,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'No equipment yet. Tap “Add equipment” to create one.',
+                      context.l10n.noEquipmentYetTapAdd,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
@@ -458,7 +462,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                     await _refresh();
                   },
                   onRent: () =>
-                      AppSnack.info(context, 'Open as customer to rent'),
+                      AppSnack.info(context, context.l10n.openAsCustomerToRent),
                 );
               },
             );

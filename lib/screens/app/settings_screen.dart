@@ -1,5 +1,6 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
@@ -12,7 +13,6 @@ import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
-// ⬇️ import your super admin screen (adjust path if different)
 import 'package:heavy_new/screens/super_admin_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -26,71 +26,97 @@ class SettingsScreen extends StatelessWidget {
     final isLoggedIn = auth.isLoggedIn;
     final isCompleted = u?.isCompleted == true;
 
-    // Fix precedence + expose flags
     final isSuperAdmin = (u?.userTypeId == 20);
     final isOrgUser = (u?.userTypeId == 17);
     final isAllowed = isLoggedIn && (isSuperAdmin || isOrgUser);
 
     if (!isAllowed) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Settings')),
+        appBar: AppBar(title: Text(L10nX(context).l10n.settingsTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Glass(
               radius: 18,
               child: Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(5),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 520),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
+                  child: Stack(
                     children: [
-                      CircleAvatar(
-                        radius: 28,
-                        backgroundColor: cs.surfaceVariant,
-                        child: AIcon(AppGlyph.info, color: cs.primary),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        isLoggedIn ? 'Not available' : 'Sign in required',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                      // Top-right settings button
+                      Positioned(
+                        top: 0,
+                        right: 0,
+                        child: IconButton.filledTonal(
+                          style: IconButton.styleFrom(
+                            backgroundColor: Theme.of(context).primaryColor,
+                            foregroundColor: Theme.of(
+                              context,
+                            ).colorScheme.onPrimary,
+                          ),
+                          tooltip: L10nX(context).l10n.appSettings,
+                          icon: const Icon(Icons.settings, color: Colors.white),
+                          onPressed: () => context.push('/settings/app'),
                         ),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        isLoggedIn
-                            ? 'This page is only available for accounts with user type #17 or #20.'
-                            : 'Please sign in to continue.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: cs.onSurfaceVariant,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
+
+                      // Content
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
                         children: [
-                          if (!isLoggedIn)
-                            FilledButton.icon(
-                              icon: const Icon(Icons.login),
-                              label: const Text('Sign in'),
-                              onPressed: () async {
-                                final ok = await Navigator.of(context)
-                                    .push<bool>(
-                                      MaterialPageRoute(
-                                        builder: (_) => const PhoneAuthScreen(),
-                                      ),
-                                    );
-                                if (ok == true && context.mounted) {
-                                  AppSnack.success(context, 'Signed in');
-                                }
-                              },
-                            ),
+                          const SizedBox(height: 4),
+                          CircleAvatar(
+                            radius: 28,
+                            backgroundColor: cs.surfaceVariant,
+                            child: AIcon(AppGlyph.info, color: cs.primary),
+                          ),
+                          const SizedBox(height: 12),
+                          Text(
+                            isLoggedIn
+                                ? L10nX(context).l10n.notAvailableTitle
+                                : L10nX(context).l10n.signInRequiredTitle,
+                            style: Theme.of(context).textTheme.titleLarge
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            isLoggedIn
+                                ? L10nX(context).l10n.restrictedPageMessage
+                                : L10nX(context).l10n.signInPrompt,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          ),
+                          const SizedBox(height: 16),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              if (!isLoggedIn)
+                                FilledButton.icon(
+                                  icon: const Icon(Icons.login),
+                                  label: Text(L10nX(context).l10n.actionSignIn),
+                                  onPressed: () async {
+                                    final ok = await Navigator.of(context)
+                                        .push<bool>(
+                                          MaterialPageRoute(
+                                            builder: (_) =>
+                                                const PhoneAuthScreen(),
+                                          ),
+                                        );
+                                    if (ok == true && context.mounted) {
+                                      AppSnack.success(
+                                        context,
+                                        L10nX(context).l10n.signedIn,
+                                      );
+                                    }
+                                  },
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
                         ],
                       ),
-                      const SizedBox(height: 4),
                     ],
                   ),
                 ),
@@ -101,17 +127,22 @@ class SettingsScreen extends StatelessWidget {
       );
     }
 
-    // ====== Visible for userTypeId 17 or 20 ======
+    // ===== visible for userTypeId 17 or 20 =====
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(title: Text(L10nX(context).l10n.settingsTitle)),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+        padding: const EdgeInsets.fromLTRB(8, 16, 8, 28),
         children: [
           // Account header
           Glass(
             radius: 18,
             child: Padding(
-              padding: const EdgeInsets.all(14),
+              padding: const EdgeInsets.only(
+                right: 14,
+                top: 14,
+                bottom: 14,
+                left: 1,
+              ),
               child: Row(
                 children: [
                   Container(
@@ -137,58 +168,94 @@ class SettingsScreen extends StatelessWidget {
                         Text(
                           (u?.fullName?.trim().isNotEmpty == true)
                               ? u!.fullName!
-                              : 'Account',
+                              : L10nX(context).l10n.accountTitle,
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          (u?.email?.trim().isNotEmpty == true)
-                              ? u!.email!
-                              : (u?.mobile ?? ''),
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: cs.onSurfaceVariant),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+
                         const SizedBox(height: 6),
                         _StatusChip(
-                          label: isCompleted ? 'Completed' : 'Incomplete',
+                          label: isCompleted
+                              ? L10nX(context).l10n.statusCompleted
+                              : L10nX(context).l10n.statusIncomplete,
                           color: isCompleted ? cs.primary : cs.tertiary,
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  OutlinedButton.icon(
-                    icon: const Icon(Icons.logout),
-                    label: const Text('Log out'),
-                    onPressed: () async {
-                      final yes = await showDialog<bool>(
-                        context: context,
-                        builder: (_) => AlertDialog(
-                          title: const Text('Log out?'),
-                          content: const Text('You can sign in again anytime.'),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context, false),
-                              child: const Text('Cancel'),
-                            ),
-                            FilledButton(
-                              onPressed: () => Navigator.pop(context, true),
-                              child: const Text('Log out'),
-                            ),
-                          ],
+                  SizedBox(
+                    height: 34, // try 30–34 for compact
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        minimumSize: const Size(
+                          0,
+                          0,
+                        ), // allow the SizedBox to control height
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: const VisualDensity(
+                          horizontal: -2,
+                          vertical: -2,
                         ),
-                      );
-                      if (yes == true) {
-                        await auth.logout();
-                        if (context.mounted)
-                          AppSnack.info(context, 'Signed out');
-                      }
-                    },
+                      ),
+                      icon: const Icon(Icons.logout, size: 18),
+                      label: Text(
+                        L10nX(context).l10n.actionSignOut,
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontSize: 12,
+                          color: Theme.of(context).primaryColor,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      onPressed: () async {
+                        final yes = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: Text(L10nX(context).l10n.logoutConfirmTitle),
+                            content: Text(
+                              L10nX(context).l10n.logoutConfirmBody,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: Text(L10nX(context).l10n.cancel),
+                                style: TextButton.styleFrom(
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(
+                                    horizontal: -2,
+                                    vertical: -2,
+                                  ),
+                                ),
+                              ),
+                              FilledButton(
+                                onPressed: () => Navigator.pop(context, true),
+                                child: Text(L10nX(context).l10n.actionSignOut),
+                                style: FilledButton.styleFrom(
+                                  tapTargetSize:
+                                      MaterialTapTargetSize.shrinkWrap,
+                                  visualDensity: const VisualDensity(
+                                    horizontal: -2,
+                                    vertical: -2,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (yes == true) {
+                          await auth.logout();
+                          if (context.mounted) {
+                            AppSnack.info(
+                              context,
+                              L10nX(context).l10n.signedOut,
+                            );
+                          }
+                        }
+                      },
+                    ),
                   ),
                 ],
               ),
@@ -207,7 +274,7 @@ class SettingsScreen extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Complete your account to unlock Organization and My equipment.',
+                        L10nX(context).l10n.completeYourAccountBody,
                         style: Theme.of(context).textTheme.bodySmall,
                       ),
                     ),
@@ -217,7 +284,7 @@ class SettingsScreen extends StatelessWidget {
                           builder: (_) => const ProfileScreen(),
                         ),
                       ),
-                      child: const Text('Complete'),
+                      child: Text(L10nX(context).l10n.completeAction),
                     ),
                   ],
                 ),
@@ -226,26 +293,26 @@ class SettingsScreen extends StatelessWidget {
           ],
 
           const SizedBox(height: 18),
-          const _SectionHeader('Account'),
+          _SectionHeader(L10nX(context).l10n.accountSection),
           _ActionTile(
             icon: AppGlyph.user,
-            title: 'Profile',
-            subtitle: 'Your personal & company details',
+            title: L10nX(context).l10n.profileTitle,
+            subtitle: L10nX(context).l10n.profileSubtitle,
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
           ),
           _ActionTile(
             icon: AppGlyph.Settings,
-            title: 'App settings',
-            subtitle: 'Theme, language, notifications',
+            title: L10nX(context).l10n.appSettings,
+            subtitle: L10nX(context).l10n.appSettingsSubtitle,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const AppSettingsScreen()),
             ),
           ),
 
           const SizedBox(height: 18),
-          const _SectionHeader('Manage'),
+          _SectionHeader(L10nX(context).l10n.manageSection),
           LayoutBuilder(
             builder: (_, c) {
               final twoUp = c.maxWidth >= 560;
@@ -256,8 +323,8 @@ class SettingsScreen extends StatelessWidget {
                   if (isCompleted)
                     _ActionCard(
                       icon: AppGlyph.organization,
-                      title: 'Organization',
-                      subtitle: 'Company info & compliance',
+                      title: L10nX(context).l10n.organizationTitle,
+                      subtitle: L10nX(context).l10n.organizationSubtitle,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const OrganizationScreen(),
@@ -268,8 +335,8 @@ class SettingsScreen extends StatelessWidget {
                   if (isCompleted)
                     _ActionCard(
                       icon: AppGlyph.truck,
-                      title: 'My equipment',
-                      subtitle: 'View and manage your fleet',
+                      title: L10nX(context).l10n.myEquipmentTitle,
+                      subtitle: L10nX(context).l10n.myEquipmentSubtitle,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const EquipmentManagementScreen(),
@@ -280,8 +347,8 @@ class SettingsScreen extends StatelessWidget {
                   if (isCompleted)
                     _ActionCard(
                       icon: AppGlyph.organization,
-                      title: 'Requests',
-                      subtitle: 'Manage your requests',
+                      title: L10nX(context).l10n.requestsTitle,
+                      subtitle: L10nX(context).l10n.requestsSubtitle,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const MyRequestsScreen(),
@@ -290,12 +357,11 @@ class SettingsScreen extends StatelessWidget {
                       width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,
                     ),
 
-                  // ✅ SUPER ADMIN ENTRY (visible only for userTypeId == 20)
                   if (isSuperAdmin)
                     _ActionCard(
-                      icon: AppGlyph.Settings, // pick any suitable glyph
-                      title: 'Super Admin',
-                      subtitle: 'Open super admin panel (debug)',
+                      icon: AppGlyph.Settings,
+                      title: L10nX(context).l10n.superAdminTitle,
+                      subtitle: L10nX(context).l10n.superAdminSubtitle,
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const SuperAdminHubScreen(),
@@ -309,19 +375,19 @@ class SettingsScreen extends StatelessWidget {
           ),
 
           const SizedBox(height: 18),
-          const _SectionHeader('Activity'),
+          _SectionHeader(L10nX(context).l10n.activitySection),
           _ActionTile(
             icon: AppGlyph.contract,
-            title: 'Contracts',
-            subtitle: 'Pending, open, finished, closed',
+            title: L10nX(context).l10n.contractsTitle,
+            subtitle: L10nX(context).l10n.contractsSubtitle,
             onTap: () => Navigator.of(
               context,
             ).push(MaterialPageRoute(builder: (_) => const ContractsScreen())),
           ),
           _ActionTile(
             icon: AppGlyph.invoice,
-            title: 'Orders (history)',
-            subtitle: 'Past orders & receipts',
+            title: L10nX(context).l10n.ordersHistoryTitle,
+            subtitle: L10nX(context).l10n.ordersHistorySubtitle,
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const OrdersHistoryScreen()),
             ),

@@ -9,6 +9,7 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 // MODELS
 import 'package:heavy_new/core/models/equipment/equipment.dart';
 import 'package:heavy_new/core/models/user/auth.dart';
+import 'package:heavy_new/foundation/localization/l10n_extensions.dart';
 
 // UI kit bits
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
@@ -103,15 +104,17 @@ class _HomeScreenState extends State<HomeScreen> {
     return OfflineBanner(
       child: Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'HeavyRent',
+          title: Text(
+            context.l10n.appName, // 'HeavyRent'
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           centerTitle: true,
           backgroundColor: Theme.of(context).colorScheme.surface,
           leading: IconButton(
-            tooltip: AuthStore.instance.isLoggedIn ? 'Logout' : 'Login',
+            tooltip: AuthStore.instance.isLoggedIn
+                ? context.l10n.tooltipLogout
+                : context.l10n.tooltipLogin,
             icon: AIcon(
               AuthStore.instance.isLoggedIn ? AppGlyph.logout : AppGlyph.login,
             ),
@@ -119,13 +122,13 @@ class _HomeScreenState extends State<HomeScreen> {
               if (AuthStore.instance.isLoggedIn) {
                 await AuthStore.instance.logout();
                 if (!context.mounted) return;
-                AppSnack.info(context, 'Signed out');
+                AppSnack.info(context, context.l10n.signedOut);
               } else {
                 final ok = await Navigator.of(context).push<bool>(
                   MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
                 );
                 if (ok == true && context.mounted) {
-                  AppSnack.success(context, 'Signed in');
+                  AppSnack.success(context, context.l10n.signedIn);
                 }
               }
             },
@@ -133,12 +136,13 @@ class _HomeScreenState extends State<HomeScreen> {
           actions: [
             // Admin button (conditionally visible)
             ValueListenableBuilder<AuthUser?>(
+              // unchanged
               valueListenable: AuthStore.instance.user,
               builder: (context, u, _) {
                 final isSuperAdmin = u?.userTypeId == 17;
                 if (!isSuperAdmin) return const SizedBox.shrink();
                 return IconButton(
-                  tooltip: 'Admin',
+                  tooltip: context.l10n.admin, // 'Admin'
                   icon: const Icon(Icons.admin_panel_settings),
                   onPressed: () {
                     Navigator.of(context).push(
@@ -155,6 +159,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const ChatActionButton(),
           ],
         ),
+
         body: RefreshIndicator(
           onRefresh: _refresh,
           child: LayoutBuilder(
@@ -183,9 +188,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           return SizedBox(
                             height: heroH,
                             child: TiltHeroCard(
-                              title: 'Heavy gear, light work',
-                              subtitle:
-                                  'Rent certified machines with drivers, on-demand.',
+                              title: context
+                                  .l10n
+                                  .heroTitle, // 'Heavy gear, light work'
+                              subtitle: context
+                                  .l10n
+                                  .heroSubtitle, // 'Rent certified machines...'
                               image: Image.asset(
                                 'lib/assets/hero.jpg',
                                 fit: BoxFit.cover,
@@ -195,14 +203,18 @@ class _HomeScreenState extends State<HomeScreen> {
                                   builder: (_) => const EquipmentListScreen(),
                                 ),
                               ),
-                              primaryLabel: 'Find equipment',
+                              primaryLabel: context
+                                  .l10n
+                                  .findEquipment, // 'Find equipment'
                             ),
                           );
                         },
                       ),
                       const SizedBox(height: 15),
                       SectionHeader(
-                        title: 'Popular equipment',
+                        title: context
+                            .l10n
+                            .popularEquipment, // 'Popular equipment'
                         action: GhostButton(
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
@@ -213,9 +225,10 @@ class _HomeScreenState extends State<HomeScreen> {
                             AppGlyph.search,
                             color: Theme.of(context).colorScheme.primary,
                           ),
-                          child: const Text('See more'),
+                          child: Text(context.l10n.seeMore), // 'See more'
                         ),
                       ),
+
                       const SizedBox(height: 12),
 
                       // EQUIPMENT GRID — adaptive max-extent grid with hover scale + glow
@@ -238,7 +251,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               child: Column(
                                 children: [
                                   Text(
-                                    'Could not load equipment',
+                                    context.l10n.couldNotLoadEquipment,
                                     style: Theme.of(
                                       context,
                                     ).textTheme.bodyLarge,
@@ -255,7 +268,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       () =>
                                           _futureTop = api.Api.getEquipments(),
                                     ),
-                                    child: const Text('Retry'),
+                                    child: Text(context.l10n.retry),
                                   ),
                                 ],
                               ),
@@ -267,7 +280,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             return Padding(
                               padding: const EdgeInsets.all(24),
                               child: Text(
-                                'No equipment yet.',
+                                context
+                                    .l10n
+                                    .noEquipmentYet, // 'No equipment yet.'
                                 style: Theme.of(context).textTheme.bodyLarge,
                               ),
                             );
@@ -698,7 +713,7 @@ class HomeEquipmentCard extends StatelessWidget {
                     // Price under distance (this is the key change)
                     const SizedBox(height: 6),
                     Text(
-                      'From ${_fmtPrice(pricePerDay)} / day',
+                      context.l10n.fromPerDay(_fmtPrice(pricePerDay)), // ✅
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: t.titleSmall?.copyWith(
@@ -717,7 +732,7 @@ class HomeEquipmentCard extends StatelessWidget {
                             Icons.shopping_cart_outlined,
                             size: 18,
                           ),
-                          label: const Text('Rent'),
+                          label: Text(context.l10n.rent),
                         ),
                       ),
                     ],
@@ -753,7 +768,9 @@ class _DistanceChip extends StatelessWidget {
           Icon(Icons.place_outlined, size: 14, color: cs.onSecondaryContainer),
           const SizedBox(width: 4),
           Text(
-            '${km.toStringAsFixed(km >= 100 ? 0 : 1)} km',
+            context.l10n.distanceKm(
+              km.toStringAsFixed(km >= 100 ? 0 : 1),
+            ), // e.g., '12.5 km' / '١٢٫٥ كم'
             style: t.labelSmall?.copyWith(color: cs.onSecondaryContainer),
           ),
         ],
@@ -894,11 +911,13 @@ class RowEquipmentCard extends StatelessWidget {
 
                           // Price under distance
                           Text(
-                            'From ${_fmtPrice(pricePerDay)} / day',
+                            context.l10n.fromPerDay(
+                              _fmtPrice(pricePerDay),
+                            ), // ✅
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: t.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w900,
+                              fontWeight: FontWeight.w800,
                             ),
                           ),
 
@@ -916,7 +935,7 @@ class RowEquipmentCard extends StatelessWidget {
                                     Icons.shopping_cart_outlined,
                                     size: 18,
                                   ),
-                                  label: const Text('Rent'),
+                                  label: Text(context.l10n.rent),
                                 ),
                               ),
                             ),

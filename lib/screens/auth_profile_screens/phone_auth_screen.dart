@@ -1,3 +1,4 @@
+// lib/screens/auth_profile_screens/phone_auth_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -6,7 +7,12 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/screens/app/notification_screen.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class PhoneAuthScreen extends StatefulWidget {
   const PhoneAuthScreen({super.key, this.onDone});
@@ -35,7 +41,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   }
 
   Future<void> _start() async {
-    if (_busy) return; // debounce
+    if (_busy) return;
     if (!_formKey.currentState!.validate()) return;
     setState(() => _busy = true);
     try {
@@ -48,32 +54,32 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         _serverOtpHint = probe.otpHint;
         _stepOtp = true;
       });
-      AppSnack.info(context, 'OTP sent');
+      AppSnack.info(context, context.l10n.otpSent);
     } catch (e) {
-      AppSnack.error(context, 'Could not start verification');
+      AppSnack.error(context, context.l10n.couldNotStartVerification);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
   Future<void> _verify() async {
-    if (_busy) return; // debounce double taps
+    if (_busy) return;
     final code = _otpCtrl.text.trim();
     if (code.length != 4) {
-      AppSnack.error(context, 'Enter the 4-digit code');
+      AppSnack.error(context, context.l10n.enterFourDigitCode);
       return;
     }
 
     setState(() => _busy = true);
     try {
       await AuthStore.instance.verifyOtp(otp: code);
-      AppSnack.success(context, 'Signed in');
+      AppSnack.success(context, context.l10n.signedIn); // you already have this
 
       if (!mounted) return;
       Notifications().sendNotification();
       Navigator.of(context).pop(true);
     } catch (e) {
-      AppSnack.error(context, 'Invalid or expired code');
+      AppSnack.error(context, context.l10n.invalidOrExpiredCode);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -84,7 +90,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Sign in')),
+      appBar: AppBar(title: Text(context.l10n.actionSignIn)), // reuse existing
       body: AbsorbPointer(
         absorbing: _busy,
         child: LayoutBuilder(
@@ -92,7 +98,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             final w = bc.maxWidth;
             final wide = w >= 900;
 
-            // Common paddings & max widths
             const screenHPad = 1.0;
             const screenVPad = 1.0;
             const formMaxWidth = 600.0;
@@ -112,7 +117,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Mobile number',
+                            context.l10n.mobileNumber,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
                           const SizedBox(height: 10),
@@ -122,8 +127,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 width: 96,
                                 child: AInput(
                                   controller: _ccCtrl,
-                                  label: 'Code',
-                                  hint: '966',
+                                  label: context.l10n.codeLabel,
+                                  hint: context.l10n.codeHint,
                                   glyph: AppGlyph.globe,
                                   keyboardType: TextInputType.phone,
                                   inputFormatters: [
@@ -137,7 +142,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                       (v ?? '').replaceAll('+', '').trim(),
                                     );
                                     return (n == null || n <= 0)
-                                        ? 'Code'
+                                        ? context.l10n.validationRequired(
+                                            context.l10n.codeLabel,
+                                          )
                                         : null;
                                   },
                                 ),
@@ -146,8 +153,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               Expanded(
                                 child: AInput(
                                   controller: _digitsCtrl,
-                                  label: 'Mobile (9 digits)',
-                                  hint: '5XX XXX XXX',
+                                  label: context.l10n.mobile9DigitsLabel,
+                                  hint: context.l10n.mobile9DigitsHint,
                                   glyph: AppGlyph.phone,
                                   keyboardType: TextInputType.number,
                                   inputFormatters: [
@@ -156,7 +163,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                   ],
                                   validator: (v) =>
                                       (v == null || v.trim().length != 9)
-                                      ? 'Enter 9 digits'
+                                      ? context.l10n.enterNineDigits
                                       : null,
                                 ),
                               ),
@@ -170,7 +177,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               color: Colors.white,
                               selected: true,
                             ),
-                            child: Text(_stepOtp ? 'Resend code' : 'Send code'),
+                            child: Text(
+                              _stepOtp
+                                  ? context.l10n.resendCode
+                                  : context.l10n.sendCode,
+                            ),
                           ),
                           if (_stepOtp &&
                               (_serverOtpHint?.isNotEmpty ?? false)) ...[
@@ -182,7 +193,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
-                                'DEV OTP: $_serverOtpHint',
+                                context.l10n.devOtpHint(_serverOtpHint!),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.labelMedium
@@ -205,13 +216,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Enter code',
+                                context.l10n.enterCodeTitle,
                                 style: Theme.of(context).textTheme.titleMedium,
                               ),
                               const SizedBox(height: 10),
                               AInput(
                                 controller: _otpCtrl,
-                                label: 'Code',
+                                label: context.l10n.codeLabel,
                                 hint: '• • • •',
                                 keyboardType: TextInputType.number,
                                 maxLines: 1,
@@ -228,11 +239,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                   color: Colors.white,
                                   selected: true,
                                 ),
-                                child: const Text('Verify & continue'),
+                                child: Text(context.l10n.verifyAndContinue),
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Didn\'t get it? Tap "Resend code".',
+                                context.l10n.didntGetItTapResend,
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: Theme.of(context).textTheme.bodySmall
@@ -249,7 +260,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             );
 
             if (!wide) {
-              // -------- Phone / small tablet: single column, centered width --------
               return Center(
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(
@@ -265,7 +275,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               );
             }
 
-            // -------- Desktop / big tablet: two columns (welcome + form) --------
+            // Desktop / big tablet: two columns
             return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: pageMaxWidth),
@@ -295,7 +305,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                     ),
                                     const SizedBox(width: 8),
                                     Text(
-                                      'Welcome back',
+                                      context.l10n.welcomeBack,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
                                       style: Theme.of(context)
@@ -309,8 +319,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 ),
                                 const SizedBox(height: 10),
                                 Text(
-                                  'Sign in with your mobile number.\n'
-                                  'Fast, secure, OTP-based login.',
+                                  context.l10n.signInWithMobileBlurb,
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
                                 const Spacer(),
@@ -326,7 +335,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                       AIcon(AppGlyph.info, color: cs.primary),
                                       const SizedBox(width: 8),
                                       Text(
-                                        'We’ll never share your number.',
+                                        context.l10n.neverShareNumber,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                         style: Theme.of(

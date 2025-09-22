@@ -15,6 +15,13 @@ import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/core/models/organization/organization_user.dart';
 
+// l10n
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
+
 class ContractSheetScreen extends StatefulWidget {
   const ContractSheetScreen({
     super.key,
@@ -146,7 +153,6 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
   int _idForUpdate({required int unitIndex, required int dayIndex}) {
     final seed = (unitIndex * 37 + dayIndex * 13);
     return (seed % 60) + 1; // 1..60
-    // (matches your requirement “random (1..60)” but deterministic per row)
   }
 
   String _key(int unitIndex, int dayIndex) => 'u$unitIndex#d$dayIndex';
@@ -239,7 +245,7 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
 
     // If nothing entered and everything locked → noop with hint
     if (!_pending.containsKey(k) && !_saved.containsKey(k)) {
-      AppSnack.info(context, 'Nothing to save for this row.');
+      AppSnack.info(context, context.l10n.rowNothingToSave);
       return;
     }
 
@@ -273,7 +279,10 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
           : (merged.vendorNote ?? ''),
     );
 
-    final label = 'u$unitIndex ${merged.sliceDate}';
+    final label = context.l10n.rowLabel(
+      unitIndex.toString(),
+      merged.sliceDate ?? '',
+    );
     setState(() => _saving.add(k));
     try {
       final ok = await api.Api.updateContractSliceSheet(payload);
@@ -285,17 +294,14 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
         _finalized.add(k);
         _pending.remove(k);
         setState(() {});
-        AppSnack.success(context, 'Saved ($label).');
+        AppSnack.success(context, context.l10n.rowSaved(label));
       } else {
-        AppSnack.error(context, 'Save failed ($label).');
+        AppSnack.error(context, context.l10n.rowSaveFailed(label));
       }
     } catch (e) {
       final msg = e.toString();
       if (msg.contains('405')) {
-        AppSnack.info(
-          context,
-          'Update endpoint not enabled (405). Nothing changed on the server.',
-        );
+        AppSnack.info(context, context.l10n.endpoint405Noop);
       } else {
         AppSnack.error(context, msg);
       }
@@ -337,7 +343,7 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
     final crossAxisCount = (qty == 1) ? 1 : 2;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Contract Sheet')),
+      appBar: AppBar(title: Text(context.l10n.contractSheetTitle)),
       body: LayoutBuilder(
         builder: (context, bc) {
           final rules = _editableForRole();
@@ -353,23 +359,32 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
                   children: [
                     _chip(
                       cs,
-                      'Contract #${widget.contract.contractNo ?? widget.contract.contractId ?? ''}',
+                      context.l10n.contractChip(
+                        '${widget.contract.contractNo ?? widget.contract.contractId ?? ''}',
+                      ),
                       Icons.assignment,
                     ),
                     _chip(
                       cs,
-                      'Req #${widget.request.requestNo ?? widget.request.requestId ?? ''}',
+                      context.l10n.requestChip(
+                        '${widget.request.requestNo ?? widget.request.requestId ?? ''}',
+                      ),
                       Icons.request_page_outlined,
                     ),
-                    _chip(cs, 'Qty: $qty', Icons.numbers),
+                    _chip(cs, context.l10n.qtyChip(qty), Icons.numbers),
                     _chip(
                       cs,
-                      '${_days.first} → ${_days.last}',
+                      context.l10n.dateRangeChip(_days.first, _days.last),
                       Icons.calendar_month,
                     ),
-                    if (_isVendor) _chip(cs, 'Role: Vendor', Icons.badge),
+                    if (_isVendor)
+                      _chip(cs, context.l10n.roleVendor, Icons.badge),
                     if (_isCustomer)
-                      _chip(cs, 'Role: Customer', Icons.badge_outlined),
+                      _chip(
+                        cs,
+                        context.l10n.roleCustomer,
+                        Icons.badge_outlined,
+                      ),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -567,7 +582,7 @@ class _UnitColumn extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  'Unit #$unitIndex',
+                  '${context.l10n.unitLabel} #$unitIndex',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     color: cs.onPrimaryContainer,
                     fontWeight: FontWeight.w800,
@@ -687,7 +702,7 @@ class _RowSavedCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    'Saved',
+                    context.l10n.savedChip,
                     style: TextStyle(
                       color: headerFg,
                       fontWeight: FontWeight.w700,
@@ -701,17 +716,17 @@ class _RowSavedCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
             child: Column(
               children: [
-                _kv('Planned', planned),
-                _kv('Actual', actual),
-                _kv('Overtime', overtime),
-                _kv('Total', total),
+                _kv(context.l10n.plannedLabel, planned),
+                _kv(context.l10n.actualLabel, actual),
+                _kv(context.l10n.overtimeLabel, overtime),
+                _kv(context.l10n.totalLabel, total),
                 if (customerNote.trim().isNotEmpty) ...[
                   const SizedBox(height: 6),
-                  _kv('Customer note', customerNote),
+                  _kv(context.l10n.customerNoteLabel, customerNote),
                 ],
                 if (vendorNote.trim().isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  _kv('Vendor note', vendorNote),
+                  _kv(context.l10n.vendorNoteLabel, vendorNote),
                 ],
               ],
             ),
@@ -808,7 +823,7 @@ class _RowCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      'Unsaved',
+                      context.l10n.unsavedChip,
                       style: TextStyle(
                         color: headerFg,
                         fontWeight: FontWeight.w700,
@@ -827,14 +842,14 @@ class _RowCard extends StatelessWidget {
                 Row(
                   children: [
                     _NumField(
-                      label: 'Planned',
+                      label: context.l10n.plannedLabel,
                       initial: planned,
                       enabled: !lockNumbers,
                       onChanged: (v) => onChangedNumber('daily', v),
                     ),
                     const SizedBox(width: 8),
                     _NumField(
-                      label: 'Actual',
+                      label: context.l10n.actualLabel,
                       initial: actual,
                       enabled: !lockNumbers,
                       onChanged: (v) => onChangedNumber('actual', v),
@@ -845,14 +860,14 @@ class _RowCard extends StatelessWidget {
                 Row(
                   children: [
                     _NumField(
-                      label: 'Overtime',
+                      label: context.l10n.overtimeLabel,
                       initial: overtime,
                       enabled: !lockNumbers,
                       onChanged: (v) => onChangedNumber('over', v),
                     ),
                     const SizedBox(width: 8),
                     _NumField(
-                      label: 'Total',
+                      label: context.l10n.totalLabel,
                       initial: total,
                       enabled: !lockNumbers,
                       onChanged: (v) => onChangedNumber('total', v),
@@ -861,14 +876,14 @@ class _RowCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 _TextField(
-                  label: 'Customer note',
+                  label: context.l10n.customerNoteLabel,
                   initial: custNote,
                   enabled: !lockCustomerNote,
                   onChanged: (v) => onChangedText('cust', v),
                 ),
                 const SizedBox(height: 8),
                 _TextField(
-                  label: 'Vendor note',
+                  label: context.l10n.vendorNoteLabel,
                   initial: vendNote,
                   enabled: !lockVendorNote,
                   onChanged: (v) => onChangedText('vend', v),
@@ -886,7 +901,11 @@ class _RowCard extends StatelessWidget {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.save),
-                    label: Text(saving ? 'Saving…' : 'Save'),
+                    label: Text(
+                      saving
+                          ? context.l10n.savingEllipsis
+                          : context.l10n.actionSave,
+                    ),
                   ),
                 ),
               ],

@@ -1,5 +1,7 @@
+// lib/screens/auth_profile_screens/profile_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:heavy_new/core/api/api_handler.dart' as api;
 import 'package:heavy_new/core/auth/auth_store.dart';
@@ -8,6 +10,10 @@ import 'package:heavy_new/core/models/user/user_account.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart'; // Glass, AppSnack, PressableScale
 import 'package:heavy_new/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -46,7 +52,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     try {
       setState(() => _busy = true);
 
-      // Prefill from current auth user
       final au = AuthStore.instance.user.value;
       UserAccount pref = UserAccount(
         id: au?.id,
@@ -60,15 +65,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
         isActive: au?.isActive,
         isCompleted: au?.isCompleted,
         userTypeId: au?.userTypeId,
-        password: null, // never prefill password
+        password: null,
       );
 
-      // Try to fetch latest from backend if we have an id
       if (pref.id != null && pref.id! > 0) {
         try {
           pref = await api.Api.getUserAccountById(pref.id!);
         } catch (_) {
-          // keep local fallback silently
+          /* keep local */
         }
       }
 
@@ -78,7 +82,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _mobile.text = pref.mobile ?? '';
       _password.clear();
     } catch (_) {
-      AppSnack.error(context, 'Failed to load profile');
+      AppSnack.error(context, context.l10n.failedToLoadProfile);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -92,7 +96,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final au = AuthStore.instance.user.value;
       final includePassword = _password.text.trim().isNotEmpty;
 
-      // Build payload for SaveUser
       final updated = UserAccount(
         id: _model?.id ?? au?.id,
         fullName: _name.text.trim(),
@@ -100,7 +103,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         password: includePassword ? _password.text.trim() : null,
         mobile: _mobile.text.trim(),
         countryCode: _model?.countryCode ?? au?.countryCode,
-        // mark as completed
         isCompleted: true,
         isActive: _model?.isActive ?? true,
         statusId: _model?.statusId,
@@ -116,7 +118,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         includePassword: includePassword,
       );
 
-      // Update local auth store to reflect completed profile
       await AuthStore.instance.saveProfileAndMarkCompleted(
         fullName: saved.fullName ?? _name.text.trim(),
         email: saved.email ?? _email.text.trim(),
@@ -127,11 +128,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
       _password.clear();
 
       if (!mounted) return;
-      AppSnack.success(context, 'Profile saved');
-      Navigator.of(context).maybePop(); // return to previous screen
+      AppSnack.success(context, context.l10n.profileSaved);
+      Navigator.of(context).maybePop();
     } catch (e) {
       if (!mounted) return;
-      AppSnack.error(context, 'Could not save profile');
+      AppSnack.error(context, context.l10n.couldNotSaveProfile);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -154,7 +155,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: Text(context.l10n.profileTitle),
+      ), // already added earlier
       body: AbsorbPointer(
         absorbing: _busy,
         child: Stack(
@@ -170,7 +173,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     padding: const EdgeInsets.all(12),
                     child: Row(
                       children: [
-                        // Simple circle avatar placeholder
                         CircleAvatar(
                           radius: 28,
                           backgroundColor: cs.surfaceVariant,
@@ -185,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         Expanded(
                           child: Text(
                             _name.text.isEmpty
-                                ? 'Complete your profile'
+                                ? context.l10n.profileCompletePrompt
                                 : _name.text,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -226,25 +228,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           AInput(
                             controller: _name,
-                            label: 'Full name',
+                            label: context.l10n.fullName,
                             glyph: AppGlyph.user,
                             textInputAction: TextInputAction.next,
                             validator: (v) => (v == null || v.trim().isEmpty)
-                                ? 'Required'
+                                ? context.l10n.validationRequired(
+                                    context.l10n.fullName,
+                                  )
                                 : null,
                           ),
                           const SizedBox(height: 8),
                           AInput(
                             controller: _email,
-                            label: 'Email',
+                            label: context.l10n.email, // existing key
                             glyph: AppGlyph.mail,
                             keyboardType: TextInputType.emailAddress,
                             textInputAction: TextInputAction.next,
                             validator: (v) {
                               final t = v?.trim() ?? '';
-                              if (t.isEmpty) return 'Enter a valid email';
+                              if (t.isEmpty)
+                                return context.l10n.validationEmail;
                               if (!t.contains('@') || !t.contains('.')) {
-                                return 'Enter a valid email';
+                                return context.l10n.validationEmail;
                               }
                               return null;
                             },
@@ -252,7 +257,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8),
                           AInput(
                             controller: _mobile,
-                            label: 'Mobile',
+                            label: context.l10n.phone, // reuse existing "phone"
                             glyph: AppGlyph.phone,
                             keyboardType: TextInputType.phone,
                             textInputAction: TextInputAction.next,
@@ -260,14 +265,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 8),
                           AInput(
                             controller: _password,
-                            label: 'Password (leave blank to keep)',
+                            label: context.l10n.passwordKeep,
                             glyph: AppGlyph.lock,
                             keyboardType: TextInputType.visiblePassword,
                             textInputAction: TextInputAction.done,
                             validator: (v) {
                               final t = v?.trim() ?? '';
                               if (t.isEmpty) return null; // optional
-                              if (t.length < 6) return 'Min 6 characters';
+                              if (t.length < 6)
+                                return context.l10n.validationMinChars(6);
                               return null;
                             },
                           ),
@@ -283,9 +289,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     selected: true,
                                     size: 22,
                                   ),
-                                  child: const Text(
-                                    'Save changes',
-                                    style: TextStyle(fontSize: 12),
+                                  child: Text(
+                                    context.l10n.actionSaveChanges,
+                                    style: const TextStyle(fontSize: 12),
                                   ),
                                 ),
                               ),
@@ -300,7 +306,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ).colorScheme.primary,
                                     size: 22,
                                   ),
-                                  child: const Text('Reset'),
+                                  child: Text(context.l10n.actionReset),
                                 ),
                               ),
                             ],

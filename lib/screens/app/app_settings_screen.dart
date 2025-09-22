@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/screens/app/app_prefs.dart';
 import 'package:intl/intl.dart';
+
+extension L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!; // non-null
+  Locale get locale => Localizations.localeOf(this);
+  bool get isArabic => locale.languageCode == 'ar';
+}
 
 class AppSettingsScreen extends StatefulWidget {
   const AppSettingsScreen({super.key});
@@ -20,7 +28,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     return await showTimePicker(
       context: context,
       initialTime: initial ?? now,
-      helpText: 'Select time',
+      helpText: context.l10n.selectTime,
     );
   }
 
@@ -29,7 +37,19 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('App settings')),
+      appBar: AppBar(
+        title: Text(context.l10n.appSettings),
+        leading: BackButton(
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/settings');
+            }
+          },
+        ),
+      ),
+
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
         children: [
@@ -49,7 +69,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                           AIcon(AppGlyph.Settings, color: cs.primary),
                           const SizedBox(width: 8),
                           Text(
-                            'Theme',
+                            context.l10n.settingsTheme, // ← localized
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
@@ -57,12 +77,12 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                       ),
                       const SizedBox(height: 10),
                       _themeOption(
-                        title: 'Light',
+                        title: context.l10n.themeLight, // ← localized
                         selected: mode == ThemeMode.light,
                         onTap: () => prefs.setTheme(ThemeMode.light),
                       ),
                       _themeOption(
-                        title: 'Dark',
+                        title: context.l10n.themeDark, // ← localized
                         selected: mode == ThemeMode.dark,
                         onTap: () => prefs.setTheme(ThemeMode.dark),
                       ),
@@ -92,7 +112,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                           AIcon(AppGlyph.globe, color: cs.primary),
                           const SizedBox(width: 8),
                           Text(
-                            'Language',
+                            context.l10n.settingsLanguage, // already in ARB
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
@@ -100,12 +120,12 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                       ),
                       const SizedBox(height: 10),
                       _langOption(
-                        'English',
+                        context.l10n.langEnglish, // already in ARB
                         selected: code == 'en',
                         onTap: () => prefs.setLocale(const Locale('en')),
                       ),
                       _langOption(
-                        'العربية',
+                        context.l10n.langArabic, // already in ARB
                         selected: code == 'ar',
                         onTap: () => prefs.setLocale(const Locale('ar')),
                       ),
@@ -128,8 +148,12 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                 builder: (_, np, __) {
                   String _fmt(TimeOfDay? t) {
                     if (t == null) return '—';
+                    // Use current locale for formatting
+                    final locale = Localizations.localeOf(
+                      context,
+                    ).toLanguageTag();
                     final dt = DateTime(0, 1, 1, t.hour, t.minute);
-                    return DateFormat.jm().format(dt);
+                    return DateFormat.jm(locale).format(dt);
                   }
 
                   return Column(
@@ -140,47 +164,46 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                           AIcon(AppGlyph.bell, color: cs.primary),
                           const SizedBox(width: 8),
                           Text(
-                            'Notifications',
+                            context.l10n.pushNotifications, // ← new key
                             style: Theme.of(context).textTheme.titleMedium
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const Spacer(),
                           GhostButton(
                             onPressed: () {
-                              // demo toast
                               AppSnack.info(
                                 context,
-                                'This is a test notification',
-                              );
+                                context.l10n.testNotificationMessage,
+                              ); // ← new key
                             },
                             icon: AIcon(AppGlyph.send, color: cs.primary),
-                            child: const Text('Test'),
+                            child: Text(context.l10n.test), // ← new key
                           ),
                         ],
                       ),
                       const SizedBox(height: 10),
                       _toggleRow(
-                        label: 'Push notifications',
+                        label: context.l10n.pushNotifications, // ← new key
                         value: np.pushEnabled,
                         onChanged: (v) =>
                             prefs.setNotifications(np.copyWith(pushEnabled: v)),
                       ),
                       _toggleRow(
-                        label: 'In-app banners',
+                        label: context.l10n.inAppBanners, // ← new key
                         value: np.inAppEnabled,
                         onChanged: (v) => prefs.setNotifications(
                           np.copyWith(inAppEnabled: v),
                         ),
                       ),
                       _toggleRow(
-                        label: 'Email updates',
+                        label: context.l10n.emailUpdates, // ← new key
                         value: np.emailEnabled,
                         onChanged: (v) => prefs.setNotifications(
                           np.copyWith(emailEnabled: v),
                         ),
                       ),
                       _toggleRow(
-                        label: 'Sound',
+                        label: context.l10n.sound, // ← new key
                         value: np.soundEnabled,
                         onChanged: (v) => prefs.setNotifications(
                           np.copyWith(soundEnabled: v),
@@ -188,7 +211,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                       ),
                       const SizedBox(height: 10),
                       Text(
-                        'Quiet hours',
+                        context.l10n.quietHours, // ← new key
                         style: Theme.of(context).textTheme.labelLarge,
                       ),
                       const SizedBox(height: 8),
@@ -205,7 +228,9 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                 }
                               },
                               icon: const Icon(Icons.nightlight_round),
-                              label: Text('From: ${_fmt(np.quietFrom)}'),
+                              label: Text(
+                                '${context.l10n.from}: ${_fmt(np.quietFrom)}',
+                              ), // ← new key
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -220,14 +245,16 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                                 }
                               },
                               icon: const Icon(Icons.sunny_snowing),
-                              label: Text('To: ${_fmt(np.quietTo)}'),
+                              label: Text(
+                                '${context.l10n.to}: ${_fmt(np.quietTo)}',
+                              ), // ← new key
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'During quiet hours, sounds are muted. (Demo—wire to your push provider later.)',
+                        context.l10n.quietHours, // ← new key
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: cs.onSurfaceVariant,
                         ),

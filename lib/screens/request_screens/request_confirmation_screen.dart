@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Clipboard
 import 'package:intl/intl.dart';
-
-// add this if you don’t already import api in this file
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/core/api/api_handler.dart' as api;
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class RequestConfirmationScreen extends StatefulWidget {
   const RequestConfirmationScreen({
@@ -12,20 +15,13 @@ class RequestConfirmationScreen extends StatefulWidget {
     required this.totalSar,
     required this.from,
     required this.to,
-    this.statusId, // ← new
+    this.statusId,
   });
 
-  /// Request number returned by the API. May be "—" or empty on some backends.
   final String requestNo;
-
-  /// Total amount (after VAT) in SAR.
   final double totalSar;
-
-  /// Rental period (inclusive).
   final DateTime from;
   final DateTime to;
-
-  /// Status (Domain 12) detail id (e.g. 34). Optional.
   final int? statusId;
 
   @override
@@ -34,7 +30,7 @@ class RequestConfirmationScreen extends StatefulWidget {
 }
 
 class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
-  String? _statusLabel; // resolved label from Domain 12
+  String? _statusLabel;
   bool _loadingStatus = false;
 
   @override
@@ -50,13 +46,11 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
     setState(() => _loadingStatus = true);
     try {
       final details = await api.Api.getDomainDetailsByDomainId(12);
-      // find the matching detail id
       final d = details.firstWhere((x) => (x.domainDetailId ?? -1) == id);
 
-      String? label;
       final en = (d.detailNameEnglish ?? '').trim();
       final ar = (d.detailNameArabic ?? '').trim();
-      label = en.isNotEmpty ? en : (ar.isNotEmpty ? ar : '#$id');
+      final label = en.isNotEmpty ? en : (ar.isNotEmpty ? ar : '#$id');
 
       if (mounted) setState(() => _statusLabel = label);
     } catch (_) {
@@ -69,14 +63,15 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
   String _fmtDate(DateTime d) => DateFormat('yyyy-MM-dd').format(d);
 
   String _fmtSar(num n) => NumberFormat.currency(
+    // keep numeric formatting the same, localize the symbol
     locale: 'en',
-    symbol: 'SAR ',
+    symbol: '${context.l10n.currencySar} ',
     decimalDigits: 2,
   ).format(n);
 
   String get _reqNoSafe {
     final v = widget.requestNo.trim();
-    if (v.isEmpty || v == '—' || v == '0') return 'Pending';
+    if (v.isEmpty || v == '—' || v == '0') return context.l10n.pending;
     return v;
   }
 
@@ -92,7 +87,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
   }
 
   String get _rangeHuman =>
-      '${_fmtDate(widget.from)} → ${_fmtDate(widget.to)}  (${_inclusiveDays} day${_inclusiveDays == 1 ? '' : 's'})';
+      '${_fmtDate(widget.from)} → ${_fmtDate(widget.to)}  (${_inclusiveDays} ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})';
 
   Future<void> _copyDetails(BuildContext context) async {
     final statusText =
@@ -100,19 +95,20 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
         (widget.statusId != null && widget.statusId! > 0
             ? '#${widget.statusId}'
             : '—'));
+
     final text = [
-      'Request: $_reqNoSafe',
-      'Status: $statusText',
-      'Dates: ${_fmtDate(widget.from)} to ${_fmtDate(widget.to)} '
-          '(${_inclusiveDays} day${_inclusiveDays == 1 ? '' : 's'})',
-      'Total: ${_fmtSar(widget.totalSar)}',
+      '${context.l10n.requestLabel} $_reqNoSafe',
+      '${context.l10n.statusLabel} $statusText',
+      '${context.l10n.dateRangeLabel} ${_fmtDate(widget.from)} ${context.l10n.toDateSep} ${_fmtDate(widget.to)} '
+          '(${_inclusiveDays} ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})',
+      '${context.l10n.totalLabel} ${_fmtSar(widget.totalSar)}',
     ].join('\n');
 
     await Clipboard.setData(ClipboardData(text: text));
     if (context.mounted) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Details copied')));
+      ).showSnackBar(SnackBar(content: Text(context.l10n.detailsCopied)));
     }
   }
 
@@ -127,7 +123,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
                   : '—'));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Request submitted')),
+      appBar: AppBar(title: Text(context.l10n.requestSubmittedTitle)),
       body: Padding(
         padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
         child: Column(
@@ -140,7 +136,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
             Row(
               children: [
                 Text(
-                  'Success!',
+                  context.l10n.successTitle,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
@@ -157,7 +153,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      'Number pending',
+                      context.l10n.numberPendingChip,
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         color: cs.onSurfaceVariant,
                         fontWeight: FontWeight.w700,
@@ -167,7 +163,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text('Your request has been submitted.'),
+            Text(context.l10n.requestSubmittedBody),
 
             const SizedBox(height: 16),
 
@@ -181,12 +177,16 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
               ),
               child: Column(
                 children: [
-                  _row(context, 'Request #', _reqNoSafe),
-                  _row(context, 'Status', statusText),
-                  _row(context, 'Date range', _rangeHuman),
                   _row(
                     context,
-                    'Total',
+                    '${context.l10n.requestHashPrefix} ',
+                    _reqNoSafe,
+                  ),
+                  _row(context, context.l10n.statusLabel, statusText),
+                  _row(context, context.l10n.dateRangeLabel, _rangeHuman),
+                  _row(
+                    context,
+                    context.l10n.totalLabel,
                     _fmtSar(widget.totalSar),
                     isStrong: true,
                   ),
@@ -203,7 +203,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
                   child: OutlinedButton.icon(
                     onPressed: () => _copyDetails(context),
                     icon: const Icon(Icons.copy),
-                    label: const Text('Copy details'),
+                    label: Text(context.l10n.actionCopyDetails),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -211,7 +211,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
                   child: FilledButton(
                     onPressed: () =>
                         Navigator.of(context).popUntil((r) => r.isFirst),
-                    child: const Text('Done'),
+                    child: Text(context.l10n.actionDone),
                   ),
                 ),
               ],

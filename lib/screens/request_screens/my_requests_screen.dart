@@ -2,6 +2,7 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/screens/request_screens/request_details_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -13,6 +14,10 @@ import 'package:heavy_new/core/api/api_handler.dart' as api;
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/organization/organization_user.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class MyRequestsScreen extends StatefulWidget {
   const MyRequestsScreen({super.key});
@@ -144,10 +149,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    // Gate by auth: prompt to sign in if needed.
-    if (!_isLoggedIn) {
+    // -------- Auth gate --------
+    if (!AuthStore.instance.isLoggedIn) {
       return Scaffold(
-        appBar: AppBar(title: const Text('My Requests')),
+        appBar: AppBar(title: Text(context.l10n.myRequestsTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -159,14 +164,14 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Sign in to view your requests',
+                      context.l10n.signInToViewRequests,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 10),
                     Text(
-                      'You need to be logged in to see your request history and details.',
+                      context.l10n.signInToViewRequestsBody,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: cs.onSurfaceVariant,
                       ),
@@ -184,7 +189,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                           setState(() => _future = _fetchMyRequests());
                         }
                       },
-                      child: const Text('Sign in'),
+                      child: Text(context.l10n.actionSignIn),
                     ),
                   ],
                 ),
@@ -195,9 +200,9 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
       );
     }
 
-    // Logged-in view
+    // -------- Logged-in view --------
     return Scaffold(
-      appBar: AppBar(title: const Text('My Requests')),
+      appBar: AppBar(title: Text(context.l10n.myRequestsTitle)),
       body: RefreshIndicator(
         onRefresh: _reload,
         child: FutureBuilder<List<RequestModel>>(
@@ -218,20 +223,21 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Failed to load requests',
+                          context.l10n.failedToLoadRequests,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
                         Text(
                           '${snap.error}',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodySmall?.copyWith(color: cs.error),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
                         ),
                         const SizedBox(height: 12),
                         FilledButton(
                           onPressed: _reload,
-                          child: const Text('Retry'),
+                          child: Text(context.l10n.actionRetry),
                         ),
                       ],
                     ),
@@ -239,6 +245,8 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 ],
               );
             }
+
+            final cs = Theme.of(context).colorScheme;
 
             if ((_orgError?.isNotEmpty ?? false)) {
               return ListView(
@@ -256,14 +264,14 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
               );
             }
 
-            final items = (snap.data ?? const []);
+            final items = snap.data ?? const <RequestModel>[];
             if (items.isEmpty) {
               return ListView(
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'No requests yet.',
+                      context.l10n.noRequestsYet,
                       style: Theme.of(context).textTheme.bodyLarge,
                     ),
                   ),
@@ -274,9 +282,10 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
             return ListView.separated(
               padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
               itemCount: items.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 6),
+              separatorBuilder: (_, __) => const SizedBox(height: 10),
               itemBuilder: (_, i) {
                 final r = items[i];
+
                 final reqNo =
                     r.requestNo?.toString() ?? r.requestId?.toString() ?? '—';
 
@@ -293,80 +302,214 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                 final total = r.afterVatPrice ?? r.totalPrice ?? 0;
 
                 final statusStr = _statusLabel(r);
-                final role = _roleChip(r);
+                final role = _roleChip(r); // "As Vendor" | "As Customer" | ""
 
                 return Glass(
-                  radius: 14,
-                  child: ListTile(
-                    contentPadding: const EdgeInsets.all(12),
-                    title: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Request #$reqNo',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                        ),
-                        if (role.isNotEmpty) ...[
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.secondaryContainer,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              role,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: cs.onSecondaryContainer),
-                            ),
-                          ),
-                        ],
-                        if (statusStr.isNotEmpty) ...[
-                          Container(
-                            margin: const EdgeInsets.only(left: 6),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: cs.primaryContainer,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: Text(
-                              statusStr,
-                              style: Theme.of(context).textTheme.labelMedium
-                                  ?.copyWith(color: cs.onPrimaryContainer),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    subtitle: Padding(
-                      padding: const EdgeInsets.only(top: 6),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('From $from  •  To $to  •  $days day(s)'),
-                          const SizedBox(height: 6),
-                          Text(
-                            _money(total),
-                            style: Theme.of(context).textTheme.titleSmall
-                                ?.copyWith(fontWeight: FontWeight.w800),
-                          ),
-                        ],
-                      ),
-                    ),
+                  radius: 16,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(16),
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(
                         builder: (_) =>
                             RequestDetailsScreen(requestId: r.requestId ?? 0),
+                      ),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        children: [
+                          // -------- Top row: icon + title/badges + amount --------
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Leading icon
+                              CircleAvatar(
+                                radius: 18,
+                                backgroundColor: cs.surfaceVariant,
+                                child: Icon(
+                                  Icons.request_page_outlined,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+
+                              // Title + badges
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // "Request #123"
+                                    Text(
+                                      '${context.l10n.requestNumber} $reqNo',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                    ),
+                                    const SizedBox(height: 6),
+                                    Wrap(
+                                      spacing: 6,
+                                      runSpacing: 6,
+                                      children: [
+                                        if (role.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: cs.secondaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              role == 'As Vendor'
+                                                  ? context.l10n.asVendor
+                                                  : (role == 'As Customer'
+                                                        ? context
+                                                              .l10n
+                                                              .asCustomer
+                                                        : role),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelMedium
+                                                  ?.copyWith(
+                                                    color:
+                                                        cs.onSecondaryContainer,
+                                                  ),
+                                            ),
+                                          ),
+                                        if (statusStr.isNotEmpty)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: cs.primaryContainer,
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              statusStr,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelMedium
+                                                  ?.copyWith(
+                                                    color:
+                                                        cs.onPrimaryContainer,
+                                                  ),
+                                            ),
+                                          ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              const SizedBox(width: 10),
+
+                              // Amount
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  Text(
+                                    _money(total),
+                                    textAlign: TextAlign.right,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleSmall
+                                        ?.copyWith(fontWeight: FontWeight.w800),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Icon(
+                                    Icons.chevron_right,
+                                    color: cs.onSurfaceVariant,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 10),
+                          const Divider(height: 1),
+
+                          // -------- Bottom row: dates & length --------
+                          Padding(
+                            padding: const EdgeInsets.only(top: 10),
+                            child: Row(
+                              children: [
+                                // From
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.calendar_today_outlined,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${context.l10n.fromDate} $from',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(width: 12),
+
+                                // To
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(Icons.arrow_forward, size: 16),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${context.l10n.toDate} $to',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                                const Spacer(),
+
+                                // Days
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.schedule_outlined,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '$days ${context.l10n.daysSuffix}',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: cs.onSurfaceVariant,
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

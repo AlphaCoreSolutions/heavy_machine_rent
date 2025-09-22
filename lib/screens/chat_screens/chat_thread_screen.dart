@@ -2,10 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:heavy_new/core/api/api_handler.dart' as api;
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class ChatThreadScreen extends StatefulWidget {
-  const ChatThreadScreen({super.key, required this.threadId});
+  const ChatThreadScreen({super.key, required this.threadId, this.title});
   final int threadId;
+  final String? title;
+
   @override
   State<ChatThreadScreen> createState() => _ChatThreadScreenState();
 }
@@ -13,35 +21,67 @@ class ChatThreadScreen extends StatefulWidget {
 class _ChatThreadScreenState extends State<ChatThreadScreen> {
   final _input = TextEditingController();
   final _scroll = ScrollController();
-  final List<_Msg> _msgs = [
-    _Msg(
-      text: 'Hello! Looking to rent a loader.',
-      me: true,
-      at: DateTime.now().subtract(const Duration(minutes: 60)),
-    ),
-    _Msg(
-      text: 'Hi! We have availability tomorrow.',
-      me: false,
-      at: DateTime.now().subtract(const Duration(minutes: 55)),
-    ),
-    _Msg(
-      text: 'Great. What time can you deliver?',
-      me: true,
-      at: DateTime.now().subtract(const Duration(minutes: 40)),
-    ),
-    _Msg(
-      text: 'Morning delivery is possible.',
-      me: false,
-      at: DateTime.now().subtract(const Duration(minutes: 35)),
-    ),
-  ];
+  final List<_Msg> _msgs = [];
   bool _sending = false;
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
 
   @override
   void dispose() {
     _input.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final rows = await api.Api.getThreadMessages(widget.threadId);
+      _msgs
+        ..clear()
+        ..addAll(
+          rows.map(
+            (m) => _Msg(
+              text: m.text ?? '',
+              me: m.isMine ?? false,
+              at: m.createdAt ?? DateTime.now(),
+            ),
+          ),
+        );
+    } catch (_) {
+      // demo fallback
+      _msgs
+        ..clear()
+        ..addAll([
+          _Msg(
+            text: 'Hello! Looking to rent a loader.',
+            me: true,
+            at: DateTime.now().subtract(const Duration(minutes: 60)),
+          ),
+          _Msg(
+            text: 'Hi! We have availability tomorrow.',
+            me: false,
+            at: DateTime.now().subtract(const Duration(minutes: 55)),
+          ),
+          _Msg(
+            text: 'Great. What time can you deliver?',
+            me: true,
+            at: DateTime.now().subtract(const Duration(minutes: 40)),
+          ),
+          _Msg(
+            text: 'Morning delivery is possible.',
+            me: false,
+            at: DateTime.now().subtract(const Duration(minutes: 35)),
+          ),
+        ]);
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _send() async {
@@ -55,17 +95,21 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
       _msgs.add(m);
       _input.clear();
     });
-    await Future.delayed(const Duration(milliseconds: 220)); // simulate network
 
-    // TODO: call your API: Api.sendMessage(threadId, text)
-    if (mounted) {
-      setState(() => _sending = false);
-      await Future.delayed(const Duration(milliseconds: 80));
-      _scroll.animateTo(
-        _scroll.position.maxScrollExtent + 120,
-        duration: const Duration(milliseconds: 240),
-        curve: Curves.easeOutCubic,
-      );
+    try {
+      await api.Api.sendThreadMessage(widget.threadId, text);
+    } catch (_) {
+      // keep optimistic; optionally show a toast
+    } finally {
+      if (mounted) {
+        setState(() => _sending = false);
+        await Future.delayed(const Duration(milliseconds: 80));
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent + 120,
+          duration: const Duration(milliseconds: 240),
+          curve: Curves.easeOutCubic,
+        );
+      }
     }
   }
 
@@ -74,18 +118,19 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text('Chat #${widget.threadId}'),
+        title: Text(widget.title ?? context.l10n.chatTitle(widget.threadId)),
         actions: [
           IconButton(
             icon: AIcon(AppGlyph.info, color: cs.primary),
             onPressed: () {
-              AppSnack.info(context, 'Thread actions coming soon');
+              AppSnack.info(context, context.l10n.threadActionsSoon);
             },
           ),
         ],
       ),
       body: Column(
         children: [
+          if (_loading) const LinearProgressIndicator(),
           Expanded(
             child: ListView.builder(
               controller: _scroll,
@@ -135,7 +180,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                     Expanded(
                       child: AInput(
                         controller: _input,
-                        hint: 'Message',
+                        hint: context.l10n.messageHint,
                         minLines: 1,
                         maxLines: 4,
                         onSubmitted: (_) => _send(),
@@ -149,7 +194,11 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                         color: Colors.white,
                         selected: true,
                       ),
-                      label: const Text('Send'),
+                      label: Text(
+                        _sending
+                            ? context.l10n.sendingEllipsis
+                            : context.l10n.actionSend,
+                      ),
                     ),
                   ],
                 ),

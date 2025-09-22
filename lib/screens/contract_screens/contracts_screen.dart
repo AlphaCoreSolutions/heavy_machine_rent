@@ -9,6 +9,13 @@ import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
 import 'contract_details_screen.dart';
 
+// l10n
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
+
 class ContractsScreen extends StatefulWidget {
   const ContractsScreen({super.key});
   @override
@@ -44,14 +51,13 @@ class _ContractsScreenState extends State<ContractsScreen> {
       setState(() {
         _future = Future.value(<ContractModel>[]);
       });
-      AppSnack.info(context, 'Please create/activate your Organization first.');
+      AppSnack.info(context, context.l10n.infoCreateActivateOrg);
       return;
     }
 
     final q =
         'Select * From Contracts Where (VendorId = $orgId Or CustomerId = $orgId)';
 
-    // Compute the future first, THEN setState synchronously.
     final fut = api.Api.searchContracts(q);
     setState(() {
       _future = fut;
@@ -64,12 +70,12 @@ class _ContractsScreenState extends State<ContractsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Contracts'),
+        title: Text(context.l10n.contractsTitle),
         actions: [
           IconButton(
             onPressed: _load,
             icon: const Icon(Icons.refresh),
-            tooltip: 'Refresh',
+            tooltip: context.l10n.actionRefresh,
           ),
         ],
       ),
@@ -84,10 +90,10 @@ class _ContractsScreenState extends State<ContractsScreen> {
             final items = snap.data ?? [];
             if (items.isEmpty) {
               return ListView(
-                children: const [
+                children: [
                   Padding(
-                    padding: EdgeInsets.all(24),
-                    child: Text('No contracts yet.'),
+                    padding: const EdgeInsets.all(24),
+                    child: Text(context.l10n.noContractsYet),
                   ),
                 ],
               );
@@ -113,14 +119,14 @@ class _ContractsScreenState extends State<ContractsScreen> {
                       ),
                     ),
                     title: Text(
-                      'Contract #$no',
+                      context.l10n.contractNumber('$no'),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    subtitle: Text('$from → $to'),
+                    subtitle: Text(context.l10n.dateRangeChip(from, to)),
                     trailing: const Icon(Icons.chevron_right),
                     onTap: () {
                       Navigator.of(context).push(

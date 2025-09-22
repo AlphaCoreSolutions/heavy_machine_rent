@@ -1,6 +1,7 @@
 // lib/screens/contract_details_screen.dart
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 import 'package:heavy_new/core/api/api_handler.dart' as api;
@@ -18,10 +19,9 @@ import 'package:heavy_new/core/models/user/nationality.dart';
 
 import 'contract_sheet_screen.dart';
 
-/// IMPORTANT: Add your logo to pubspec.yaml:
-/// flutter:
-///   assets:
-///     - assets/company_logo.png
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 class ContractDetailsScreen extends StatefulWidget {
   const ContractDetailsScreen({super.key, required this.contractId});
@@ -61,7 +61,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                 ? d.detailNameEnglish!.trim()
                 : (d.detailNameArabic?.trim().isNotEmpty ?? false)
                 ? d.detailNameArabic!.trim()
-                : 'Detail #${d.domainDetailId ?? 0}';
+                : context.l10n.detailHash('${d.domainDetailId ?? 0}');
             return MapEntry(d.domainDetailId ?? -1, label);
           }),
         );
@@ -196,7 +196,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
   (String, String) _respRow(String title, int? id) {
     if (id == null || id == 0) return (title, '—');
     final label = _respNameById[id] ?? '—';
-    return (title, '$label (ID #$id)');
+    return (title, context.l10n.responsibilityValue(label, '$id'));
   }
 
   // ---------- UI ----------
@@ -209,10 +209,10 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
         context,
       ).colorScheme.surfaceVariant.withOpacity(.25),
       appBar: AppBar(
-        title: const Text('Contract'),
+        title: Text(context.l10n.contractTitle),
         actions: [
           IconButton(
-            tooltip: 'Open Contract Sheet',
+            tooltip: context.l10n.actionOpenContractSheet,
             onPressed: () async {
               final b = await _future;
               final slices = await api.Api.getSlicesForContract(
@@ -221,7 +221,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
               final slice = slices.isNotEmpty ? slices.first : null;
               if (!mounted) return;
               if (slice == null) {
-                AppSnack.error(context, 'No contract slice found/created.');
+                AppSnack.error(context, context.l10n.errorNoContractSlice);
                 return;
               }
               Navigator.of(context).push(
@@ -238,17 +238,14 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
             icon: const Icon(Icons.description),
           ),
           IconButton(
-            tooltip: 'Print',
+            tooltip: context.l10n.actionPrint,
             onPressed: () {
-              AppSnack.info(
-                context,
-                'Printing stub — wire up printing/pdf here.',
-              );
+              AppSnack.info(context, context.l10n.printingStubMessage);
             },
             icon: const Icon(Icons.print),
           ),
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: context.l10n.actionRefresh,
             onPressed: () => setState(() => _future = _load()),
             icon: const Icon(Icons.refresh),
           ),
@@ -264,7 +261,9 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
             );
           }
           if (snap.hasError || !snap.hasData) {
-            return const Center(child: Text('Failed to load contract details'));
+            return Center(
+              child: Text(context.l10n.errorFailedToLoadContractDetails),
+            );
           }
 
           final b = snap.data!;
@@ -349,7 +348,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                                 _LogoBox(),
                                 const SizedBox(height: 12),
                                 Text(
-                                  'RENTAL AGREEMENT',
+                                  context.l10n.rentalAgreementHeader,
                                   style: Theme.of(context).textTheme.titleLarge
                                       ?.copyWith(
                                         color: pageTextColor,
@@ -359,7 +358,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Contract #${c.contractNo ?? c.contractId ?? '—'}',
+                                  '${c.contractNo ?? c.contractId ?? '—'}',
                                   style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(
                                         color: pageTextColor.withOpacity(.75),
@@ -371,12 +370,21 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                             const Divider(height: 24),
 
                             // Parties
-                            _SectionHeader('Parties', color: pageTextColor),
+                            _SectionHeader(
+                              context.l10n.sectionParties,
+                              color: pageTextColor,
+                            ),
                             _KeyValueGrid(
                               color: pageTextColor,
                               rows: [
-                                ('Vendor', partyName(b.vendorOrg)),
-                                ('Customer', partyName(b.customerOrg)),
+                                (
+                                  context.l10n.vendorLabel,
+                                  partyName(b.vendorOrg),
+                                ),
+                                (
+                                  context.l10n.customerLabel,
+                                  partyName(b.customerOrg),
+                                ),
                               ],
                             ),
                             const SizedBox(height: 14),
@@ -384,13 +392,13 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                               color: pageTextColor,
                               rows: [
                                 (
-                                  'From',
+                                  context.l10n.fromDate,
                                   _ymd(c.fromDate) == '—'
                                       ? _ymd(r.fromDate)
                                       : _ymd(c.fromDate),
                                 ),
                                 (
-                                  'To',
+                                  context.l10n.toDate,
                                   _ymd(c.toDate) == '—'
                                       ? _ymd(r.toDate)
                                       : _ymd(c.toDate),
@@ -400,47 +408,65 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
 
                             const SizedBox(height: 22),
                             _SectionHeader(
-                              'Request Summary',
+                              context.l10n.sectionRequestSummary,
                               color: pageTextColor,
                             ),
                             _KeyValueGrid(
                               color: pageTextColor,
                               rows: [
                                 (
-                                  'Request No.',
+                                  context.l10n.requestNumberLabel,
                                   '${r.requestNo ?? r.requestId ?? '—'}',
                                 ),
                                 (
-                                  'Quantity',
+                                  context.l10n.quantityLabel,
                                   '${r.requestedQuantity ?? 0}',
                                 ), // ← requestedQuantity from request
-                                ('Days', '${r.numberDays ?? 0}'),
+                                (
+                                  context.l10n.daysLabel,
+                                  '${r.numberDays ?? 0}',
+                                ),
                               ],
                             ),
                             const SizedBox(height: 8),
                             _KeyValueGrid(
                               color: pageTextColor,
                               rows: [
-                                ('Rent / Day', _currency(r.rentPricePerDay)),
-                                // (Removed distance pricing & rent/km as requested)
-                                ('Subtotal', _currency(r.totalPrice ?? 0)),
-                                ('VAT', _currency(r.vatPrice ?? 0)),
                                 (
-                                  'Total',
+                                  context.l10n.rentPerDayLabel,
+                                  _currency(r.rentPricePerDay),
+                                ),
+                                // (Removed distance pricing & rent/km as requested)
+                                (
+                                  context.l10n.subtotalLabel,
+                                  _currency(r.totalPrice ?? 0),
+                                ),
+                                (
+                                  context.l10n.vatLabel,
+                                  _currency(r.vatPrice ?? 0),
+                                ),
+                                (
+                                  context.l10n.totalLabel,
                                   _currency(r.afterVatPrice ?? r.totalPrice),
                                 ),
-                                ('Down Payment', _currency(r.downPayment)),
+                                (
+                                  context.l10n.downPaymentLabel,
+                                  _currency(r.downPayment),
+                                ),
                               ],
                             ),
 
                             const SizedBox(height: 22),
-                            _SectionHeader('Equipment', color: pageTextColor),
+                            _SectionHeader(
+                              context.l10n.sectionEquipment,
+                              color: pageTextColor,
+                            ),
                             _KeyValueGrid(
                               color: pageTextColor,
                               rows: [
-                                ('Title', e.title),
+                                (context.l10n.titleLabel, e.title),
                                 (
-                                  'Category',
+                                  context.l10n.categoryLabel,
                                   e.category?.detailNameEnglish ??
                                       e.category?.detailNameArabic ??
                                       '—',
@@ -451,7 +477,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
 
                             const SizedBox(height: 22),
                             _SectionHeader(
-                              'Responsibilities (Domain 7)',
+                              context.l10n.sectionResponsibilities,
                               color: pageTextColor,
                             ),
                             if (_respLoading)
@@ -464,39 +490,42 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                                 color: pageTextColor,
                                 rows: [
                                   _respRow(
-                                    'Fuel Responsibility',
+                                    context.l10n.fuelResponsibilityLabel,
                                     e.fuelResponsibilityId,
                                   ),
                                   _respRow(
-                                    'Driver Food',
+                                    context.l10n.driverFoodLabel,
                                     e.driverFoodResponsibilityId,
                                   ),
                                   _respRow(
-                                    'Driver Housing',
+                                    context.l10n.driverHousingLabel,
                                     e.driverHousingResponsibilityId,
                                   ),
                                   _respRow(
-                                    'Driver Transport',
+                                    context.l10n.driverTransportLabel,
                                     e.driverTransResponsibilityId,
                                   ),
                                 ],
                               ),
 
                             const SizedBox(height: 22),
-                            _SectionHeader('Terms', color: pageTextColor),
+                            _SectionHeader(
+                              context.l10n.sectionTerms,
+                              color: pageTextColor,
+                            ),
                             _BulletBox(
                               color: pageTextColor,
-                              items: const [
-                                'Down payment before mobilization; remaining as per agreed schedule.',
-                                'All equipment to be used according to manufacturer guidelines.',
-                                'Customer is responsible for site access and safe working environment.',
-                                'Damages and liability per company terms and applicable law.',
+                              items: [
+                                context.l10n.termDownPayment,
+                                context.l10n.termManufacturerGuidelines,
+                                context.l10n.termCustomerSiteAccess,
+                                context.l10n.termLiability,
                               ],
                             ),
                             if (b.terms.isNotEmpty) ...[
                               const SizedBox(height: 10),
                               Text(
-                                'Equipment Terms:',
+                                context.l10n.sectionTerms,
                                 style: Theme.of(context).textTheme.bodyMedium
                                     ?.copyWith(
                                       color: pageTextColor,
@@ -529,12 +558,12 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
 
                             const SizedBox(height: 22),
                             _SectionHeader(
-                              'Driver Assignments (per requested unit)',
+                              context.l10n.sectionDriverAssignments,
                               color: pageTextColor,
                             ),
                             if (b.rdls.isEmpty)
                               Text(
-                                'No driver locations found for this request.',
+                                context.l10n.noDriverLocations,
                                 style: TextStyle(color: Colors.red.shade700),
                               )
                             else
@@ -560,7 +589,10 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
                               ),
 
                             const SizedBox(height: 26),
-                            _SectionHeader('Signatures', color: pageTextColor),
+                            _SectionHeader(
+                              context.l10n.sectionSignatures,
+                              color: pageTextColor,
+                            ),
                             const SizedBox(height: 10),
                             _SignatureLines(
                               color: pageTextColor,
@@ -604,7 +636,7 @@ class _LogoBox extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                'Company Logo',
+                context.l10n.companyLogo,
                 style: Theme.of(context).textTheme.labelLarge,
               ),
             ),
@@ -747,18 +779,19 @@ class _DriverUnitCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Unit #$unitId',
+              '${context.l10n.unitLabel} #$unitId',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 color: color,
                 fontWeight: FontWeight.w800,
               ),
             ),
             const SizedBox(height: 6),
-            _kv('Requested nationality', nationality, color),
+            _kv(context.l10n.requestedNationalityLabel, nationality, color),
             if (dropoff.isNotEmpty && dropoff != '—')
-              _kv('Drop-off', dropoff, color),
-            if (coords.trim().isNotEmpty) _kv('Coords', coords, color),
-            _kv('Assigned driver', assignedDriver, color),
+              _kv(context.l10n.dropoffLabel, dropoff, color),
+            if (coords.trim().isNotEmpty)
+              _kv(context.l10n.coordsLabel, coords, color),
+            _kv(context.l10n.assignedDriverLabel, assignedDriver, color),
           ],
         ),
       ),
@@ -805,7 +838,10 @@ class _SignatureLines extends StatelessWidget {
               const SizedBox(height: 36),
               Container(height: 1.2, color: cs.outline),
               const SizedBox(height: 6),
-              Text('Vendor: $vendorName', style: TextStyle(color: color)),
+              Text(
+                '${context.l10n.vendorLabel}: $vendorName',
+                style: TextStyle(color: color),
+              ),
             ],
           ),
         ),
@@ -816,7 +852,10 @@ class _SignatureLines extends StatelessWidget {
               const SizedBox(height: 36),
               Container(height: 1.2, color: cs.outline),
               const SizedBox(height: 6),
-              Text('Customer: $customerName', style: TextStyle(color: color)),
+              Text(
+                '${context.l10n.customerLabel}: $customerName',
+                style: TextStyle(color: color),
+              ),
             ],
           ),
         ),
