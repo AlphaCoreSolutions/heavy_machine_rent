@@ -14,6 +14,7 @@ import 'package:heavy_new/foundation/ui/app_theme.dart';
 import 'package:heavy_new/foundation/ui/scroll_behavior.dart';
 import 'package:heavy_new/foundation/ui/transitions.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
+import 'package:heavy_new/foundation/widgets/notifications_store.dart';
 import 'package:heavy_new/l10n/app_localizations.dart';
 
 // Shell & screens
@@ -50,11 +51,14 @@ Future _firebaseBackgroundMessage(RemoteMessage message) async {
   }
 }
 
+final NotificationsStore notificationsStore = NotificationsStore();
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   await Notifications().init();
+  await notificationsStore.init();
   await Notifications().initLocalNotifications();
 
   FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);

@@ -2776,6 +2776,612 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{d}d'**
   String timeDaysShort(Object d);
+
+  /// No description provided for @title_equipmentDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment details'**
+  String get title_equipmentDetails;
+
+  /// No description provided for @msg_failedLoadEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load equipment'**
+  String get msg_failedLoadEquipment;
+
+  /// No description provided for @label_availability.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability'**
+  String get label_availability;
+
+  /// No description provided for @label_rentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent Date (From)'**
+  String get label_rentFrom;
+
+  /// No description provided for @hint_yyyyMMdd.
+  ///
+  /// In en, this message translates to:
+  /// **'YYYY-MM-DD'**
+  String get hint_yyyyMMdd;
+
+  /// No description provided for @label_returnTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Date (To)'**
+  String get label_returnTo;
+
+  /// No description provided for @pill_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day} other{{count} days}}'**
+  String pill_days(num count);
+
+  /// No description provided for @label_expectedKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected distance (km)'**
+  String get label_expectedKm;
+
+  /// No description provided for @mini_pricePerKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{currency} {price} / km'**
+  String mini_pricePerKm(Object currency, Object price);
+
+  /// No description provided for @label_quantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get label_quantity;
+
+  /// No description provided for @label_requestedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested quantity'**
+  String get label_requestedQty;
+
+  /// No description provided for @mini_available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {count}'**
+  String mini_available(Object count);
+
+  /// No description provided for @label_driverLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Locations'**
+  String get label_driverLocations;
+
+  /// No description provided for @msg_loadingNats.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading available driver nationalities…'**
+  String get msg_loadingNats;
+
+  /// No description provided for @msg_noNats.
+  ///
+  /// In en, this message translates to:
+  /// **'No driver nationalities available for this equipment.'**
+  String get msg_noNats;
+
+  /// No description provided for @label_driverNationality.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver nationality *'**
+  String get label_driverNationality;
+
+  /// No description provided for @label_dropoffAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off address'**
+  String get label_dropoffAddress;
+
+  /// No description provided for @label_dropoffLat.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off latitude *'**
+  String get label_dropoffLat;
+
+  /// No description provided for @label_dropoffLon.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off longitude *'**
+  String get label_dropoffLon;
+
+  /// No description provided for @label_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get label_notes;
+
+  /// No description provided for @chip_available.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {count}'**
+  String chip_available(Object count);
+
+  /// No description provided for @label_priceBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Price breakdown'**
+  String get label_priceBreakdown;
+
+  /// No description provided for @row_perUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Per unit'**
+  String get row_perUnit;
+
+  /// No description provided for @row_base.
+  ///
+  /// In en, this message translates to:
+  /// **'Base ({price} × {days} day)'**
+  String row_base(Object days, Object price);
+
+  /// No description provided for @row_distance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance ({pricePerKm} × {km} km)'**
+  String row_distance(Object km, Object pricePerKm);
+
+  /// No description provided for @row_vat.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT {rate}%'**
+  String row_vat(Object rate);
+
+  /// No description provided for @row_perUnitTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per-unit total'**
+  String get row_perUnitTotal;
+
+  /// No description provided for @row_qtyTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'× Quantity ({qty})'**
+  String row_qtyTimes(Object qty);
+
+  /// No description provided for @row_subtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get row_subtotal;
+
+  /// No description provided for @row_vatOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT'**
+  String get row_vatOnly;
+
+  /// No description provided for @row_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get row_total;
+
+  /// No description provided for @row_downPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Down payment'**
+  String get row_downPayment;
+
+  /// No description provided for @btn_submit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit request'**
+  String get btn_submit;
+
+  /// No description provided for @btn_submitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting…'**
+  String get btn_submitting;
+
+  /// No description provided for @row_fuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel: {value}'**
+  String row_fuel(Object value);
+
+  /// No description provided for @err_chooseDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose dates'**
+  String get err_chooseDates;
+
+  /// No description provided for @info_signInFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in first'**
+  String get info_signInFirst;
+
+  /// No description provided for @err_qtyMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity must be at least 1'**
+  String get err_qtyMin;
+
+  /// No description provided for @err_qtyAvail.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} piece(s) available'**
+  String err_qtyAvail(Object count);
+
+  /// No description provided for @err_unitSelectNat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}: Select a nationality'**
+  String err_unitSelectNat(Object index);
+
+  /// No description provided for @err_unitLatLng.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}: Drop-off lat/long required'**
+  String err_unitLatLng(Object index);
+
+  /// No description provided for @err_vendorMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor not found for this equipment.'**
+  String get err_vendorMissing;
+
+  /// No description provided for @info_createOrg.
+  ///
+  /// In en, this message translates to:
+  /// **'Please create/activate your Organization first.'**
+  String get info_createOrg;
+
+  /// No description provided for @err_loadNats.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load equipment driver nationalities.'**
+  String get err_loadNats;
+
+  /// No description provided for @err_loadResp.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load responsibility names.'**
+  String get err_loadResp;
+
+  /// No description provided for @equipDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment details'**
+  String get equipDetailsTitle;
+
+  /// No description provided for @msgFailedLoadEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load equipment'**
+  String get msgFailedLoadEquipment;
+
+  /// No description provided for @labelAvailability.
+  ///
+  /// In en, this message translates to:
+  /// **'Availability'**
+  String get labelAvailability;
+
+  /// No description provided for @labelRentFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Rent Date (From)'**
+  String get labelRentFrom;
+
+  /// No description provided for @hintYyyyMmDd.
+  ///
+  /// In en, this message translates to:
+  /// **'YYYY-MM-DD'**
+  String get hintYyyyMmDd;
+
+  /// No description provided for @labelReturnTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Return Date (To)'**
+  String get labelReturnTo;
+
+  /// No description provided for @pillDays.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{{count} day} other{{count} days}}'**
+  String pillDays(int count);
+
+  /// No description provided for @labelExpectedKm.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected distance (km)'**
+  String get labelExpectedKm;
+
+  /// No description provided for @miniPricePerKm.
+  ///
+  /// In en, this message translates to:
+  /// **'{currency} {price} / km'**
+  String miniPricePerKm(String currency, String price);
+
+  /// No description provided for @labelQuantity.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity'**
+  String get labelQuantity;
+
+  /// No description provided for @labelRequestedQty.
+  ///
+  /// In en, this message translates to:
+  /// **'Requested quantity'**
+  String get labelRequestedQty;
+
+  /// No description provided for @miniAvailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available: {count}'**
+  String miniAvailable(int count);
+
+  /// No description provided for @labelDriverLocations.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Locations'**
+  String get labelDriverLocations;
+
+  /// No description provided for @msgLoadingNats.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading available driver nationalities…'**
+  String get msgLoadingNats;
+
+  /// No description provided for @msgNoNats.
+  ///
+  /// In en, this message translates to:
+  /// **'No driver nationalities available for this equipment.'**
+  String get msgNoNats;
+
+  /// No description provided for @labelDriverNationality.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver nationality *'**
+  String get labelDriverNationality;
+
+  /// No description provided for @labelDropoffAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off address'**
+  String get labelDropoffAddress;
+
+  /// No description provided for @labelDropoffLat.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off latitude *'**
+  String get labelDropoffLat;
+
+  /// No description provided for @labelDropoffLon.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off longitude *'**
+  String get labelDropoffLon;
+
+  /// No description provided for @labelNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get labelNotes;
+
+  /// No description provided for @labelPriceBreakdown.
+  ///
+  /// In en, this message translates to:
+  /// **'Price breakdown'**
+  String get labelPriceBreakdown;
+
+  /// No description provided for @rowPerUnit.
+  ///
+  /// In en, this message translates to:
+  /// **'Per unit'**
+  String get rowPerUnit;
+
+  /// No description provided for @rowBase.
+  ///
+  /// In en, this message translates to:
+  /// **'Base ({price} × {days} day)'**
+  String rowBase(String price, String days);
+
+  /// No description provided for @rowDistance.
+  ///
+  /// In en, this message translates to:
+  /// **'Distance ({pricePerKm} × {km} km)'**
+  String rowDistance(String pricePerKm, String km);
+
+  /// No description provided for @rowVat.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT {rate}%'**
+  String rowVat(String rate);
+
+  /// No description provided for @rowPerUnitTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Per-unit total'**
+  String get rowPerUnitTotal;
+
+  /// No description provided for @rowQtyTimes.
+  ///
+  /// In en, this message translates to:
+  /// **'× Quantity ({qty})'**
+  String rowQtyTimes(int qty);
+
+  /// No description provided for @rowSubtotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Subtotal'**
+  String get rowSubtotal;
+
+  /// No description provided for @rowVatOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'VAT'**
+  String get rowVatOnly;
+
+  /// No description provided for @rowTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get rowTotal;
+
+  /// No description provided for @rowDownPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Down payment'**
+  String get rowDownPayment;
+
+  /// No description provided for @btnSubmitting.
+  ///
+  /// In en, this message translates to:
+  /// **'Submitting…'**
+  String get btnSubmitting;
+
+  /// No description provided for @btnSubmit.
+  ///
+  /// In en, this message translates to:
+  /// **'Submit request'**
+  String get btnSubmit;
+
+  /// No description provided for @rowFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel: {value}'**
+  String rowFuel(String value);
+
+  /// No description provided for @errChooseDates.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose dates'**
+  String get errChooseDates;
+
+  /// No description provided for @infoSignInFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in first'**
+  String get infoSignInFirst;
+
+  /// No description provided for @errQtyMin.
+  ///
+  /// In en, this message translates to:
+  /// **'Quantity must be at least 1'**
+  String get errQtyMin;
+
+  /// No description provided for @errQtyAvail.
+  ///
+  /// In en, this message translates to:
+  /// **'Only {count} piece(s) available'**
+  String errQtyAvail(int count);
+
+  /// No description provided for @errUnitSelectNat.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}: Select a nationality'**
+  String errUnitSelectNat(int index);
+
+  /// No description provided for @errUnitLatLng.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}: Drop-off lat/long required'**
+  String errUnitLatLng(int index);
+
+  /// No description provided for @errVendorMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor not found for this equipment.'**
+  String get errVendorMissing;
+
+  /// No description provided for @infoCreateOrgFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please create/activate your Organization first.'**
+  String get infoCreateOrgFirst;
+
+  /// No description provided for @errLoadNatsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load equipment driver nationalities.'**
+  String get errLoadNatsFailed;
+
+  /// No description provided for @errLoadRespFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load responsibility names.'**
+  String get errLoadRespFailed;
+
+  /// No description provided for @errRequestAddFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Request/add failed'**
+  String get errRequestAddFailed;
+
+  /// No description provided for @requestCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Request created'**
+  String get requestCreated;
+
+  /// No description provided for @unitIndex.
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}'**
+  String unitIndex(int index);
+
+  /// No description provided for @noImages.
+  ///
+  /// In en, this message translates to:
+  /// **'No images'**
+  String get noImages;
+
+  /// No description provided for @mapSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search a place…'**
+  String get mapSearchHint;
+
+  /// No description provided for @mapNoResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results'**
+  String get mapNoResults;
+
+  /// No description provided for @mapCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get mapCancel;
+
+  /// No description provided for @mapUseThisLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Use this location'**
+  String get mapUseThisLocation;
+
+  /// No description provided for @mapExpandTooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Expand map'**
+  String get mapExpandTooltip;
+
+  /// No description provided for @mapClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get mapClear;
+
+  /// No description provided for @mapLatLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lat: {value}'**
+  String mapLatLabel(String value);
+
+  /// No description provided for @mapLngLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Lng: {value}'**
+  String mapLngLabel(String value);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

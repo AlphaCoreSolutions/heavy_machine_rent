@@ -585,5 +585,213 @@
         "placeholders": {
             "d": {}
         }
+    },
+    "title_equipmentDetails": "تفاصيل المعدّة",
+    "msg_failedLoadEquipment": "فشل في تحميل بيانات المعدّة",
+    "label_availability": "التوفر",
+    "label_rentFrom": "تاريخ بدء الإيجار",
+    "hint_yyyyMMdd": "YYYY-MM-DD",
+    "label_returnTo": "تاريخ الإرجاع",
+    "pill_days": "{count, plural, one{{count} يوم} other{{count} أيام}}",
+    "label_expectedKm": "المسافة المتوقعة (كم)",
+    "mini_pricePerKm": "{currency} {price} / كم",
+    "label_quantity": "الكمية",
+    "label_requestedQty": "الكمية المطلوبة",
+    "mini_available": "المتوفر: {count}",
+    "label_driverLocations": "مواقع السائقين",
+    "msg_loadingNats": "جاري تحميل الجنسيات المتاحة للسائقين…",
+    "msg_noNats": "لا توجد جنسيات سائقين متاحة لهذه المعدّة.",
+    "label_driverNationality": "جنسية السائق *",
+    "label_dropoffAddress": "عنوان التسليم",
+    "label_dropoffLat": "إحداثي خط العرض *",
+    "label_dropoffLon": "إحداثي خط الطول *",
+    "label_notes": "ملاحظات",
+    "chip_available": "المتوفر: {count}",
+    "label_priceBreakdown": "تفاصيل التسعير",
+    "row_perUnit": "لكل وحدة",
+    "row_base": "الأساس ({price} × {days} يوم)",
+    "row_distance": "المسافة ({pricePerKm} × {km} كم)",
+    "row_vat": "ضريبة القيمة المضافة {rate}٪",
+    "row_perUnitTotal": "إجمالي لكل وحدة",
+    "row_qtyTimes": "× الكمية ({qty})",
+    "row_subtotal": "الإجمالي الفرعي",
+    "row_vatOnly": "الضريبة",
+    "row_total": "الإجمالي",
+    "row_downPayment": "الدفعة المقدمة",
+    "btn_submit": "إرسال الطلب",
+    "btn_submitting": "جاري الإرسال…",
+    "row_fuel": "الوقود: {value}",
+    "err_chooseDates": "يرجى اختيار التواريخ",
+    "info_signInFirst": "يرجى تسجيل الدخول أولاً",
+    "err_qtyMin": "يجب أن تكون الكمية 1 على الأقل",
+    "err_qtyAvail": "متاح فقط {count} قطعة",
+    "err_unitSelectNat": "الوحدة {index}: اختر الجنسية",
+    "err_unitLatLng": "الوحدة {index}: مطلوب إحداثيات التسليم",
+    "err_vendorMissing": "لا يوجد مورد لهذه المعدّة.",
+    "info_createOrg": "يرجى إنشاء/تفعيل مؤسستك أولاً.",
+    "err_loadNats": "تعذر تحميل جنسيات السائقين للمعدة.",
+    "err_loadResp": "تعذر تحميل أسماء المسؤوليات.",
+    "equipDetailsTitle": "تفاصيل المعدّة",
+    "msgFailedLoadEquipment": "فشل في تحميل بيانات المعدّة",
+    "labelAvailability": "التوفر",
+    "labelRentFrom": "تاريخ بدء الإيجار",
+    "hintYyyyMmDd": "YYYY-MM-DD",
+    "labelReturnTo": "تاريخ الإرجاع",
+    "pillDays": "{count, plural, one{{count} يوم} other{{count} أيام}}",
+    "@pillDays": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "labelExpectedKm": "المسافة المتوقعة (كم)",
+    "miniPricePerKm": "{currency} {price} / كم",
+    "@miniPricePerKm": {
+        "placeholders": {
+            "currency": {
+                "type": "String"
+            },
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "labelQuantity": "الكمية",
+    "labelRequestedQty": "الكمية المطلوبة",
+    "miniAvailable": "المتوفر: {count}",
+    "@miniAvailable": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "labelDriverLocations": "مواقع السائقين",
+    "msgLoadingNats": "جاري تحميل الجنسيات المتاحة للسائقين…",
+    "msgNoNats": "لا توجد جنسيات سائقين متاحة لهذه المعدّة.",
+    "labelDriverNationality": "جنسية السائق *",
+    "labelDropoffAddress": "عنوان التسليم",
+    "labelDropoffLat": "إحداثي خط العرض *",
+    "labelDropoffLon": "إحداثي خط الطول *",
+    "labelNotes": "ملاحظات",
+    "labelPriceBreakdown": "تفاصيل التسعير",
+    "rowPerUnit": "لكل وحدة",
+    "rowBase": "الأساس ({price} × {days} يوم)",
+    "@rowBase": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            },
+            "days": {
+                "type": "String"
+            }
+        }
+    },
+    "rowDistance": "المسافة ({pricePerKm} × {km} كم)",
+    "@rowDistance": {
+        "placeholders": {
+            "pricePerKm": {
+                "type": "String"
+            },
+            "km": {
+                "type": "String"
+            }
+        }
+    },
+    "rowVat": "ضريبة القيمة المضافة {rate}٪",
+    "@rowVat": {
+        "placeholders": {
+            "rate": {
+                "type": "String"
+            }
+        }
+    },
+    "rowPerUnitTotal": "إجمالي لكل وحدة",
+    "rowQtyTimes": "× الكمية ({qty})",
+    "@rowQtyTimes": {
+        "placeholders": {
+            "qty": {
+                "type": "int"
+            }
+        }
+    },
+    "rowSubtotal": "الإجمالي الفرعي",
+    "rowVatOnly": "الضريبة",
+    "rowTotal": "الإجمالي",
+    "rowDownPayment": "الدفعة المقدمة",
+    "btnSubmitting": "جاري الإرسال…",
+    "btnSubmit": "إرسال الطلب",
+    "rowFuel": "الوقود: {value}",
+    "@rowFuel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "errChooseDates": "يرجى اختيار التواريخ",
+    "infoSignInFirst": "يرجى تسجيل الدخول أولاً",
+    "errQtyMin": "يجب أن تكون الكمية 1 على الأقل",
+    "errQtyAvail": "متاح فقط {count} قطعة",
+    "@errQtyAvail": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "errUnitSelectNat": "الوحدة {index}: اختر الجنسية",
+    "@errUnitSelectNat": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "errUnitLatLng": "الوحدة {index}: مطلوب إحداثيات التسليم",
+    "@errUnitLatLng": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "errVendorMissing": "لا يوجد مورد لهذه المعدّة.",
+    "infoCreateOrgFirst": "يرجى إنشاء/تفعيل مؤسستك أولاً.",
+    "errLoadNatsFailed": "تعذر تحميل جنسيات السائقين للمعدة.",
+    "errLoadRespFailed": "تعذر تحميل أسماء المسؤوليات.",
+    "errRequestAddFailed": "فشل إنشاء/إضافة الطلب",
+    "requestCreated": "تم إنشاء الطلب",
+    "unitIndex": "الوحدة {index}",
+    "@unitIndex": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "noImages": "لا توجد صور",
+    "mapSearchHint": "ابحث عن موقع…",
+    "mapNoResults": "لا توجد نتائج",
+    "mapCancel": "إلغاء",
+    "mapUseThisLocation": "استخدام هذا الموقع",
+    "mapExpandTooltip": "تكبير الخريطة",
+    "mapClear": "مسح",
+    "mapLatLabel": "خط العرض: {value}",
+    "@mapLatLabel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "mapLngLabel": "خط الطول: {value}",
+    "@mapLngLabel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
     }
 }

@@ -1,8 +1,5 @@
-// =================================================================================
-// EQUIPMENT DETAILS — Request first; then create RequestDriverLocation per unit.
-// UI for Driver Location: nationality, drop-off address, lat, lon (no notes).
-// Price shows Per-unit then × Quantity totals.
-// =================================================================================
+// lib/screens/equipment_details_screen.dart
+// Localized version (matches the style used in equipment_editor_screen.dart)
 
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -13,6 +10,7 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/admin/request_driver_location.dart';
 import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:heavy_new/core/models/maps/maps_service.dart';
 import 'package:heavy_new/core/models/organization/organization_user.dart';
 import 'package:heavy_new/core/models/user/nationality.dart';
 import 'package:heavy_new/core/utils/model_utils.dart';
@@ -23,6 +21,11 @@ import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 
 import 'package:heavy_new/screens/request_screens/request_confirmation_screen.dart';
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
 
 // -------- Per-unit/total price helper --------
 class _PriceBreakdown {
@@ -37,7 +40,6 @@ class _PriceBreakdown {
 }
 
 // -------- Inline form state per unit --------
-
 class _LocUnitForm {
   int? nationalityId;
   final TextEditingController dAddr = TextEditingController();
@@ -57,11 +59,11 @@ class _LocUnitForm {
       requestDriverLocationId: 0,
       requestId: 0, // embedded create
       equipmentId: equipmentId,
-      equipmentNumber: "", // not shown; send empty
+      equipmentNumber: "",
       driverNationalityId: nationalityId ?? 0,
-      equipmentDriverId: 0, // fixed 0
+      equipmentDriverId: 0,
       otherNotes: notes.text.trim(),
-      pickupAddress: " ", // per requirement
+      pickupAddress: " ",
       pLongitude: "0",
       pLatitude: "0",
       dropoffAddress: dAddr.text.trim(),
@@ -79,7 +81,6 @@ class EquipmentDetailsScreen extends StatefulWidget {
 }
 
 class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
-  // Small helper: when server gives you modelId but row isn't visible yet.
   Future<RequestModel?> _hydrateByIdWithRetry(int id) async {
     const delays = <Duration>[
       Duration(milliseconds: 150),
@@ -92,15 +93,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       try {
         final m = await api.Api.getRequestById(id);
         if (m.requestId != null && m.requestId! > 0) return m;
-      } catch (_) {
-        /* ignore and retry */
-      }
+      } catch (_) {}
       await Future.delayed(d);
     }
     return null;
   }
 
-  // Safe coercion
   Map<String, dynamic>? _asMap(dynamic any) {
     if (any == null) return null;
     if (any is Map<String, dynamic>) return any;
@@ -148,16 +146,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       final drivers = await api.Api.getEquipmentDriversByEquipmentId(
         widget.equipmentId,
       );
-      // Collect unique, valid nationality IDs
       final ids = drivers
-          .map(
-            (d) => d.driverNationalityId ?? d.driverNationalityId,
-          ) // depending on your model field name
+          .map((d) => d.driverNationalityId ?? d.driverNationalityId)
           .where((id) => (id ?? 0) > 0)
           .cast<int>()
           .toSet();
 
-      // If any selected nationality is now invalid, clear it
       for (final f in _locForms) {
         if (f.nationalityId != null && !ids.contains(f.nationalityId)) {
           f.nationalityId = null;
@@ -174,7 +168,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _allowedNatError = 'Could not load equipment driver nationalities.';
+        _allowedNatError = context.l10n.errLoadNatsFailed;
         _loadingAllowedNats = false;
       });
     }
@@ -202,7 +196,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     super.dispose();
   }
 
-  // ---------- helpers ----------
   String _fmtYmd(DateTime d) => fmtDate(d);
   String _fmt(num? n) => (n ?? 0).toStringAsFixed(2);
 
@@ -270,15 +263,14 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _respMapError = 'Could not load responsibility names.';
+        _respMapError = context.l10n.errLoadRespFailed;
         _respMapLoading = false;
       });
     }
   }
 
-  // ---------- pricing ----------
   _PriceBreakdown _computePerUnit(Equipment e) {
-    if (_days <= 0)
+    if (_days <= 0) {
       return const _PriceBreakdown(
         base: 0,
         distance: 0,
@@ -286,6 +278,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         total: 0,
         downPayment: 0,
       );
+    }
     final perDay = (e.rentPerDayDouble ?? 0).toDouble();
     final base = perDay * _days;
     final perKm = (e.rentPerDistanceDouble ?? 0).toDouble();
@@ -315,7 +308,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     );
   }
 
-  // ---------- date pickers ----------
   void _pickFromDate() async {
     final now = DateTime.now();
     final d = await showDatePicker(
@@ -367,58 +359,54 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     }
   }
 
-  // ---------- submit (single payload with embedded RDL) ----------
   Future<void> _submit(Equipment e) async {
     if (_from == null || _to == null) {
-      AppSnack.error(context, 'Please choose dates');
+      AppSnack.error(context, context.l10n.errChooseDates);
       return;
     }
     if (!AuthStore.instance.isLoggedIn) {
-      AppSnack.info(context, 'Please sign in first');
+      AppSnack.info(context, context.l10n.infoSignInFirst);
       return;
     }
 
     final avail = _availableQty(e);
     if (_qty < 1) {
-      AppSnack.error(context, 'Quantity must be at least 1');
+      AppSnack.error(context, context.l10n.errQtyMin);
       return;
     }
     if (avail > 0 && _qty > avail) {
-      AppSnack.error(context, 'Only $avail piece(s) available');
+      AppSnack.error(context, context.l10n.errQtyAvail(avail));
       return;
     }
 
-    // validate forms
     for (int i = 0; i < _locForms.length; i++) {
       final f = _locForms[i];
       if ((f.nationalityId ?? 0) <= 0) {
-        AppSnack.error(context, 'Unit ${i + 1}: Select a nationality');
+        AppSnack.error(context, context.l10n.errUnitSelectNat(i + 1));
         return;
       }
       if (f.dLat.text.trim().isEmpty || f.dLon.text.trim().isEmpty) {
-        AppSnack.error(context, 'Unit ${i + 1}: Drop-off lat/long required');
+        AppSnack.error(context, context.l10n.errUnitLatLng(i + 1));
         return;
       }
     }
 
     final vendorId = e.vendorId ?? e.organization?.organizationId ?? 0;
     if (vendorId == 0) {
-      AppSnack.error(context, 'Vendor not found for this equipment.');
+      AppSnack.error(context, context.l10n.errVendorMissing);
       return;
     }
     final eqId = e.equipmentId ?? 0;
 
     final meOrg = await _resolveMyOrganizationId();
     if (meOrg == null || meOrg == 0) {
-      AppSnack.info(context, 'Please create/activate your Organization first.');
+      AppSnack.info(context, context.l10n.infoCreateOrgFirst);
       return;
     }
 
-    // Pricing fallback (in case server doesn't echo a model)
     final totals = _computeTotal(e);
     final subtotalAll = totals.base + totals.distance;
 
-    // Build embedded driver-location rows
     final rdl = _locForms.map((f) => f.toEmbedded(equipmentId: eqId)).toList();
 
     final draft = RequestDraft(
@@ -454,15 +442,10 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
     setState(() => _submitting = true);
     try {
-      // Call whatever your API exposes. It may return:
-      // - RequestModel
-      // - an ApiEnvelope-like map/string/list
-      // - your older AddRequestResult wrapper
       final raw = await api.Api.addRequest(
         draft,
       ).timeout(const Duration(seconds: 20));
 
-      // 1) If API already returns a RequestModel, we’re done.
       if (raw is RequestModel) {
         final created = raw;
         final reqNo =
@@ -498,11 +481,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         return;
       }
 
-      // 2) If API returns your previous wrapper {success, message, model}, unwrap it.
       if (raw is! RequestModel && raw is! ApiEnvelope) {
         final maybeModel = (raw as dynamic).model;
-        ((raw as dynamic).message ?? '').toString().trim();
-
         if (maybeModel is RequestModel) {
           final created = maybeModel;
           final reqNo =
@@ -533,23 +513,17 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           );
           return;
         }
-
-        // fallthrough → treat the whole thing as an envelope-any
       }
 
-      // 3) Envelope-first path (works if addRequest returns map/string/list/envelope)
       final env = (raw is ApiEnvelope) ? raw : ApiEnvelope.fromAny(raw);
-
-      // Server explicitly failed?
       if ((env as ApiEnvelope).flag == false) {
-        final msg = ((env).message?.trim().isNotEmpty ?? false)
+        final msg = (env).message?.trim().isNotEmpty == true
             ? (env).message!.trim()
-            : 'Request/add failed';
+            : context.l10n.errRequestAddFailed;
         AppSnack.error(context, msg);
         return;
       }
 
-      // Try data → model
       final mapData = _asMap(env.data);
       if (mapData != null && mapData.isNotEmpty) {
         final created = RequestModel.fromJson(mapData);
@@ -580,7 +554,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         return;
       }
 
-      // No data, but we have an id → hydrate with small retry
       final id = env.modelId ?? 0;
       if (id > 0) {
         final created = await _hydrateByIdWithRetry(id);
@@ -613,12 +586,11 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
         }
       }
 
-      // Last resort: success only, no model
       AppSnack.success(
         context,
-        (env.message?.trim().isNotEmpty ?? false)
+        env.message?.trim().isNotEmpty == true
             ? env.message!.trim()
-            : 'Request created',
+            : context.l10n.requestCreated,
       );
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -640,13 +612,12 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     }
   }
 
-  // ---------- UI ----------
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Equipment details')),
+      appBar: AppBar(title: Text(context.l10n.equipDetailsTitle)),
       body: FutureBuilder<Equipment>(
         future: _future,
         builder: (context, snap) {
@@ -656,7 +627,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
             );
           }
           if (snap.hasError || !snap.hasData) {
-            return const Center(child: Text('Failed to load equipment'));
+            return Center(child: Text(context.l10n.msgFailedLoadEquipment));
           }
           final e = snap.data!;
           final pxUnit = _computePerUnit(e);
@@ -666,7 +637,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(3, 12, 3, 28),
             children: [
-              // Gallery
               _Gallery(
                 images: (e.equipmentImages ?? [])
                     .map((i) => i.equipmentPath ?? '')
@@ -675,7 +645,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Header
               Glass(
                 radius: 20,
                 child: Column(
@@ -709,7 +678,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                             ),
                           ),
                         TonalIconChip(
-                          label: 'Available: $avail',
+                          label: context.l10n.miniAvailable(avail),
                           icon: AIcon(
                             AppGlyph.info,
                             color: cs.onPrimaryContainer,
@@ -722,14 +691,13 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Availability
               Glass(
                 radius: 20,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Availability',
+                      context.l10n.labelAvailability,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 10),
@@ -738,8 +706,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                         Expanded(
                           child: AInput(
                             controller: _fromCtrl,
-                            label: 'Rent Date (From)',
-                            hint: 'YYYY-MM-DD',
+                            label: context.l10n.labelRentFrom,
+                            hint: context.l10n.hintYyyyMmDd,
                             glyph: AppGlyph.calendar,
                             readOnly: true,
                             onTap: _pickFromDate,
@@ -749,8 +717,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                         Expanded(
                           child: AInput(
                             controller: _toCtrl,
-                            label: 'Return Date (To)',
-                            hint: 'YYYY-MM-DD',
+                            label: context.l10n.labelReturnTo,
+                            hint: context.l10n.hintYyyyMmDd,
                             glyph: AppGlyph.calendar,
                             readOnly: true,
                             onTap: _pickToDate,
@@ -761,14 +729,16 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                     const SizedBox(height: 8),
                     Align(
                       alignment: Alignment.centerLeft,
-                      child: _DaysPill(daysText: '$_days day(s)', cs: cs),
+                      child: _DaysPill(
+                        daysText: context.l10n.pillDays(_days),
+                        cs: cs,
+                      ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 14),
 
-              // Distance (if applicable)
               if (e.isDistancePrice == true) ...[
                 Glass(
                   radius: 20,
@@ -777,8 +747,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                       Expanded(
                         child: AInput(
                           controller: _kmCtrl,
-                          label: 'Expected distance (km)',
-                          hint: 'e.g. 120',
+                          label: context.l10n.labelExpectedKm,
+                          hint: '120',
                           glyph: AppGlyph.mapPin,
                           keyboardType: TextInputType.number,
                           onChanged: (v) {
@@ -790,7 +760,10 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                       ),
                       const SizedBox(width: 8),
                       _MiniPill(
-                        text: '$_ccy ${_fmt(e.rentPerDistanceDouble)} / km',
+                        text: context.l10n.miniPricePerKm(
+                          _ccy,
+                          _fmt(e.rentPerDistanceDouble),
+                        ),
                       ),
                     ],
                   ),
@@ -798,14 +771,13 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                 const SizedBox(height: 14),
               ],
 
-              // Quantity
               Glass(
                 radius: 20,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quantity',
+                      context.l10n.labelQuantity,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 10),
@@ -814,8 +786,8 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                         Expanded(
                           child: AInput(
                             controller: _qtyCtrl,
-                            label: 'Requested quantity',
-                            hint: 'e.g. 1',
+                            label: context.l10n.labelRequestedQty,
+                            hint: '1',
                             glyph: AppGlyph.info,
                             keyboardType: TextInputType.number,
                             onChanged: (v) {
@@ -833,7 +805,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        _MiniPill(text: 'Available: $avail'),
+                        _MiniPill(text: context.l10n.miniAvailable(avail)),
                       ],
                     ),
                   ],
@@ -841,14 +813,13 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Driver Locations (Nationality + dropoff + coords + notes)
               Glass(
                 radius: 22,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Driver Locations',
+                      context.l10n.labelDriverLocations,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 8),
@@ -863,27 +834,23 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           if (_loadingAllowedNats) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'Loading available driver nationalities…',
+                              context.l10n.msgLoadingNats,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ] else if (_allowedNatIds.isEmpty) ...[
                             const SizedBox(height: 8),
                             Text(
-                              'No driver nationalities available for this equipment.',
+                              context.l10n.msgNoNats,
                               style: Theme.of(context).textTheme.bodySmall,
                             ),
                           ],
                           ...List.generate(_locForms.length, (i) {
                             final form = _locForms[i];
 
-                            // Filtered nationalities for this equipment
                             final allowedNats = _nats.where((n) {
                               final id = n.nationalityId ?? 0;
                               return _allowedNatIds.contains(id);
                             }).toList();
-
-                            // If nothing allowed, we’ll disable the dropdown inside the card
-                            //final hasAllowed = allowedNats.isNotEmpty;
 
                             return Padding(
                               padding: EdgeInsets.only(
@@ -892,8 +859,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                               child: _LocCard(
                                 index: i + 1,
                                 form: form,
-                                nationalities:
-                                    allowedNats, // ← pass the filtered list
+                                nationalities: allowedNats,
                                 onRemove: _locForms.length > 1
                                     ? () => setState(() {
                                         form.dispose();
@@ -913,43 +879,54 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               ),
               const SizedBox(height: 14),
 
-              // Price breakdown (per-unit then × qty)
               Glass(
                 radius: 22,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Price breakdown',
+                      context.l10n.labelPriceBreakdown,
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                     const SizedBox(height: 10),
 
-                    _rowBold('Per unit', ''),
+                    _rowBold(context.l10n.rowPerUnit, ''),
                     _row(
-                      'Base (${Money.format(e.rentPerDayDouble)} × $_days day)',
+                      context.l10n.rowBase(
+                        Money.format(e.rentPerDayDouble),
+                        _days.toString(),
+                      ),
                       Money.format(pxUnit.base, withCode: true),
                     ),
                     if (e.isDistancePrice == true)
                       _row(
-                        'Distance (${_fmt(e.rentPerDistanceDouble)} × $_expectedKm km)',
+                        context.l10n.rowDistance(
+                          _fmt(e.rentPerDistanceDouble),
+                          _expectedKm.toStringAsFixed(0),
+                        ),
                         Money.format(pxUnit.distance, withCode: true),
                       ),
                     _row(
-                      'VAT ${(_vatRate * 100).toStringAsFixed(0)}%',
+                      context.l10n.rowVat((_vatRate * 100).toStringAsFixed(0)),
                       Money.format(pxUnit.vat),
                     ),
-                    _rowBold('Per-unit total', Money.format(pxUnit.total)),
+                    _rowBold(
+                      context.l10n.rowPerUnitTotal,
+                      Money.format(pxUnit.total),
+                    ),
 
                     const SizedBox(height: 8),
-                    _rowBold('× Quantity ($_qty)', ''),
+                    _rowBold(context.l10n.rowQtyTimes(_qty), ''),
                     _row(
-                      'Subtotal',
+                      context.l10n.rowSubtotal,
                       Money.format(pxAll.base + pxAll.distance, withCode: true),
                     ),
-                    _row('VAT', Money.format(pxAll.vat)),
-                    _rowBold('Total', Money.format(pxAll.total)),
-                    _row('Down payment', Money.format(pxAll.downPayment)),
+                    _row(context.l10n.rowVatOnly, Money.format(pxAll.vat)),
+                    _rowBold(context.l10n.rowTotal, Money.format(pxAll.total)),
+                    _row(
+                      context.l10n.rowDownPayment,
+                      Money.format(pxAll.downPayment),
+                    ),
 
                     const SizedBox(height: 14),
                     BrandButton(
@@ -971,13 +948,19 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                               selected: true,
                             ),
                       child: Text(
-                        _submitting ? 'Submitting…' : 'Submit request',
+                        _submitting
+                            ? context.l10n.btnSubmitting
+                            : context.l10n.btnSubmit,
                       ),
                     ),
 
                     const SizedBox(height: 6),
                     Text(
-                      'Fuel: ${_respNameById[e.fuelResponsibilityId ?? e.fuelResponsibility?.domainDetailId] ?? "—"}',
+                      context.l10n.rowFuel(
+                        _respNameById[e.fuelResponsibilityId ??
+                                e.fuelResponsibility?.domainDetailId] ??
+                            "—",
+                      ),
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurface.withOpacity(0.7),
                       ),
@@ -996,7 +979,6 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     );
   }
 
-  // ------ small UI helpers (unchanged from your style) ------
   Widget _row(String label, String value) => Padding(
     padding: const EdgeInsets.symmetric(vertical: 6),
     child: Row(
@@ -1123,7 +1105,7 @@ class _LocCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Unit $index',
+                context.l10n.unitIndex(index), // e.g., "Unit {index}"
                 style: Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -1140,8 +1122,8 @@ class _LocCard extends StatelessWidget {
 
           DropdownButtonFormField<int>(
             value: hasOptions ? form.nationalityId : null,
-            decoration: const InputDecoration(
-              labelText: 'Driver nationality *',
+            decoration: InputDecoration(
+              labelText: context.l10n.labelDriverNationality,
             ),
             items: nationalities.map((n) {
               final label =
@@ -1158,46 +1140,66 @@ class _LocCard extends StatelessWidget {
             onChanged: hasOptions ? (v) => form.nationalityId = v : null,
           ),
 
-          SizedBox(height: 8),
+          const SizedBox(height: 12),
 
           AInput(
             controller: form.dAddr,
-            label: 'Drop-off address',
+            label: context.l10n.labelDropoffAddress,
             glyph: AppGlyph.mapPin,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 10),
+
+          // NOTE: your InlineMapPicker widget (already localized inside itself if needed)
+          InlineMapPicker(
+            latCtrl: form.dLat,
+            lonCtrl: form.dLon,
+            addrCtrl: form.dAddr,
+            googleApiKey: 'YOUR_PLACES_WEB_API_KEY',
+            height: 240,
+            onChanged: () {},
+          ),
+
+          const SizedBox(height: 10),
 
           Row(
             children: [
               Expanded(
-                child: AInput(
+                child: TextFormField(
                   controller: form.dLat,
-                  label: 'Drop-off latitude *',
-                  glyph: AppGlyph.pin,
-                  keyboardType: TextInputType.number,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.labelDropoffLat,
+                    suffixIcon: const Icon(Icons.pin_drop_outlined),
+                  ),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: AInput(
+                child: TextFormField(
                   controller: form.dLon,
-                  label: 'Drop-off longitude *',
-                  glyph: AppGlyph.pin,
-                  keyboardType: TextInputType.number,
+                  readOnly: true,
+                  decoration: InputDecoration(
+                    labelText: context.l10n.labelDropoffLon,
+                    suffixIcon: const Icon(Icons.pin_drop_outlined),
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
 
-          AInput(controller: form.notes, label: 'Notes', glyph: AppGlyph.edit),
+          AInput(
+            controller: form.notes,
+            label: context.l10n.labelNotes,
+            glyph: AppGlyph.edit,
+          ),
         ],
       ),
     );
   }
 }
 
-// -------- Gallery widget you already had --------
+// -------- Gallery widget (unchanged except strings already neutral) --------
 class _Gallery extends StatefulWidget {
   const _Gallery({required this.images});
   final List<String> images;
@@ -1270,7 +1272,7 @@ class _GalleryState extends State<_Gallery> {
               borderRadius: BorderRadius.circular(18),
               color: cs.surfaceVariant,
             ),
-            child: const Center(child: Text('No images')),
+            child: Center(child: Text(context.l10n.noImages)),
           ),
         ),
       );

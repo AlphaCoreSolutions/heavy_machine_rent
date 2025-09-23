@@ -1429,4 +1429,371 @@ class AppLocalizationsAr extends AppLocalizations {
   String timeDaysShort(Object d) {
     return '$dي';
   }
+
+  @override
+  String get title_equipmentDetails => 'تفاصيل المعدّة';
+
+  @override
+  String get msg_failedLoadEquipment => 'فشل في تحميل بيانات المعدّة';
+
+  @override
+  String get label_availability => 'التوفر';
+
+  @override
+  String get label_rentFrom => 'تاريخ بدء الإيجار';
+
+  @override
+  String get hint_yyyyMMdd => 'YYYY-MM-DD';
+
+  @override
+  String get label_returnTo => 'تاريخ الإرجاع';
+
+  @override
+  String pill_days(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أيام',
+      one: '$count يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get label_expectedKm => 'المسافة المتوقعة (كم)';
+
+  @override
+  String mini_pricePerKm(Object currency, Object price) {
+    return '$currency $price / كم';
+  }
+
+  @override
+  String get label_quantity => 'الكمية';
+
+  @override
+  String get label_requestedQty => 'الكمية المطلوبة';
+
+  @override
+  String mini_available(Object count) {
+    return 'المتوفر: $count';
+  }
+
+  @override
+  String get label_driverLocations => 'مواقع السائقين';
+
+  @override
+  String get msg_loadingNats => 'جاري تحميل الجنسيات المتاحة للسائقين…';
+
+  @override
+  String get msg_noNats => 'لا توجد جنسيات سائقين متاحة لهذه المعدّة.';
+
+  @override
+  String get label_driverNationality => 'جنسية السائق *';
+
+  @override
+  String get label_dropoffAddress => 'عنوان التسليم';
+
+  @override
+  String get label_dropoffLat => 'إحداثي خط العرض *';
+
+  @override
+  String get label_dropoffLon => 'إحداثي خط الطول *';
+
+  @override
+  String get label_notes => 'ملاحظات';
+
+  @override
+  String chip_available(Object count) {
+    return 'المتوفر: $count';
+  }
+
+  @override
+  String get label_priceBreakdown => 'تفاصيل التسعير';
+
+  @override
+  String get row_perUnit => 'لكل وحدة';
+
+  @override
+  String row_base(Object days, Object price) {
+    return 'الأساس ($price × $days يوم)';
+  }
+
+  @override
+  String row_distance(Object km, Object pricePerKm) {
+    return 'المسافة ($pricePerKm × $km كم)';
+  }
+
+  @override
+  String row_vat(Object rate) {
+    return 'ضريبة القيمة المضافة $rate٪';
+  }
+
+  @override
+  String get row_perUnitTotal => 'إجمالي لكل وحدة';
+
+  @override
+  String row_qtyTimes(Object qty) {
+    return '× الكمية ($qty)';
+  }
+
+  @override
+  String get row_subtotal => 'الإجمالي الفرعي';
+
+  @override
+  String get row_vatOnly => 'الضريبة';
+
+  @override
+  String get row_total => 'الإجمالي';
+
+  @override
+  String get row_downPayment => 'الدفعة المقدمة';
+
+  @override
+  String get btn_submit => 'إرسال الطلب';
+
+  @override
+  String get btn_submitting => 'جاري الإرسال…';
+
+  @override
+  String row_fuel(Object value) {
+    return 'الوقود: $value';
+  }
+
+  @override
+  String get err_chooseDates => 'يرجى اختيار التواريخ';
+
+  @override
+  String get info_signInFirst => 'يرجى تسجيل الدخول أولاً';
+
+  @override
+  String get err_qtyMin => 'يجب أن تكون الكمية 1 على الأقل';
+
+  @override
+  String err_qtyAvail(Object count) {
+    return 'متاح فقط $count قطعة';
+  }
+
+  @override
+  String err_unitSelectNat(Object index) {
+    return 'الوحدة $index: اختر الجنسية';
+  }
+
+  @override
+  String err_unitLatLng(Object index) {
+    return 'الوحدة $index: مطلوب إحداثيات التسليم';
+  }
+
+  @override
+  String get err_vendorMissing => 'لا يوجد مورد لهذه المعدّة.';
+
+  @override
+  String get info_createOrg => 'يرجى إنشاء/تفعيل مؤسستك أولاً.';
+
+  @override
+  String get err_loadNats => 'تعذر تحميل جنسيات السائقين للمعدة.';
+
+  @override
+  String get err_loadResp => 'تعذر تحميل أسماء المسؤوليات.';
+
+  @override
+  String get equipDetailsTitle => 'تفاصيل المعدّة';
+
+  @override
+  String get msgFailedLoadEquipment => 'فشل في تحميل بيانات المعدّة';
+
+  @override
+  String get labelAvailability => 'التوفر';
+
+  @override
+  String get labelRentFrom => 'تاريخ بدء الإيجار';
+
+  @override
+  String get hintYyyyMmDd => 'YYYY-MM-DD';
+
+  @override
+  String get labelReturnTo => 'تاريخ الإرجاع';
+
+  @override
+  String pillDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count أيام',
+      one: '$count يوم',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get labelExpectedKm => 'المسافة المتوقعة (كم)';
+
+  @override
+  String miniPricePerKm(String currency, String price) {
+    return '$currency $price / كم';
+  }
+
+  @override
+  String get labelQuantity => 'الكمية';
+
+  @override
+  String get labelRequestedQty => 'الكمية المطلوبة';
+
+  @override
+  String miniAvailable(int count) {
+    return 'المتوفر: $count';
+  }
+
+  @override
+  String get labelDriverLocations => 'مواقع السائقين';
+
+  @override
+  String get msgLoadingNats => 'جاري تحميل الجنسيات المتاحة للسائقين…';
+
+  @override
+  String get msgNoNats => 'لا توجد جنسيات سائقين متاحة لهذه المعدّة.';
+
+  @override
+  String get labelDriverNationality => 'جنسية السائق *';
+
+  @override
+  String get labelDropoffAddress => 'عنوان التسليم';
+
+  @override
+  String get labelDropoffLat => 'إحداثي خط العرض *';
+
+  @override
+  String get labelDropoffLon => 'إحداثي خط الطول *';
+
+  @override
+  String get labelNotes => 'ملاحظات';
+
+  @override
+  String get labelPriceBreakdown => 'تفاصيل التسعير';
+
+  @override
+  String get rowPerUnit => 'لكل وحدة';
+
+  @override
+  String rowBase(String price, String days) {
+    return 'الأساس ($price × $days يوم)';
+  }
+
+  @override
+  String rowDistance(String pricePerKm, String km) {
+    return 'المسافة ($pricePerKm × $km كم)';
+  }
+
+  @override
+  String rowVat(String rate) {
+    return 'ضريبة القيمة المضافة $rate٪';
+  }
+
+  @override
+  String get rowPerUnitTotal => 'إجمالي لكل وحدة';
+
+  @override
+  String rowQtyTimes(int qty) {
+    return '× الكمية ($qty)';
+  }
+
+  @override
+  String get rowSubtotal => 'الإجمالي الفرعي';
+
+  @override
+  String get rowVatOnly => 'الضريبة';
+
+  @override
+  String get rowTotal => 'الإجمالي';
+
+  @override
+  String get rowDownPayment => 'الدفعة المقدمة';
+
+  @override
+  String get btnSubmitting => 'جاري الإرسال…';
+
+  @override
+  String get btnSubmit => 'إرسال الطلب';
+
+  @override
+  String rowFuel(String value) {
+    return 'الوقود: $value';
+  }
+
+  @override
+  String get errChooseDates => 'يرجى اختيار التواريخ';
+
+  @override
+  String get infoSignInFirst => 'يرجى تسجيل الدخول أولاً';
+
+  @override
+  String get errQtyMin => 'يجب أن تكون الكمية 1 على الأقل';
+
+  @override
+  String errQtyAvail(int count) {
+    return 'متاح فقط $count قطعة';
+  }
+
+  @override
+  String errUnitSelectNat(int index) {
+    return 'الوحدة $index: اختر الجنسية';
+  }
+
+  @override
+  String errUnitLatLng(int index) {
+    return 'الوحدة $index: مطلوب إحداثيات التسليم';
+  }
+
+  @override
+  String get errVendorMissing => 'لا يوجد مورد لهذه المعدّة.';
+
+  @override
+  String get infoCreateOrgFirst => 'يرجى إنشاء/تفعيل مؤسستك أولاً.';
+
+  @override
+  String get errLoadNatsFailed => 'تعذر تحميل جنسيات السائقين للمعدة.';
+
+  @override
+  String get errLoadRespFailed => 'تعذر تحميل أسماء المسؤوليات.';
+
+  @override
+  String get errRequestAddFailed => 'فشل إنشاء/إضافة الطلب';
+
+  @override
+  String get requestCreated => 'تم إنشاء الطلب';
+
+  @override
+  String unitIndex(int index) {
+    return 'الوحدة $index';
+  }
+
+  @override
+  String get noImages => 'لا توجد صور';
+
+  @override
+  String get mapSearchHint => 'ابحث عن موقع…';
+
+  @override
+  String get mapNoResults => 'لا توجد نتائج';
+
+  @override
+  String get mapCancel => 'إلغاء';
+
+  @override
+  String get mapUseThisLocation => 'استخدام هذا الموقع';
+
+  @override
+  String get mapExpandTooltip => 'تكبير الخريطة';
+
+  @override
+  String get mapClear => 'مسح';
+
+  @override
+  String mapLatLabel(String value) {
+    return 'خط العرض: $value';
+  }
+
+  @override
+  String mapLngLabel(String value) {
+    return 'خط الطول: $value';
+  }
 }

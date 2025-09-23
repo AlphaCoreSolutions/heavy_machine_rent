@@ -6,11 +6,18 @@
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
 
     <application
         android:label="heavy_machinery"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+         <meta-data
+             android:name="com.google.android.geo.API_KEY"
+             android:value="AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw" />
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -24,6 +31,7 @@
             android:turnScreenOn="true"
             android:enableOnBackInvokedCallBack="true"
             
+           
             <meta-data
               android:name="io.flutter.embedding.android.NormalTheme"
               android:resource="@style/NormalTheme"

@@ -1,3 +1,5 @@
+// lib/screens/chat_list_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
@@ -19,65 +21,63 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   final _search = TextEditingController();
+  final _debounceMs = 250;
+  Timer? _deb;
   List<_ChatThread> _threads = [];
   List<_ChatThread> _filtered = [];
   bool _loading = false;
+  String? _loadError;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _search.addListener(_onQueryChanged);
+  }
+
+  @override
+  void dispose() {
+    _deb?.cancel();
+    _search.removeListener(_onQueryChanged);
+    _search.dispose();
+    super.dispose();
+  }
+
+  void _onQueryChanged() {
+    _deb?.cancel();
+    _deb = Timer(Duration(milliseconds: _debounceMs), _apply);
   }
 
   Future<void> _load() async {
-    setState(() => _loading = true);
+    setState(() {
+      _loading = true;
+      _loadError = null;
+    });
     try {
-      // Try real API
-      final rows = await api.Api.getChatThreads(); // <-- implement server-side
+      final rows = await api.Api.getChatThreads(); // <-- server impl
       _threads = rows
           .map(
             (m) => _ChatThread(
               id: m.threadId ?? 0,
-              title: m.title ?? '—',
-              lastMessage: m.lastMessage ?? '',
+              title: (m.title ?? '').trim().isNotEmpty
+                  ? m.title!.trim()
+                  : context.l10n.unnamedFactory, // reuse a neutral key
+              lastMessage: (m.lastMessage ?? '').trim(),
               lastAt: m.lastAt ?? DateTime.now(),
               unread: m.unreadCount ?? 0,
             ),
           )
           .toList();
-    } catch (_) {
-      // Fallback demo
-      _threads = [
-        _ChatThread(
-          id: 12,
-          title: 'Al Waha Rentals',
-          lastMessage: 'We can deliver tomorrow morning.',
-          lastAt: DateTime.now().subtract(const Duration(minutes: 6)),
-          unread: 2,
-        ),
-        _ChatThread(
-          id: 21,
-          title: 'Riyadh Earthworks',
-          lastMessage: 'Invoice sent.',
-          lastAt: DateTime.now().subtract(const Duration(hours: 4)),
-        ),
-        _ChatThread(
-          id: 7,
-          title: 'Gold Crane Co.',
-          lastMessage: 'Thanks!',
-          lastAt: DateTime.now().subtract(const Duration(days: 1, hours: 3)),
-        ),
-      ];
+
+      // newest first
+      _threads.sort((a, b) => b.lastAt.compareTo(a.lastAt));
+    } catch (e) {
+      _loadError = e.toString();
+      _threads = [];
     } finally {
       _apply();
       if (mounted) setState(() => _loading = false);
     }
-  }
-
-  @override
-  void dispose() {
-    _search.dispose();
-    super.dispose();
   }
 
   void _apply() {
@@ -109,7 +109,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
               controller: _search,
               label: context.l10n.searchChats,
               glyph: AppGlyph.search,
-              onChanged: (_) => _apply(),
               onSubmitted: (_) => _apply(),
             ),
           ),
@@ -119,86 +118,114 @@ class _ChatListScreenState extends State<ChatListScreen> {
               child: LinearProgressIndicator(),
             ),
           Expanded(
-            child: _filtered.isEmpty
-                ? ListView(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(context.l10n.noChatsYet),
-                      ),
-                    ],
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
-                    itemCount: _filtered.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) {
-                      final t = _filtered[i];
-                      return Glass(
-                        radius: 16,
-                        child: ListTile(
-                          leading: CircleAvatar(
-                            backgroundColor: cs.surfaceVariant,
-                            child: AIcon(
-                              AppGlyph.chat,
-                              color: cs.onSurfaceVariant,
-                            ),
-                          ),
-                          title: Text(
-                            t.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          subtitle: Text(
-                            t.lastMessage,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                _ago(context, t.lastAt),
-                                style: Theme.of(context).textTheme.labelSmall,
-                              ),
-                              if (t.unread > 0)
-                                Container(
-                                  margin: const EdgeInsets.only(top: 6),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 6,
-                                    vertical: 2,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: cs.primary,
-                                    borderRadius: BorderRadius.circular(10),
-                                  ),
-                                  child: Text(
-                                    t.unread.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                            ],
-                          ),
-                          onTap: () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => ChatThreadScreen(
-                                threadId: t.id,
-                                title: t.title,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
+            child: RefreshIndicator(onRefresh: _load, child: _buildList(cs)),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildList(ColorScheme cs) {
+    if (_loadError != null && _threads.isEmpty) {
+      // Hard error state (no cache)
+      return ListView(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              children: [
+                Text(context.l10n.errorFailedToLoadOptions),
+                const SizedBox(height: 8),
+                Text(
+                  _loadError!,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: cs.error),
+                ),
+                const SizedBox(height: 12),
+                FilledButton(
+                  onPressed: _load,
+                  child: Text(context.l10n.actionRetry),
+                ),
+              ],
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_filtered.isEmpty) {
+      // Empty or no matches
+      final emptyText = _search.text.trim().isEmpty
+          ? context.l10n.noChatsYet
+          : context.l10n.mapNoResults; // reuse a generic "No results"
+      return ListView(
+        children: [
+          Padding(padding: const EdgeInsets.all(24), child: Text(emptyText)),
+        ],
+      );
+    }
+
+    return ListView.separated(
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+      itemCount: _filtered.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      itemBuilder: (_, i) {
+        final t = _filtered[i];
+        return Glass(
+          radius: 16,
+          child: ListTile(
+            leading: CircleAvatar(
+              backgroundColor: cs.surfaceVariant,
+              child: AIcon(AppGlyph.chat, color: cs.onSurfaceVariant),
+            ),
+            title: Text(
+              t.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            ),
+            subtitle: Text(
+              t.lastMessage,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _ago(context, t.lastAt),
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
+                if (t.unread > 0)
+                  Container(
+                    margin: const EdgeInsets.only(top: 6),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: cs.primary,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      t.unread.toString(),
+                      style: const TextStyle(color: Colors.white, fontSize: 10),
+                    ),
+                  ),
+              ],
+            ),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(
+                builder: (_) =>
+                    ChatThreadScreen(threadId: t.id, title: t.title),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 

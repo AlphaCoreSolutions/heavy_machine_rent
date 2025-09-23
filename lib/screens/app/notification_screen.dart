@@ -11,6 +11,7 @@ import 'package:heavy_new/core/models/firebase/crud_service.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:go_router/go_router.dart';
+import 'package:heavy_new/foundation/widgets/notifications_store.dart';
 import 'package:heavy_new/main.dart';
 
 class Notifications {
@@ -179,18 +180,66 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  late List<_NotifItem> _items;
-  Map payload = {};
-
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      //   Notifications.instance.wireOpenHandlers();
-    });
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
+    // (optional) handle payload if navigated via local notification tap
+    final data = ModalRoute.of(context)!.settings.arguments;
+    if (data is RemoteMessage) {
+      // already handled by store wiring; nothing to do
+    } else if (data is NotificationResponse) {
+      final payload = data.payload;
+      if (payload != null && payload.isNotEmpty) {
+        // Could parse & do something
+        final _ = jsonDecode(payload);
+      }
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Notifications')),
+      body: AnimatedBuilder(
+        animation: notificationsStore,
+        builder: (_, __) {
+          final items = notificationsStore.items;
+          if (items.isEmpty) {
+            return const Center(child: Text('No notifications'));
+          }
+          return ListView.separated(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            itemCount: items.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 10),
+            itemBuilder: (_, i) {
+              final n = items[i];
+              return Glass(
+                radius: 16,
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: cs.primaryContainer,
+                    child: AIcon(AppGlyph.bell, color: cs.onPrimaryContainer),
+                  ),
+                  title: Text(
+                    n.title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  subtitle: Text(n.body),
+                  trailing: Text(
+                    _fmtAgo(n.createdAt),
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                  onTap: () => _go(n),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 
-  void _go(_NotifItem n) {
+  void _go(NotifItem n) {
     switch (n.type) {
       case 'chat_message':
         context.push('/chats/${n.entityId}');
@@ -202,53 +251,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         context.push('/requests');
         break;
       default:
-        // Stay here or future detail screen
+        // keep simple
         break;
     }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final data = ModalRoute.of(context)!.settings.arguments;
-    if (data is RemoteMessage) {
-      payload = data.data;
-    }
-    if (data is NotificationResponse) {
-      payload = jsonDecode(data.payload!);
-    }
-    final cs = Theme.of(context).colorScheme;
-    return Scaffold(
-      appBar: AppBar(title: const Text('Notifications')),
-      body: ListView.separated(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-        itemCount: _items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 10),
-        itemBuilder: (_, i) {
-          final n = _items[i];
-          return Glass(
-            radius: 16,
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: cs.primaryContainer,
-                child: AIcon(AppGlyph.bell, color: cs.onPrimaryContainer),
-              ),
-              title: Text(
-                n.title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              subtitle: Text(n.body),
-              trailing: Text(
-                _fmtAgo(n.createdAt),
-                style: Theme.of(context).textTheme.labelSmall,
-              ),
-              onTap: () => _go(n),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   String _fmtAgo(DateTime t) {
@@ -258,22 +263,4 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     if (d.inHours < 24) return '${d.inHours}h';
     return '${d.inDays}d';
   }
-}
-
-class _NotifItem {
-  final int id;
-  final String title;
-  final String body;
-  final String type;
-  final DateTime createdAt;
-  final int? entityId;
-  const _NotifItem({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.type,
-    required this.createdAt,
-    // ignore: unused_element_parameter
-    this.entityId,
-  });
 }

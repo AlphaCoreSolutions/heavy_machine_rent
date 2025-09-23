@@ -622,5 +622,213 @@
         "placeholders": {
             "d": {}
         }
+    },
+    "title_equipmentDetails": "Equipment details",
+    "msg_failedLoadEquipment": "Failed to load equipment",
+    "label_availability": "Availability",
+    "label_rentFrom": "Rent Date (From)",
+    "hint_yyyyMMdd": "YYYY-MM-DD",
+    "label_returnTo": "Return Date (To)",
+    "pill_days": "{count, plural, one{{count} day} other{{count} days}}",
+    "label_expectedKm": "Expected distance (km)",
+    "mini_pricePerKm": "{currency} {price} / km",
+    "label_quantity": "Quantity",
+    "label_requestedQty": "Requested quantity",
+    "mini_available": "Available: {count}",
+    "label_driverLocations": "Driver Locations",
+    "msg_loadingNats": "Loading available driver nationalities…",
+    "msg_noNats": "No driver nationalities available for this equipment.",
+    "label_driverNationality": "Driver nationality *",
+    "label_dropoffAddress": "Drop-off address",
+    "label_dropoffLat": "Drop-off latitude *",
+    "label_dropoffLon": "Drop-off longitude *",
+    "label_notes": "Notes",
+    "chip_available": "Available: {count}",
+    "label_priceBreakdown": "Price breakdown",
+    "row_perUnit": "Per unit",
+    "row_base": "Base ({price} × {days} day)",
+    "row_distance": "Distance ({pricePerKm} × {km} km)",
+    "row_vat": "VAT {rate}%",
+    "row_perUnitTotal": "Per-unit total",
+    "row_qtyTimes": "× Quantity ({qty})",
+    "row_subtotal": "Subtotal",
+    "row_vatOnly": "VAT",
+    "row_total": "Total",
+    "row_downPayment": "Down payment",
+    "btn_submit": "Submit request",
+    "btn_submitting": "Submitting…",
+    "row_fuel": "Fuel: {value}",
+    "err_chooseDates": "Please choose dates",
+    "info_signInFirst": "Please sign in first",
+    "err_qtyMin": "Quantity must be at least 1",
+    "err_qtyAvail": "Only {count} piece(s) available",
+    "err_unitSelectNat": "Unit {index}: Select a nationality",
+    "err_unitLatLng": "Unit {index}: Drop-off lat/long required",
+    "err_vendorMissing": "Vendor not found for this equipment.",
+    "info_createOrg": "Please create/activate your Organization first.",
+    "err_loadNats": "Could not load equipment driver nationalities.",
+    "err_loadResp": "Could not load responsibility names.",
+    "equipDetailsTitle": "Equipment details",
+    "msgFailedLoadEquipment": "Failed to load equipment",
+    "labelAvailability": "Availability",
+    "labelRentFrom": "Rent Date (From)",
+    "hintYyyyMmDd": "YYYY-MM-DD",
+    "labelReturnTo": "Return Date (To)",
+    "pillDays": "{count, plural, one{{count} day} other{{count} days}}",
+    "@pillDays": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "labelExpectedKm": "Expected distance (km)",
+    "miniPricePerKm": "{currency} {price} / km",
+    "@miniPricePerKm": {
+        "placeholders": {
+            "currency": {
+                "type": "String"
+            },
+            "price": {
+                "type": "String"
+            }
+        }
+    },
+    "labelQuantity": "Quantity",
+    "labelRequestedQty": "Requested quantity",
+    "miniAvailable": "Available: {count}",
+    "@miniAvailable": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "labelDriverLocations": "Driver Locations",
+    "msgLoadingNats": "Loading available driver nationalities…",
+    "msgNoNats": "No driver nationalities available for this equipment.",
+    "labelDriverNationality": "Driver nationality *",
+    "labelDropoffAddress": "Drop-off address",
+    "labelDropoffLat": "Drop-off latitude *",
+    "labelDropoffLon": "Drop-off longitude *",
+    "labelNotes": "Notes",
+    "labelPriceBreakdown": "Price breakdown",
+    "rowPerUnit": "Per unit",
+    "rowBase": "Base ({price} × {days} day)",
+    "@rowBase": {
+        "placeholders": {
+            "price": {
+                "type": "String"
+            },
+            "days": {
+                "type": "String"
+            }
+        }
+    },
+    "rowDistance": "Distance ({pricePerKm} × {km} km)",
+    "@rowDistance": {
+        "placeholders": {
+            "pricePerKm": {
+                "type": "String"
+            },
+            "km": {
+                "type": "String"
+            }
+        }
+    },
+    "rowVat": "VAT {rate}%",
+    "@rowVat": {
+        "placeholders": {
+            "rate": {
+                "type": "String"
+            }
+        }
+    },
+    "rowPerUnitTotal": "Per-unit total",
+    "rowQtyTimes": "× Quantity ({qty})",
+    "@rowQtyTimes": {
+        "placeholders": {
+            "qty": {
+                "type": "int"
+            }
+        }
+    },
+    "rowSubtotal": "Subtotal",
+    "rowVatOnly": "VAT",
+    "rowTotal": "Total",
+    "rowDownPayment": "Down payment",
+    "btnSubmitting": "Submitting…",
+    "btnSubmit": "Submit request",
+    "rowFuel": "Fuel: {value}",
+    "@rowFuel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "errChooseDates": "Please choose dates",
+    "infoSignInFirst": "Please sign in first",
+    "errQtyMin": "Quantity must be at least 1",
+    "errQtyAvail": "Only {count} piece(s) available",
+    "@errQtyAvail": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "errUnitSelectNat": "Unit {index}: Select a nationality",
+    "@errUnitSelectNat": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "errUnitLatLng": "Unit {index}: Drop-off lat/long required",
+    "@errUnitLatLng": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "errVendorMissing": "Vendor not found for this equipment.",
+    "infoCreateOrgFirst": "Please create/activate your Organization first.",
+    "errLoadNatsFailed": "Could not load equipment driver nationalities.",
+    "errLoadRespFailed": "Could not load responsibility names.",
+    "errRequestAddFailed": "Request/add failed",
+    "requestCreated": "Request created",
+    "unitIndex": "Unit {index}",
+    "@unitIndex": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "noImages": "No images",
+    "mapSearchHint": "Search a place…",
+    "mapNoResults": "No results",
+    "mapCancel": "Cancel",
+    "mapUseThisLocation": "Use this location",
+    "mapExpandTooltip": "Expand map",
+    "mapClear": "Clear",
+    "mapLatLabel": "Lat: {value}",
+    "@mapLatLabel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
+    },
+    "mapLngLabel": "Lng: {value}",
+    "@mapLngLabel": {
+        "placeholders": {
+            "value": {
+                "type": "String"
+            }
+        }
     }
 }

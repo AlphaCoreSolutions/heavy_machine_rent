@@ -1425,4 +1425,371 @@ class AppLocalizationsEn extends AppLocalizations {
   String timeDaysShort(Object d) {
     return '${d}d';
   }
+
+  @override
+  String get title_equipmentDetails => 'Equipment details';
+
+  @override
+  String get msg_failedLoadEquipment => 'Failed to load equipment';
+
+  @override
+  String get label_availability => 'Availability';
+
+  @override
+  String get label_rentFrom => 'Rent Date (From)';
+
+  @override
+  String get hint_yyyyMMdd => 'YYYY-MM-DD';
+
+  @override
+  String get label_returnTo => 'Return Date (To)';
+
+  @override
+  String pill_days(num count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get label_expectedKm => 'Expected distance (km)';
+
+  @override
+  String mini_pricePerKm(Object currency, Object price) {
+    return '$currency $price / km';
+  }
+
+  @override
+  String get label_quantity => 'Quantity';
+
+  @override
+  String get label_requestedQty => 'Requested quantity';
+
+  @override
+  String mini_available(Object count) {
+    return 'Available: $count';
+  }
+
+  @override
+  String get label_driverLocations => 'Driver Locations';
+
+  @override
+  String get msg_loadingNats => 'Loading available driver nationalities…';
+
+  @override
+  String get msg_noNats => 'No driver nationalities available for this equipment.';
+
+  @override
+  String get label_driverNationality => 'Driver nationality *';
+
+  @override
+  String get label_dropoffAddress => 'Drop-off address';
+
+  @override
+  String get label_dropoffLat => 'Drop-off latitude *';
+
+  @override
+  String get label_dropoffLon => 'Drop-off longitude *';
+
+  @override
+  String get label_notes => 'Notes';
+
+  @override
+  String chip_available(Object count) {
+    return 'Available: $count';
+  }
+
+  @override
+  String get label_priceBreakdown => 'Price breakdown';
+
+  @override
+  String get row_perUnit => 'Per unit';
+
+  @override
+  String row_base(Object days, Object price) {
+    return 'Base ($price × $days day)';
+  }
+
+  @override
+  String row_distance(Object km, Object pricePerKm) {
+    return 'Distance ($pricePerKm × $km km)';
+  }
+
+  @override
+  String row_vat(Object rate) {
+    return 'VAT $rate%';
+  }
+
+  @override
+  String get row_perUnitTotal => 'Per-unit total';
+
+  @override
+  String row_qtyTimes(Object qty) {
+    return '× Quantity ($qty)';
+  }
+
+  @override
+  String get row_subtotal => 'Subtotal';
+
+  @override
+  String get row_vatOnly => 'VAT';
+
+  @override
+  String get row_total => 'Total';
+
+  @override
+  String get row_downPayment => 'Down payment';
+
+  @override
+  String get btn_submit => 'Submit request';
+
+  @override
+  String get btn_submitting => 'Submitting…';
+
+  @override
+  String row_fuel(Object value) {
+    return 'Fuel: $value';
+  }
+
+  @override
+  String get err_chooseDates => 'Please choose dates';
+
+  @override
+  String get info_signInFirst => 'Please sign in first';
+
+  @override
+  String get err_qtyMin => 'Quantity must be at least 1';
+
+  @override
+  String err_qtyAvail(Object count) {
+    return 'Only $count piece(s) available';
+  }
+
+  @override
+  String err_unitSelectNat(Object index) {
+    return 'Unit $index: Select a nationality';
+  }
+
+  @override
+  String err_unitLatLng(Object index) {
+    return 'Unit $index: Drop-off lat/long required';
+  }
+
+  @override
+  String get err_vendorMissing => 'Vendor not found for this equipment.';
+
+  @override
+  String get info_createOrg => 'Please create/activate your Organization first.';
+
+  @override
+  String get err_loadNats => 'Could not load equipment driver nationalities.';
+
+  @override
+  String get err_loadResp => 'Could not load responsibility names.';
+
+  @override
+  String get equipDetailsTitle => 'Equipment details';
+
+  @override
+  String get msgFailedLoadEquipment => 'Failed to load equipment';
+
+  @override
+  String get labelAvailability => 'Availability';
+
+  @override
+  String get labelRentFrom => 'Rent Date (From)';
+
+  @override
+  String get hintYyyyMmDd => 'YYYY-MM-DD';
+
+  @override
+  String get labelReturnTo => 'Return Date (To)';
+
+  @override
+  String pillDays(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count days',
+      one: '$count day',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get labelExpectedKm => 'Expected distance (km)';
+
+  @override
+  String miniPricePerKm(String currency, String price) {
+    return '$currency $price / km';
+  }
+
+  @override
+  String get labelQuantity => 'Quantity';
+
+  @override
+  String get labelRequestedQty => 'Requested quantity';
+
+  @override
+  String miniAvailable(int count) {
+    return 'Available: $count';
+  }
+
+  @override
+  String get labelDriverLocations => 'Driver Locations';
+
+  @override
+  String get msgLoadingNats => 'Loading available driver nationalities…';
+
+  @override
+  String get msgNoNats => 'No driver nationalities available for this equipment.';
+
+  @override
+  String get labelDriverNationality => 'Driver nationality *';
+
+  @override
+  String get labelDropoffAddress => 'Drop-off address';
+
+  @override
+  String get labelDropoffLat => 'Drop-off latitude *';
+
+  @override
+  String get labelDropoffLon => 'Drop-off longitude *';
+
+  @override
+  String get labelNotes => 'Notes';
+
+  @override
+  String get labelPriceBreakdown => 'Price breakdown';
+
+  @override
+  String get rowPerUnit => 'Per unit';
+
+  @override
+  String rowBase(String price, String days) {
+    return 'Base ($price × $days day)';
+  }
+
+  @override
+  String rowDistance(String pricePerKm, String km) {
+    return 'Distance ($pricePerKm × $km km)';
+  }
+
+  @override
+  String rowVat(String rate) {
+    return 'VAT $rate%';
+  }
+
+  @override
+  String get rowPerUnitTotal => 'Per-unit total';
+
+  @override
+  String rowQtyTimes(int qty) {
+    return '× Quantity ($qty)';
+  }
+
+  @override
+  String get rowSubtotal => 'Subtotal';
+
+  @override
+  String get rowVatOnly => 'VAT';
+
+  @override
+  String get rowTotal => 'Total';
+
+  @override
+  String get rowDownPayment => 'Down payment';
+
+  @override
+  String get btnSubmitting => 'Submitting…';
+
+  @override
+  String get btnSubmit => 'Submit request';
+
+  @override
+  String rowFuel(String value) {
+    return 'Fuel: $value';
+  }
+
+  @override
+  String get errChooseDates => 'Please choose dates';
+
+  @override
+  String get infoSignInFirst => 'Please sign in first';
+
+  @override
+  String get errQtyMin => 'Quantity must be at least 1';
+
+  @override
+  String errQtyAvail(int count) {
+    return 'Only $count piece(s) available';
+  }
+
+  @override
+  String errUnitSelectNat(int index) {
+    return 'Unit $index: Select a nationality';
+  }
+
+  @override
+  String errUnitLatLng(int index) {
+    return 'Unit $index: Drop-off lat/long required';
+  }
+
+  @override
+  String get errVendorMissing => 'Vendor not found for this equipment.';
+
+  @override
+  String get infoCreateOrgFirst => 'Please create/activate your Organization first.';
+
+  @override
+  String get errLoadNatsFailed => 'Could not load equipment driver nationalities.';
+
+  @override
+  String get errLoadRespFailed => 'Could not load responsibility names.';
+
+  @override
+  String get errRequestAddFailed => 'Request/add failed';
+
+  @override
+  String get requestCreated => 'Request created';
+
+  @override
+  String unitIndex(int index) {
+    return 'Unit $index';
+  }
+
+  @override
+  String get noImages => 'No images';
+
+  @override
+  String get mapSearchHint => 'Search a place…';
+
+  @override
+  String get mapNoResults => 'No results';
+
+  @override
+  String get mapCancel => 'Cancel';
+
+  @override
+  String get mapUseThisLocation => 'Use this location';
+
+  @override
+  String get mapExpandTooltip => 'Expand map';
+
+  @override
+  String get mapClear => 'Clear';
+
+  @override
+  String mapLatLabel(String value) {
+    return 'Lat: $value';
+  }
+
+  @override
+  String mapLngLabel(String value) {
+    return 'Lng: $value';
+  }
 }

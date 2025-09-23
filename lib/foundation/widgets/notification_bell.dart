@@ -1,8 +1,12 @@
-// lib/widgets/notifications_bell.dart (or inside home_screen.dart)
+// lib/widgets/notifications_bell.dart
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:go_router/go_router.dart';
+import 'package:heavy_new/foundation/widgets/notifications_store.dart';
+import 'package:heavy_new/main.dart';
+
+enum _MenuAction { seeAll }
 
 class NotificationsBell extends StatefulWidget {
   const NotificationsBell({super.key});
@@ -11,67 +15,49 @@ class NotificationsBell extends StatefulWidget {
 }
 
 class _NotificationsBellState extends State<NotificationsBell> {
-  // Demo data; replace with API feed later
-  List<_Notif> _items = [
-    _Notif(
-      id: 1,
-      title: 'Request approved',
-      body: 'Your request REQ-101 was approved.',
-      createdAt: DateTime.now().subtract(const Duration(minutes: 8)),
-      type: 'request_updated',
-      entityId: 101,
-    ),
-    _Notif(
-      id: 2,
-      title: 'New message',
-      body: 'Vendor: “We can deliver tomorrow.”',
-      createdAt: DateTime.now().subtract(const Duration(hours: 2)),
-      type: 'chat_message',
-      entityId: 12, // threadId
-    ),
-    _Notif(
-      id: 3,
-      title: 'Contract opened',
-      body: 'Contract CNT-311 is now active.',
-      createdAt: DateTime.now().subtract(const Duration(days: 1)),
-      type: 'contract_open',
-      entityId: 311,
-    ),
-  ];
-
   final _btnKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final unread = _items.length;
 
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        IconButton(
-          key: _btnKey,
-          tooltip: 'Notifications',
-          icon: AIcon(AppGlyph.bell, color: cs.primary),
-          onPressed: _showDropdown,
-        ),
-        if (unread > 0)
-          Positioned(
-            right: 6,
-            top: 6,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-              decoration: BoxDecoration(
-                color: cs.error,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                unread > 9 ? '9+' : unread.toString(),
-                style: const TextStyle(color: Colors.white, fontSize: 10),
-              ),
+    return AnimatedBuilder(
+      animation: notificationsStore,
+      builder: (_, __) {
+        final items = notificationsStore.items;
+        final unread = items.length; // if you track read state, change this
+
+        return Stack(
+          clipBehavior: Clip.none,
+          children: [
+            IconButton(
+              key: _btnKey,
+              tooltip: 'Notifications',
+              icon: AIcon(AppGlyph.bell, color: cs.primary),
+              onPressed: _showDropdown,
             ),
-          ),
-      ],
+            if (unread > 0)
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: cs.error,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    unread > 9 ? '9+' : unread.toString(),
+                    style: const TextStyle(color: Colors.white, fontSize: 10),
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 
@@ -79,14 +65,15 @@ class _NotificationsBellState extends State<NotificationsBell> {
     final ctx = context;
     final rb = _btnKey.currentContext?.findRenderObject() as RenderBox?;
     if (rb == null) return;
+
     final overlay = Overlay.of(ctx).context.findRenderObject() as RenderBox;
     final pos = rb.localToGlobal(Offset.zero, ancestor: overlay);
     final size = rb.size;
 
-    // A glassy dropdown menu with up to 6 recent notifications
-    final entries = _items.take(6).toList();
+    final entries = notificationsStore.recent(6);
 
-    final selected = await showMenu<_Notif>(
+    // We allow both NotifItem and _MenuAction from the same menu.
+    final selected = await showMenu<Object?>(
       context: ctx,
       position: RelativeRect.fromLTRB(
         pos.dx,
@@ -94,54 +81,103 @@ class _NotificationsBellState extends State<NotificationsBell> {
         overlay.size.width - pos.dx - size.width,
         0,
       ),
-      items: List.generate(entries.length, (i) {
-        final n = entries[i];
-        final isLast = i == entries.length - 1;
-        return PopupMenuItem<_Notif>(
-          value: n,
-          padding: EdgeInsets.zero,
-          child: Padding(
-       
-            padding: EdgeInsets.only(bottom: isLast ? 0 : 6),
+      constraints: const BoxConstraints(minWidth: 280, maxWidth: 340),
+      elevation: 0,
+      color: Colors.transparent,
+      items: <PopupMenuEntry<Object?>>[
+        if (entries.isEmpty) ...[
+          PopupMenuItem<Object?>(
+            enabled: false,
+            padding: EdgeInsets.zero,
             child: Glass(
               radius: 12,
               child: ListTile(
                 dense: true,
-                title: Text(
-                  n.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    ctx,
-                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                subtitle: Text(
-                  n.body,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                trailing: Text(
-                  _fmtAgo(n.createdAt),
-                  style: Theme.of(ctx).textTheme.labelSmall,
-                ),
+                title: const Text('No notifications'),
+                subtitle: const Text('You’re all caught up.'),
               ),
             ),
           ),
-        );
-      }),
-      constraints: const BoxConstraints(minWidth: 280, maxWidth: 340),
-      elevation: 0,
-      color: Colors.transparent, // keep transparent so the gaps show through
+          const PopupMenuDivider(height: 6),
+          PopupMenuItem<Object?>(
+            value: _MenuAction.seeAll,
+            padding: EdgeInsets.zero,
+            child: Glass(
+              radius: 12,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.inbox_outlined),
+                title: const Text('See all notifications'),
+              ),
+            ),
+          ),
+        ] else ...[
+          // Recent notifications
+          ...List.generate(entries.length, (i) {
+            final n = entries[i];
+            final isLast = i == entries.length - 1;
+            return PopupMenuItem<Object?>(
+              value: n,
+              padding: EdgeInsets.zero,
+              child: Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 6),
+                child: Glass(
+                  radius: 12,
+                  child: ListTile(
+                    dense: true,
+                    title: Text(
+                      n.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(ctx).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    subtitle: Text(
+                      n.body,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    trailing: Text(
+                      _fmtAgo(n.createdAt),
+                      style: Theme.of(ctx).textTheme.labelSmall,
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }),
+          const PopupMenuDivider(height: 6),
+          PopupMenuItem<Object?>(
+            value: _MenuAction.seeAll,
+            padding: EdgeInsets.zero,
+            child: Glass(
+              radius: 12,
+              child: ListTile(
+                dense: true,
+                leading: const Icon(Icons.inbox_outlined),
+                title: const Text('See all notifications'),
+              ),
+            ),
+          ),
+        ],
+      ],
     );
 
-    if (selected != null) {
+    if (selected == null) return;
+
+    if (selected is _MenuAction && selected == _MenuAction.seeAll) {
+      context.push('/notifications');
+      return;
+    }
+
+    if (selected is NotifItem) {
       _routeFor(ctx, selected);
-      setState(() => _items.removeWhere((e) => e.id == selected.id));
+      notificationsStore.removeById(selected.id);
     }
   }
 
-  void _routeFor(BuildContext context, _Notif n) {
-    // Simple mapping; tweak as your detail screens appear
+  void _routeFor(BuildContext context, NotifItem n) {
     switch (n.type) {
       case 'chat_message':
         context.push('/chats/${n.entityId}');
@@ -164,21 +200,4 @@ class _NotificationsBellState extends State<NotificationsBell> {
     if (d.inHours < 24) return '${d.inHours}h';
     return '${d.inDays}d';
   }
-}
-
-class _Notif {
-  final int id;
-  final String title;
-  final String body;
-  final DateTime createdAt;
-  final String type; // 'chat_message', 'request_updated', 'contract_open', etc.
-  final int? entityId; // threadId, requestId, contractId...
-  _Notif({
-    required this.id,
-    required this.title,
-    required this.body,
-    required this.createdAt,
-    required this.type,
-    this.entityId,
-  });
 }
