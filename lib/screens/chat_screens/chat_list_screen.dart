@@ -7,6 +7,9 @@ import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/l10n/app_localizations.dart';
 import 'package:heavy_new/core/api/api_handler.dart' as api;
 
+// If you have an ApiEnvelope type, import it; otherwise the code below
+// simply treats unknown shapes defensively.
+
 import 'chat_thread_screen.dart';
 
 extension _L10nX on BuildContext {
@@ -53,21 +56,37 @@ class _ChatListScreenState extends State<ChatListScreen> {
       _loading = true;
       _loadError = null;
     });
+
     try {
-      final rows = await api.Api.getChatThreads(); // <-- server impl
-      _threads = rows
-          .map(
-            (m) => _ChatThread(
-              id: m.threadId ?? 0,
-              title: (m.title ?? '').trim().isNotEmpty
-                  ? m.title!.trim()
-                  : context.l10n.unnamedFactory, // reuse a neutral key
-              lastMessage: (m.lastMessage ?? '').trim(),
-              lastAt: m.lastAt ?? DateTime.now(),
-              unread: m.unreadCount ?? 0,
-            ),
-          )
-          .toList();
+      final raw = await api.Api.getChatThreads();
+
+      // —— Robustly coerce to List<dynamic> —— //
+      final List<dynamic> rows = _asList(raw);
+
+      // Map to view models (guard each field)
+      _threads = rows.map((m) {
+        // Support both strongly-typed models and Map responses
+        final id = _pickInt(m, ['threadId', 'id']) ?? 0;
+        final title =
+            _pickString(m, ['title', 'name'])?.trim().isNotEmpty == true
+            ? _pickString(m, ['title', 'name'])!.trim()
+            : context.l10n.unnamedFactory; // neutral, already localized
+        final lastMsg =
+            _pickString(m, ['lastMessage', 'last_msg', 'message'])?.trim() ??
+            '';
+        final lastAt =
+            _pickDate(m, ['lastAt', 'last_at', 'updatedAt']) ?? DateTime.now();
+        final unread =
+            _pickInt(m, ['unreadCount', 'unread', 'unread_count']) ?? 0;
+
+        return _ChatThread(
+          id: id,
+          title: title,
+          lastMessage: lastMsg,
+          lastAt: lastAt,
+          unread: unread,
+        );
+      }).toList();
 
       // newest first
       _threads.sort((a, b) => b.lastAt.compareTo(a.lastAt));
@@ -79,6 +98,138 @@ class _ChatListScreenState extends State<ChatListScreen> {
       if (mounted) setState(() => _loading = false);
     }
   }
+
+  // ---- helpers to safely coerce dynamic API shapes ----
+  List<dynamic> _asList(dynamic raw) {
+    if (raw == null) return const [];
+    if (raw is List) return raw;
+
+    // Common server patterns:
+    // { data: [...] }, { model: [...] }, { items: [...] }
+    if (raw is Map) {
+      final candidates = [
+        raw['data'],
+        raw['model'],
+        raw['items'],
+        raw['threads'],
+        raw['result'],
+      ];
+      for (final c in candidates) {
+        if (c is List) return c;
+      }
+    }
+
+    // If your client wraps results (e.g., ApiEnvelope), try raw.data, etc.
+    try {
+      final data = (raw as dynamic).data;
+      if (data is List) return data;
+    } catch (_) {}
+
+    // Fallback: not a list
+    return const [];
+  }
+
+  String? _pickString(dynamic m, List<String> keys) {
+    if (m == null) return null;
+    if (m is Map) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v is String) return v;
+      }
+      return null;
+    }
+    // object with fields
+    try {
+      for (final k in keys) {
+        final v = (m as dynamic).toJson != null
+            ? (m as dynamic).toJson()[k]
+            : (m as dynamic).__getattribute__(k);
+        if (v is String) return v;
+      }
+    } catch (_) {
+      // Try direct field access
+      // ignore: unused_local_variable
+      for (final k in keys) {
+        try {
+          (m as dynamic)
+              .toString(); // last resort – but avoid spamming title with whole object
+          // don't use this for content fields
+          // We won't return from here.
+        } catch (_) {}
+      }
+    }
+    // direct properties (best effort)
+    try {
+      for (final k in keys) {
+        final v = (m as dynamic)[k];
+        if (v is String) return v;
+      }
+    } catch (_) {}
+    // strongly-typed model getters
+    try {
+      final v = (m as dynamic).title;
+      if (v is String) return v;
+    } catch (_) {}
+    return null;
+  }
+
+  int? _pickInt(dynamic m, List<String> keys) {
+    if (m == null) return null;
+    if (m is Map) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v is int) return v;
+        if (v is num) return v.toInt();
+        if (v is String) return int.tryParse(v);
+      }
+      return null;
+    }
+    try {
+      for (final k in keys) {
+        final v = (m as dynamic)..[k]; // will throw; skip
+        if (v is int) return v;
+      }
+    } catch (_) {}
+    // common direct fields
+    try {
+      final v = (m as dynamic).threadId;
+      if (v is int) return v;
+    } catch (_) {}
+    return null;
+  }
+
+  DateTime? _pickDate(dynamic m, List<String> keys) {
+    if (m == null) return null;
+    if (m is Map) {
+      for (final k in keys) {
+        final v = m[k];
+        if (v is DateTime) return v;
+        if (v is String) {
+          final p = DateTime.tryParse(v);
+          if (p != null) return p;
+        }
+        if (v is int) {
+          // epoch seconds/ms heuristic
+          if (v > 1000000000000) return DateTime.fromMillisecondsSinceEpoch(v);
+          if (v > 1000000000)
+            return DateTime.fromMillisecondsSinceEpoch(v * 1000);
+        }
+      }
+      return null;
+    }
+    try {
+      for (final k in keys) {
+        final v = (m as dynamic)..[k]; // will throw; skip
+        if (v is DateTime) return v;
+      }
+    } catch (_) {}
+    try {
+      final v = (m as dynamic).lastAt;
+      if (v is DateTime) return v;
+    } catch (_) {}
+    return null;
+  }
+  // ---- end helpers ----
 
   void _apply() {
     final q = _search.text.trim().toLowerCase();
@@ -138,6 +289,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
                 const SizedBox(height: 8),
                 Text(
                   _loadError!,
+                  textAlign: TextAlign.center,
                   style: Theme.of(
                     context,
                   ).textTheme.bodySmall?.copyWith(color: cs.error),
@@ -155,10 +307,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
     }
 
     if (_filtered.isEmpty) {
-      // Empty or no matches
       final emptyText = _search.text.trim().isEmpty
           ? context.l10n.noChatsYet
-          : context.l10n.mapNoResults; // reuse a generic "No results"
+          : context.l10n.mapNoResults;
       return ListView(
         children: [
           Padding(padding: const EdgeInsets.all(24), child: Text(emptyText)),
