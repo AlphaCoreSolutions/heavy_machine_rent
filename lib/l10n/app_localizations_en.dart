@@ -829,7 +829,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nameArReq => 'Name (AR) *';
 
   @override
-  String get typeDomain10Req => 'Type (Domain 10) *';
+  String get typeDomain10Req => 'Type*';
 
   @override
   String get issueDateReq => 'Issue date *';
@@ -1080,25 +1080,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tooltipRefreshFactories => 'Refresh factories';
 
   @override
-  String get labelStatusD11 => 'Status (Domain 11)';
+  String get labelStatusD11 => 'Status';
 
   @override
   String get sectionLogistics => 'Logistics';
 
   @override
-  String get labelCategoryD9 => 'Category (Domain 9)';
+  String get labelCategoryD9 => 'Category';
 
   @override
-  String get labelFuelRespD7 => 'Fuel responsibility (Domain 7)';
+  String get labelFuelRespD7 => 'Fuel responsibility';
 
   @override
-  String get labelTransferTypeD8 => 'Transfer type (Domain 8)';
+  String get labelTransferTypeD8 => 'Transfer type';
 
   @override
-  String get labelTransferRespD7 => 'Transfer responsibility (Domain 7)';
+  String get labelTransferRespD7 => 'Transfer responsibility';
 
   @override
-  String get sectionDriverRespD7 => 'Driver responsibilities (Domain 7)';
+  String get sectionDriverRespD7 => 'Driver responsibilities';
 
   @override
   String get labelTransport => 'Transport';
@@ -1200,7 +1200,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionEquipment => 'Equipment';
 
   @override
-  String get sectionResponsibilities => 'Responsibilities (Domain 7)';
+  String get sectionResponsibilities => 'Responsibilities';
 
   @override
   String get sectionTerms => 'Terms';
@@ -1792,4 +1792,179 @@ class AppLocalizationsEn extends AppLocalizations {
   String mapLngLabel(String value) {
     return 'Lng: $value';
   }
+
+  @override
+  String get actionLogin => 'Login';
+
+  @override
+  String get actionLogout => 'Logout';
+
+  @override
+  String get sameDropoffForAll => 'Same Drop-off Location';
+
+  @override
+  String errUnitAddress(int index) {
+    return 'Unit $index: please enter the drop-off address';
+  }
+
+  @override
+  String get infoCompleteProfileFirst => 'Please complete your profile first.';
+
+  @override
+  String get leaveEmpty => 'Leave Empty For 0%';
+
+  @override
+  String get errSelectEquipmentType => 'Select an equipment type';
+
+  @override
+  String get errSelectEquipmentFromList => 'Select an equipment from the list';
+
+  @override
+  String get errSelectFactory => 'Select a factory';
+
+  @override
+  String get errEnterDescriptionEnOrAr => 'Enter a description (English or Arabic)';
+
+  @override
+  String get errSelectFuelResponsibility => 'Select fuel responsibility';
+
+  @override
+  String get errSelectTransferType => 'Select transfer type';
+
+  @override
+  String get errSelectTransferResponsibility => 'Select transfer responsibility';
+
+  @override
+  String get errSelectDriverTransport => 'Select driver transport responsibility';
+
+  @override
+  String get errSelectDriverFood => 'Select driver food responsibility';
+
+  @override
+  String get errSelectDriverHousing => 'Select driver housing responsibility';
+
+  @override
+  String get errPricePerDayGtZero => 'Enter price per day (> 0).';
+
+  @override
+  String get errPricePerHourGtZero => 'Enter price per hour (> 0).';
+
+  @override
+  String get errQuantityGteOne => 'Enter quantity (≥ 1).';
+
+  @override
+  String get errPleaseCompleteForm => 'Please complete the form';
+
+  @override
+  String get errDescRequiredEnOrAr => 'Required (EN or AR)';
+
+  @override
+  String get errRequired => 'Required';
+
+  @override
+  String get failedToLoadEquipment => 'Failed to load equipment';
+
+  @override
+  String get unsavedChangesTitle => 'Unsaved changes';
+
+  @override
+  String get unsavedChangesBody => 'You have unsaved changes. Save them before leaving?';
+
+  @override
+  String get actionDiscard => 'Discard';
+
+  @override
+  String get pickIssueAndExpire => 'Please pick both Issue and Expire dates.';
+
+  @override
+  String get chooseType => 'Please choose a Type.';
+
+  @override
+  String get chooseDocumentFile => 'Please choose a document file.';
+
+  @override
+  String get nameEnRequired => 'Name (EN) *';
+
+  @override
+  String get nameArRequired => 'Name (AR) *';
+
+  @override
+  String get typeDomain10Required => 'Type *';
+
+  @override
+  String get issueDateRequired => 'Issue date *';
+
+  @override
+  String get expireDateRequired => 'Expire date *';
+
+  @override
+  String get deleteImageTitle => 'Delete image';
+
+  @override
+  String get deleteImageBody => 'Remove this image from the listing?';
+
+  @override
+  String get deleteTermQ => 'Delete term?';
+
+  @override
+  String get addDriver => 'Add driver';
+
+  @override
+  String get editDriver => 'Edit driver';
+
+  @override
+  String get nationalityRequired => 'Nationality *';
+
+  @override
+  String get deleteDriverQ => 'Delete driver?';
+
+  @override
+  String get addDriverFile => 'Add driver file';
+
+  @override
+  String get serverFileName => 'Server file name';
+
+  @override
+  String get fileTypeIdRequired => 'File type id *';
+
+  @override
+  String get startDateYmd => 'Start yyyy-MM-dd';
+
+  @override
+  String get endDateYmd => 'End yyyy-MM-dd';
+
+  @override
+  String get actionAdd => 'Add';
+
+  @override
+  String addFailedWithMsg(Object msg) {
+    return 'Add failed: $msg';
+  }
+
+  @override
+  String get fileDescriptionOptionalAr => 'File description Arabic (optional)';
+
+  @override
+  String get fileDescriptionOptionalEn => 'File description English (optional)';
+
+  @override
+  String get required => 'Required';
+
+  @override
+  String get previewPdf => 'PDF preview';
+
+  @override
+  String get open => 'Open';
+
+  @override
+  String get pickAFileFirst => 'Please pick and upload a file first';
+
+  @override
+  String get savingDots => 'Saving…';
+
+  @override
+  String get tryAgain => 'Try Again';
+
+  @override
+  String get all => 'all';
 }

@@ -1162,27 +1162,109 @@ class Api {
     return tokens;
   }
 
-  static String _kUploadEndpoint = 'File/UploadStatic';
+  // In api.Api
+  static String _kUploadEndpoint = 'StaticFiles';
 
-  // Returns the saved filename (basename only)
+  // Helper: do one attempt with specific field names / url
+  static Future<http.Response> _attemptUpload({
+    required String url,
+    required String folderFieldName,
+    required String folderName,
+    required String fileFieldName,
+    required Uint8List bytes,
+    required String filename,
+  }) async {
+    debugPrint('[UploadStatic] -> POST $url');
+    debugPrint('[UploadStatic]   fields: {$folderFieldName: $folderName}');
+    debugPrint(
+      '[UploadStatic]   file: {name: $filename, bytes: ${bytes.length}}',
+    );
+
+    final uri = Uri.parse(url);
+    final req = http.MultipartRequest('POST', uri)
+      ..fields[folderFieldName] = folderName
+      ..files.add(
+        http.MultipartFile.fromBytes(fileFieldName, bytes, filename: filename),
+      );
+
+    final streamed = await req.send();
+    final res = await http.Response.fromStream(streamed);
+    debugPrint('[UploadStatic] <- status: ${res.statusCode}');
+    debugPrint('[UploadStatic] <- body: ${res.body}');
+    return res;
+  }
+
+  // Returns the saved filename (basename only), with robust logging + fallbacks
   static Future<String> uploadStaticBytes({
     required String folderName,
     required Uint8List bytes,
     required String filename,
   }) async {
-    final uri = Uri.parse('$_baseUrl$_kUploadEndpoint');
+    // Attempt order:
+    // 1) POST /File/UploadStatic with fields {folder, file}
+    // 2) fields {folderName, file}
+    // 3) fields {FolderName, file}
+    // 4) as query: /File/UploadStatic?folder=... with {file}
+    // 5) as query: /File/UploadStatic?folderName=... with {file}
 
-    final req = http.MultipartRequest('POST', uri)
-      ..fields['folder'] = folderName
-      ..files.add(
-        http.MultipartFile.fromBytes('file', bytes, filename: filename),
+    final base = '$_baseUrl$_kUploadEndpoint';
+
+    http.Response res = await _attemptUpload(
+      url: base,
+      folderFieldName: 'folder',
+      folderName: folderName,
+      fileFieldName: 'file',
+      bytes: bytes,
+      filename: filename,
+    );
+
+    if (res.statusCode == 404 || res.statusCode == 400) {
+      res = await _attemptUpload(
+        url: base,
+        folderFieldName: 'folderName',
+        folderName: folderName,
+        fileFieldName: 'file',
+        bytes: bytes,
+        filename: filename,
       );
+    }
 
-    final streamed = await req.send();
-    final res = await http.Response.fromStream(streamed);
+    if (res.statusCode == 404 || res.statusCode == 400) {
+      res = await _attemptUpload(
+        url: base,
+        folderFieldName: 'FolderName',
+        folderName: folderName,
+        fileFieldName: 'file',
+        bytes: bytes,
+        filename: filename,
+      );
+    }
+
+    if (res.statusCode == 404 || res.statusCode == 400) {
+      final url = '$base?folder=${Uri.encodeComponent(folderName)}';
+      res = await _attemptUpload(
+        url: url,
+        folderFieldName: 'noop', // ignored
+        folderName: folderName,
+        fileFieldName: 'file',
+        bytes: bytes,
+        filename: filename,
+      );
+    }
+
+    if (res.statusCode == 404 || res.statusCode == 400) {
+      final url = '$base?folderName=${Uri.encodeComponent(folderName)}';
+      res = await _attemptUpload(
+        url: url,
+        folderFieldName: 'noop',
+        folderName: folderName,
+        fileFieldName: 'file',
+        bytes: bytes,
+        filename: filename,
+      );
+    }
 
     if (res.statusCode < 200 || res.statusCode >= 300) {
-      // FIX: message is positional
       throw ApiException(
         'Upload failed (${res.statusCode})',
         statusCode: res.statusCode,
@@ -1190,7 +1272,17 @@ class Api {
       );
     }
 
-    final decoded = json.decode(res.body);
+    dynamic decoded;
+    try {
+      decoded = json.decode(res.body);
+    } catch (_) {
+      throw ApiException(
+        'Upload response is not JSON',
+        statusCode: res.statusCode,
+        details: _asDetails(res.body),
+      );
+    }
+
     if (decoded is! Map) {
       throw ApiException(
         'Upload response is not a JSON object',
@@ -1198,17 +1290,18 @@ class Api {
         details: _asDetails(res.body),
       );
     }
+
     final j = Map<String, dynamic>.from(decoded);
     final raw = (j['fileName'] ?? j['name'] ?? j['path'] ?? '').toString();
     final name = p.basename(raw);
     if (name.isEmpty) {
-      // FIX: positional message
       throw ApiException(
         'Upload response missing filename',
         statusCode: res.statusCode,
         details: _asDetails(res.body),
       );
     }
+    debugPrint('[UploadStatic] parsed filename: $name');
     return name;
   }
 
@@ -1960,15 +2053,43 @@ class Api {
     );
   }
 
+  // Api.addEquipmentDriverFile
   static Future<EquipmentDriverFile> addEquipmentDriverFile(
     EquipmentDriverFile file,
   ) async {
-    final raw = await _post(
-      'EquipmentDriverFile/add',
-      body: _stripNullsDeep(file.toJson()),
-    );
-    return EquipmentDriverFile.fromJson(
-      _unwrapMap(raw, envelope: ApiEnvelope()),
+    final body = _stripNullsDeep(file.toJson());
+
+    // Log body as JSON (avoid math.log)
+    dev.log(jsonEncode(body), name: 'Api.addEquipmentDriverFile');
+
+    final raw = await _post('EquipmentDriverFile/add', body: body);
+
+    // The add endpoint returns an envelope like:
+    // {"flag":true,"responseType":9,"message":"Process completed","modelId":6,...}
+    // so extract the id and fetch the full model.
+    final map = (raw is Map)
+        ? Map<String, dynamic>.from(raw)
+        : <String, dynamic>{};
+
+    final modelId = map['modelId'];
+    if (modelId is int && modelId > 0) {
+      // Fetch full object
+      return getEquipmentDriverFileById(modelId);
+    }
+
+    // Some endpoints may also inline the model; handle that too just in case.
+    final maybeModel = map['model'];
+    if (maybeModel is Map) {
+      return EquipmentDriverFile.fromJson(
+        Map<String, dynamic>.from(maybeModel),
+      );
+    }
+
+    // If we get here, we didn't get an id or a model → throw a clear error.
+    throw ApiException(
+      'AddEquipmentDriverFile: missing modelId/model in response',
+      statusCode: 200,
+      details: raw,
     );
   }
 
@@ -1979,8 +2100,26 @@ class Api {
       'EquipmentDriverFile/update',
       body: _stripNullsDeep(file.toJson()),
     );
-    return EquipmentDriverFile.fromJson(
-      _unwrapMap(raw, envelope: ApiEnvelope()),
+    final map = (raw is Map)
+        ? Map<String, dynamic>.from(raw)
+        : <String, dynamic>{};
+
+    final modelId = map['modelId'] ?? file.equipmentDriverFileId;
+    if (modelId is int && modelId > 0) {
+      return getEquipmentDriverFileById(modelId);
+    }
+
+    final maybeModel = map['model'];
+    if (maybeModel is Map) {
+      return EquipmentDriverFile.fromJson(
+        Map<String, dynamic>.from(maybeModel),
+      );
+    }
+
+    throw ApiException(
+      'UpdateEquipmentDriverFile: missing modelId/model in response',
+      statusCode: 200,
+      details: raw,
     );
   }
 

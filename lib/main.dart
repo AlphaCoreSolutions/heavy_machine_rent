@@ -66,10 +66,10 @@ void main() async {
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     if (message.notification != null) {
       log('Background message clicked!');
-      navigatorKey.currentState?.pushNamed(
-        '/notifications',
-        arguments: message,
-      );
+      final ctx = _rootNavigatorKey.currentContext;
+      if (ctx != null) {
+        ctx.push('/notifications'); // GoRouter navigation
+      }
     }
   });
 
@@ -93,10 +93,12 @@ void main() async {
   final remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
   if (remoteMessage != null) {
     log('App opened from terminated state via notification');
-    navigatorKey.currentState?.pushNamed(
-      '/notifications',
-      arguments: remoteMessage,
-    );
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final ctx = _rootNavigatorKey.currentContext;
+      if (ctx != null) {
+        ctx.push('/notifications'); // GoRouter navigation
+      }
+    });
   }
 
   const androidEmuBase = 'https://sr.visioncit.com/api/';
@@ -153,7 +155,7 @@ class HeavyApp extends StatelessWidget {
   }
 }
 
-final _rootNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'root');
+final _rootNavigatorKey = navigatorKey;
 final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 final GoRouter _router = GoRouter(

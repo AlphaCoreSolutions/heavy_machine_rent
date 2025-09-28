@@ -56,6 +56,8 @@ enum AppGlyph {
   dashboard,
   lock,
   pin,
+  fileText,
+  all,
 }
 
 /// Visual style intent for families that support weights.
@@ -240,6 +242,10 @@ class AIcon extends StatelessWidget {
         return LucideIcons.lock;
       case AppGlyph.pin:
         return LucideIcons.pin;
+      case AppGlyph.fileText:
+        return LucideIcons.text;
+      case AppGlyph.all:
+        return Icons.all_inbox;
     }
   }
 }

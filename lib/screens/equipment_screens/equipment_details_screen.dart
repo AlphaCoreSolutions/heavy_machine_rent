@@ -19,6 +19,9 @@ import 'package:heavy_new/foundation/formatting/money.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
+import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 
 import 'package:heavy_new/screens/request_screens/request_confirmation_screen.dart';
 import 'package:heavy_new/l10n/app_localizations.dart';
@@ -81,6 +84,66 @@ class EquipmentDetailsScreen extends StatefulWidget {
 }
 
 class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
+  // Add to _EquipmentDetailsScreenState:
+  bool _sameDropoffForAll = false;
+  bool _sameDropoffWired = false; // <— new: are we listening to unit #1?
+
+  void _propagateFirstDropoff() {
+    if (!_sameDropoffForAll) return;
+    if (_locForms.isEmpty) return;
+    final first = _locForms.first;
+    final name = first.dAddr.text;
+    final lat = first.dLat.text;
+    final lon = first.dLon.text;
+    if (name.isEmpty || lat.isEmpty || lon.isEmpty) return;
+
+    // Update the rest (this will auto-move their InlineMapPicker via its listeners)
+    for (var i = 1; i < _locForms.length; i++) {
+      _locForms[i].dAddr.text = name;
+      _locForms[i].dLat.text = lat;
+      _locForms[i].dLon.text = lon;
+    }
+  }
+
+  void _wireSameDropoffListeners() {
+    if (_sameDropoffWired) return;
+    if (_locForms.isEmpty) return;
+    final first = _locForms.first;
+    first.dAddr.addListener(_propagateFirstDropoff);
+    first.dLat.addListener(_propagateFirstDropoff);
+    first.dLon.addListener(_propagateFirstDropoff);
+    _sameDropoffWired = true;
+  }
+
+  void _unwireSameDropoffListeners() {
+    if (!_sameDropoffWired) return;
+    if (_locForms.isEmpty) {
+      _sameDropoffWired = false;
+      return;
+    }
+    final first = _locForms.first;
+    first.dAddr.removeListener(_propagateFirstDropoff);
+    first.dLat.removeListener(_propagateFirstDropoff);
+    first.dLon.removeListener(_propagateFirstDropoff);
+    _sameDropoffWired = false;
+  }
+
+  void _applySameDropoffFromFirst() {
+    if (_locForms.isEmpty) return;
+    final first = _locForms.first;
+    final name = first.dAddr.text.trim();
+    final lat = first.dLat.text.trim();
+    final lon = first.dLon.text.trim();
+    if (name.isEmpty || lat.isEmpty || lon.isEmpty) return;
+    setState(() {
+      for (var i = 1; i < _locForms.length; i++) {
+        _locForms[i].dAddr.text = name;
+        _locForms[i].dLat.text = lat;
+        _locForms[i].dLon.text = lon;
+      }
+    });
+  }
+
   Future<RequestModel?> _hydrateByIdWithRetry(int id) async {
     const delays = <Duration>[
       Duration(milliseconds: 150),
@@ -135,6 +198,46 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
   bool _loadingAllowedNats = false;
   // ignore: unused_field
   String? _allowedNatError;
+
+  Future<bool> _ensureLoggedInAndReady() async {
+    // 1) Login if needed
+    if (!AuthStore.instance.isLoggedIn) {
+      final ok = await Navigator.of(
+        context,
+      ).push<bool>(MaterialPageRoute(builder: (_) => const PhoneAuthScreen()));
+      if (ok != true || !AuthStore.instance.isLoggedIn) {
+        AppSnack.info(context, context.l10n.infoSignInFirst);
+        return false;
+      }
+    }
+
+    // 2) Check “profile completed” (adapt to your real signal if different)
+    final user = AuthStore.instance.user.value;
+    final isProfileComplete =
+        (user?.isCompleted == true) ||
+        (user?.fullName?.trim().isNotEmpty ?? false);
+    if (!isProfileComplete) {
+      AppSnack.info(context, context.l10n.infoCompleteProfileFirst);
+      // TODO: Navigate to your "Complete Profile" screen if you have one.
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const ProfileScreen()));
+      return false;
+    }
+
+    // 3) Check organization presence
+    final meOrg = await _resolveMyOrganizationId();
+    if (meOrg == null || meOrg == 0) {
+      AppSnack.info(context, context.l10n.infoCreateOrgFirst);
+      // TODO: push to organization creation if available
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const OrganizationScreen()));
+      return false;
+    }
+
+    return true;
+  }
 
   Future<void> _loadAllowedNationalitiesForEquipment() async {
     if (_loadingAllowedNats) return;
@@ -308,38 +411,69 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     );
   }
 
+  DateTime _dateOnly(DateTime d) => DateUtils.dateOnly(d);
+  DateTime get _today => _dateOnly(DateTime.now());
+  DateTime get _tomorrow => _today.add(const Duration(days: 1));
+
   void _pickFromDate() async {
-    final now = DateTime.now();
+    // User must start from tomorrow or later
+    final first = _tomorrow;
+
+    // If current _from is before 'first', use 'first' as initial
+    final init = (_from != null && !_from!.isBefore(first)) ? _from! : first;
+
     final d = await showDatePicker(
       context: context,
-      initialDate: _from ?? now,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 365)),
+      initialDate: init,
+      firstDate: first,
+      lastDate: first.add(const Duration(days: 365)),
     );
+
     if (d != null) {
+      final picked = _dateOnly(d);
       setState(() {
-        _from = d;
-        _fromCtrl.text = _fmtYmd(d);
-        if (_to != null && _to!.isBefore(_from!)) {
-          _to = d;
-          _toCtrl.text = _fmtYmd(d);
+        _from = picked;
+        _fromCtrl.text = _fmtYmd(picked);
+
+        // Ensure "to" stays valid and never before "from"
+        if (_to == null || _to!.isBefore(picked)) {
+          _to = picked;
+          _toCtrl.text = _fmtYmd(picked);
         }
       });
     }
   }
 
   void _pickToDate() async {
-    final start = _from ?? DateTime.now();
+    // Base lower-bound is tomorrow
+    final baseFirst = _tomorrow;
+
+    // If user already picked a "from", to-date cannot be before that
+    final mustBeAfter = _from ?? baseFirst;
+    final first = !mustBeAfter.isBefore(baseFirst) ? mustBeAfter : baseFirst;
+
+    // Choose a safe initialDate inside bounds
+    DateTime init;
+    if (_to != null && !_to!.isBefore(first)) {
+      init = _to!;
+    } else if (_from != null && !_from!.isBefore(first)) {
+      init = _from!;
+    } else {
+      init = first;
+    }
+
     final d = await showDatePicker(
       context: context,
-      initialDate: _to ?? start,
-      firstDate: start,
-      lastDate: start.add(const Duration(days: 365)),
+      initialDate: init,
+      firstDate: first,
+      lastDate: first.add(const Duration(days: 365)),
     );
+
     if (d != null) {
+      final picked = _dateOnly(d);
       setState(() {
-        _to = d;
-        _toCtrl.text = _fmtYmd(d);
+        _to = picked;
+        _toCtrl.text = _fmtYmd(picked);
       });
     }
   }
@@ -366,9 +500,15 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
     }
     if (!AuthStore.instance.isLoggedIn) {
       AppSnack.info(context, context.l10n.infoSignInFirst);
+      await Navigator.of(
+        context,
+      ).push(MaterialPageRoute(builder: (_) => const PhoneAuthScreen()));
       return;
     }
+    final okReady = await _ensureLoggedInAndReady();
+    if (!okReady) return;
 
+    if (_sameDropoffForAll) _applySameDropoffFromFirst();
     final avail = _availableQty(e);
     if (_qty < 1) {
       AppSnack.error(context, context.l10n.errQtyMin);
@@ -383,6 +523,13 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
       final f = _locForms[i];
       if ((f.nationalityId ?? 0) <= 0) {
         AppSnack.error(context, context.l10n.errUnitSelectNat(i + 1));
+        return;
+      }
+      if (f.dAddr.text.trim().isEmpty) {
+        AppSnack.error(
+          context,
+          context.l10n.errUnitAddress(i + 1),
+        ); // add to ARB
         return;
       }
       if (f.dLat.text.trim().isEmpty || f.dLon.text.trim().isEmpty) {
@@ -614,367 +761,420 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+    final baseTheme = Theme.of(context);
+    final compactTextTheme = baseTheme.textTheme.apply(
+      fontSizeFactor: 0.92,
+    ); // ~8% smaller
 
-    return Scaffold(
-      appBar: AppBar(title: Text(context.l10n.equipDetailsTitle)),
-      body: FutureBuilder<Equipment>(
-        future: _future,
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
+    final cs = baseTheme.colorScheme;
+    return Theme(
+      data: baseTheme.copyWith(textTheme: compactTextTheme),
+      child: Scaffold(
+        appBar: AppBar(title: Text(context.l10n.equipDetailsTitle)),
+        body: FutureBuilder<Equipment>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return ListView(
+                children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
+              );
+            }
+            if (snap.hasError || !snap.hasData) {
+              return Center(child: Text(context.l10n.msgFailedLoadEquipment));
+            }
+            final e = snap.data!;
+            final pxUnit = _computePerUnit(e);
+            final pxAll = _computeTotal(e);
+            final avail = _availableQty(e);
+
             return ListView(
-              children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
-            );
-          }
-          if (snap.hasError || !snap.hasData) {
-            return Center(child: Text(context.l10n.msgFailedLoadEquipment));
-          }
-          final e = snap.data!;
-          final pxUnit = _computePerUnit(e);
-          final pxAll = _computeTotal(e);
-          final avail = _availableQty(e);
-
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(3, 12, 3, 28),
-            children: [
-              _Gallery(
-                images: (e.equipmentImages ?? [])
-                    .map((i) => i.equipmentPath ?? '')
-                    .where((p) => p.isNotEmpty)
-                    .toList(),
-              ),
-              const SizedBox(height: 14),
-
-              Glass(
-                radius: 20,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      e.title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        if (e.category?.detailNameEnglish != null)
-                          TonalIconChip(
-                            label: e.category!.detailNameEnglish!,
-                            icon: AIcon(
-                              AppGlyph.truck,
-                              color: cs.onPrimaryContainer,
-                            ),
-                          ),
-                        if (e.organization?.nameEnglish != null)
-                          TonalIconChip(
-                            label: e.organization!.nameEnglish!,
-                            icon: AIcon(
-                              AppGlyph.organization,
-                              color: cs.onPrimaryContainer,
-                            ),
-                          ),
-                        TonalIconChip(
-                          label: context.l10n.miniAvailable(avail),
-                          icon: AIcon(
-                            AppGlyph.info,
-                            color: cs.onPrimaryContainer,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              padding: const EdgeInsets.fromLTRB(3, 12, 3, 28),
+              children: [
+                _Gallery(
+                  images: (e.equipmentImages ?? [])
+                      .map((i) => i.equipmentPath ?? '')
+                      .where((p) => p.isNotEmpty)
+                      .toList(),
                 ),
-              ),
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
 
-              Glass(
-                radius: 20,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.labelAvailability,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AInput(
-                            controller: _fromCtrl,
-                            label: context.l10n.labelRentFrom,
-                            hint: context.l10n.hintYyyyMmDd,
-                            glyph: AppGlyph.calendar,
-                            readOnly: true,
-                            onTap: _pickFromDate,
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: AInput(
-                            controller: _toCtrl,
-                            label: context.l10n.labelReturnTo,
-                            hint: context.l10n.hintYyyyMmDd,
-                            glyph: AppGlyph.calendar,
-                            readOnly: true,
-                            onTap: _pickToDate,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: _DaysPill(
-                        daysText: context.l10n.pillDays(_days),
-                        cs: cs,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              if (e.isDistancePrice == true) ...[
                 Glass(
                   radius: 20,
-                  child: Row(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: AInput(
-                          controller: _kmCtrl,
-                          label: context.l10n.labelExpectedKm,
-                          hint: '120',
-                          glyph: AppGlyph.mapPin,
-                          keyboardType: TextInputType.number,
-                          onChanged: (v) {
-                            final parsed =
-                                double.tryParse(v.replaceAll(',', '.')) ?? 0;
-                            setState(() => _expectedKm = parsed);
-                          },
+                      Text(
+                        e.title,
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      _MiniPill(
-                        text: context.l10n.miniPricePerKm(
-                          _ccy,
-                          _fmt(e.rentPerDistanceDouble),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          if (e.category?.detailNameEnglish != null)
+                            TonalIconChip(
+                              label: e.category!.detailNameEnglish!,
+                              icon: AIcon(
+                                AppGlyph.truck,
+                                color: cs.onPrimaryContainer,
+                              ),
+                            ),
+                          if (e.organization?.nameEnglish != null)
+                            TonalIconChip(
+                              label: e.organization!.nameEnglish!,
+                              icon: AIcon(
+                                AppGlyph.organization,
+                                color: cs.onPrimaryContainer,
+                              ),
+                            ),
+                          TonalIconChip(
+                            label: context.l10n.miniAvailable(avail),
+                            icon: AIcon(
+                              AppGlyph.info,
+                              color: cs.onPrimaryContainer,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                Glass(
+                  radius: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.labelAvailability,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: AInput(
+                              controller: _fromCtrl,
+                              label: context.l10n.labelRentFrom,
+                              hint: context.l10n.hintYyyyMmDd,
+                              glyph: AppGlyph.calendar,
+                              readOnly: true,
+                              onTap: _pickFromDate,
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: AInput(
+                              controller: _toCtrl,
+                              label: context.l10n.labelReturnTo,
+                              hint: context.l10n.hintYyyyMmDd,
+                              glyph: AppGlyph.calendar,
+                              readOnly: true,
+                              onTap: _pickToDate,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: _DaysPill(
+                          daysText: context.l10n.pillDays(_days),
+                          cs: cs,
                         ),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 14),
-              ],
 
-              Glass(
-                radius: 20,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.labelQuantity,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
+                if (e.isDistancePrice == true) ...[
+                  Glass(
+                    radius: 20,
+                    child: Row(
                       children: [
                         Expanded(
                           child: AInput(
-                            controller: _qtyCtrl,
-                            label: context.l10n.labelRequestedQty,
-                            hint: '1',
-                            glyph: AppGlyph.info,
+                            controller: _kmCtrl,
+                            label: context.l10n.labelExpectedKm,
+                            hint: '120',
+                            glyph: AppGlyph.mapPin,
                             keyboardType: TextInputType.number,
                             onChanged: (v) {
-                              final n =
-                                  int.tryParse(
-                                    v.replaceAll(RegExp(r'[^0-9]'), ''),
-                                  ) ??
-                                  1;
-                              final q = n < 1 ? 1 : n;
-                              setState(() {
-                                _qty = q;
-                                _ensureLocForms(q);
-                              });
+                              final parsed =
+                                  double.tryParse(v.replaceAll(',', '.')) ?? 0;
+                              setState(() => _expectedKm = parsed);
                             },
                           ),
                         ),
                         const SizedBox(width: 8),
-                        _MiniPill(text: context.l10n.miniAvailable(avail)),
+                        _MiniPill(
+                          text: context.l10n.miniPricePerKm(
+                            _ccy,
+                            _fmt(e.rentPerDistanceDouble),
+                          ),
+                        ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
+                  ),
+                  const SizedBox(height: 14),
+                ],
 
-              Glass(
-                radius: 22,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.labelDriverLocations,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 8),
-
-                    AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 240),
-                      switchInCurve: Curves.easeOut,
-                      switchOutCurve: Curves.easeIn,
-                      child: Column(
-                        key: ValueKey(_locForms.length),
+                Glass(
+                  radius: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.labelQuantity,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
                         children: [
-                          if (_loadingAllowedNats) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              context.l10n.msgLoadingNats,
-                              style: Theme.of(context).textTheme.bodySmall,
+                          Expanded(
+                            child: AInput(
+                              controller: _qtyCtrl,
+                              label: context.l10n.labelRequestedQty,
+                              hint: '1',
+                              glyph: AppGlyph.info,
+                              keyboardType: TextInputType.number,
+                              onChanged: (v) {
+                                final n =
+                                    int.tryParse(
+                                      v.replaceAll(RegExp(r'[^0-9]'), ''),
+                                    ) ??
+                                    1;
+                                final q = n < 1 ? 1 : n;
+                                setState(() {
+                                  _qty = q;
+                                  _ensureLocForms(q);
+                                  if (_sameDropoffForAll) {
+                                    _unwireSameDropoffListeners(); // detach from old #1 (if any)
+                                    _wireSameDropoffListeners(); // attach to new #1
+                                    _applySameDropoffFromFirst(); // keep others in sync
+                                  }
+                                });
+                              },
                             ),
-                          ] else if (_allowedNatIds.isEmpty) ...[
-                            const SizedBox(height: 8),
-                            Text(
-                              context.l10n.msgNoNats,
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                          ...List.generate(_locForms.length, (i) {
-                            final form = _locForms[i];
-
-                            final allowedNats = _nats.where((n) {
-                              final id = n.nationalityId ?? 0;
-                              return _allowedNatIds.contains(id);
-                            }).toList();
-
-                            return Padding(
-                              padding: EdgeInsets.only(
-                                bottom: i == _locForms.length - 1 ? 0 : 12,
-                              ),
-                              child: _LocCard(
-                                index: i + 1,
-                                form: form,
-                                nationalities: allowedNats,
-                                onRemove: _locForms.length > 1
-                                    ? () => setState(() {
-                                        form.dispose();
-                                        _locForms.removeAt(i);
-                                        _qty = _locForms.length;
-                                        _qtyCtrl.text = '$_qty';
-                                      })
-                                    : null,
-                              ),
-                            );
-                          }),
+                          ),
+                          const SizedBox(width: 8),
+                          _MiniPill(text: context.l10n.miniAvailable(avail)),
                         ],
                       ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              Glass(
-                radius: 22,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.labelPriceBreakdown,
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                    const SizedBox(height: 10),
-
-                    _rowBold(context.l10n.rowPerUnit, ''),
-                    _row(
-                      context.l10n.rowBase(
-                        Money.format(e.rentPerDayDouble),
-                        _days.toString(),
-                      ),
-                      Money.format(pxUnit.base, withCode: true),
-                    ),
-                    if (e.isDistancePrice == true)
-                      _row(
-                        context.l10n.rowDistance(
-                          _fmt(e.rentPerDistanceDouble),
-                          _expectedKm.toStringAsFixed(0),
-                        ),
-                        Money.format(pxUnit.distance, withCode: true),
-                      ),
-                    _row(
-                      context.l10n.rowVat((_vatRate * 100).toStringAsFixed(0)),
-                      Money.format(pxUnit.vat),
-                    ),
-                    _rowBold(
-                      context.l10n.rowPerUnitTotal,
-                      Money.format(pxUnit.total),
-                    ),
-
-                    const SizedBox(height: 8),
-                    _rowBold(context.l10n.rowQtyTimes(_qty), ''),
-                    _row(
-                      context.l10n.rowSubtotal,
-                      Money.format(pxAll.base + pxAll.distance, withCode: true),
-                    ),
-                    _row(context.l10n.rowVatOnly, Money.format(pxAll.vat)),
-                    _rowBold(context.l10n.rowTotal, Money.format(pxAll.total)),
-                    _row(
-                      context.l10n.rowDownPayment,
-                      Money.format(pxAll.downPayment),
-                    ),
-
-                    const SizedBox(height: 14),
-                    BrandButton(
-                      onPressed: _submitting ? null : () => _submit(e),
-                      icon: _submitting
-                          ? const SizedBox(
-                              height: 18,
-                              width: 18,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : AIcon(
-                              AppGlyph.contract,
-                              color: Colors.white,
-                              selected: true,
-                            ),
-                      child: Text(
-                        _submitting
-                            ? context.l10n.btnSubmitting
-                            : context.l10n.btnSubmit,
-                      ),
-                    ),
-
-                    const SizedBox(height: 6),
-                    Text(
-                      context.l10n.rowFuel(
-                        _respNameById[e.fuelResponsibilityId ??
-                                e.fuelResponsibility?.domainDetailId] ??
-                            "—",
-                      ),
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: cs.onSurface.withOpacity(0.7),
-                      ),
-                    ),
-                    if (_respMapError != null) ...[
-                      const SizedBox(height: 6),
-                      Text(_respMapError!, style: TextStyle(color: cs.error)),
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
+                const SizedBox(height: 14),
+
+                Glass(
+                  radius: 22,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.labelDriverLocations,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 8),
+                      // Inside the "Driver Locations" Glass, before AnimatedSwitcher:
+                      CheckboxListTile(
+                        contentPadding: EdgeInsets.zero,
+                        value: _sameDropoffForAll,
+                        onChanged: (v) {
+                          final enabled = v ?? false;
+                          setState(() => _sameDropoffForAll = enabled);
+                          if (enabled) {
+                            _wireSameDropoffListeners();
+                            _applySameDropoffFromFirst(); // one-shot sync now…
+                            _propagateFirstDropoff(); // …and continue syncing live
+                          } else {
+                            _unwireSameDropoffListeners();
+                          }
+                        },
+
+                        title: Text(
+                          context.l10n.sameDropoffForAll,
+                        ), // add to ARB
+                        controlAffinity: ListTileControlAffinity.leading,
+                      ),
+                      const SizedBox(height: 8),
+
+                      AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 240),
+                        switchInCurve: Curves.easeOut,
+                        switchOutCurve: Curves.easeIn,
+                        child: Column(
+                          key: ValueKey(_locForms.length),
+                          children: [
+                            if (_loadingAllowedNats) ...[
+                              const SizedBox(height: 8),
+
+                              Text(
+                                context.l10n.msgLoadingNats,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ] else if (_allowedNatIds.isEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                context.l10n.msgNoNats,
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                            ...List.generate(_locForms.length, (i) {
+                              final form = _locForms[i];
+
+                              final allowedNats = _nats.where((n) {
+                                final id = n.nationalityId ?? 0;
+                                return _allowedNatIds.contains(id);
+                              }).toList();
+
+                              return Padding(
+                                padding: EdgeInsets.only(
+                                  bottom: i == _locForms.length - 1 ? 0 : 12,
+                                ),
+                                child: _LocCard(
+                                  index: i + 1,
+                                  form: form,
+                                  nationalities: allowedNats,
+                                  onRemove: _locForms.length > 1
+                                      ? () => setState(() {
+                                          final removedWasFirst = (i == 0);
+                                          _locForms[i].dispose();
+                                          _locForms.removeAt(i);
+                                          _qty = _locForms.length;
+                                          _qtyCtrl.text = '$_qty';
+
+                                          if (_sameDropoffForAll) {
+                                            // If first changed, rewire to the new first.
+                                            if (removedWasFirst) {
+                                              _unwireSameDropoffListeners();
+                                              _wireSameDropoffListeners();
+                                            }
+                                            _applySameDropoffFromFirst();
+                                          }
+                                        })
+                                      : null,
+                                ),
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+
+                Glass(
+                  radius: 22,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.labelPriceBreakdown,
+                        style: Theme.of(context).textTheme.headlineSmall,
+                      ),
+                      const SizedBox(height: 10),
+
+                      _rowBold(context.l10n.rowPerUnit, ''),
+                      _row(
+                        context.l10n.rowBase(
+                          Money.format(e.rentPerDayDouble),
+                          _days.toString(),
+                        ),
+                        Money.format(pxUnit.base, withCode: true),
+                      ),
+                      if (e.isDistancePrice == true)
+                        _row(
+                          context.l10n.rowDistance(
+                            _fmt(e.rentPerDistanceDouble),
+                            _expectedKm.toStringAsFixed(0),
+                          ),
+                          Money.format(pxUnit.distance, withCode: true),
+                        ),
+                      _row(
+                        context.l10n.rowVat(
+                          (_vatRate * 100).toStringAsFixed(0),
+                        ),
+                        Money.format(pxUnit.vat),
+                      ),
+                      _rowBold(
+                        context.l10n.rowPerUnitTotal,
+                        Money.format(pxUnit.total),
+                      ),
+
+                      const SizedBox(height: 8),
+                      _rowBold(context.l10n.rowQtyTimes(_qty), ''),
+                      _row(
+                        context.l10n.rowSubtotal,
+                        Money.format(
+                          pxAll.base + pxAll.distance,
+                          withCode: true,
+                        ),
+                      ),
+                      _row(context.l10n.rowVatOnly, Money.format(pxAll.vat)),
+                      _rowBold(
+                        context.l10n.rowTotal,
+                        Money.format(pxAll.total),
+                      ),
+                      _row(
+                        context.l10n.rowDownPayment,
+                        Money.format(pxAll.downPayment),
+                      ),
+
+                      const SizedBox(height: 14),
+                      BrandButton(
+                        onPressed: _submitting ? null : () => _submit(e),
+                        icon: _submitting
+                            ? const SizedBox(
+                                height: 18,
+                                width: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                            : AIcon(
+                                AppGlyph.contract,
+                                color: Colors.white,
+                                selected: true,
+                              ),
+                        child: Text(
+                          _submitting
+                              ? context.l10n.btnSubmitting
+                              : context.l10n.btnSubmit,
+                        ),
+                      ),
+
+                      const SizedBox(height: 6),
+                      Text(
+                        context.l10n.rowFuel(
+                          _respNameById[e.fuelResponsibilityId ??
+                                  e.fuelResponsibility?.domainDetailId] ??
+                              "—",
+                        ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: cs.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                      if (_respMapError != null) ...[
+                        const SizedBox(height: 6),
+                        Text(_respMapError!, style: TextStyle(color: cs.error)),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -1142,19 +1342,21 @@ class _LocCard extends StatelessWidget {
 
           const SizedBox(height: 12),
 
+          // Address input (shows the chosen place name, not coordinates)
           AInput(
             controller: form.dAddr,
             label: context.l10n.labelDropoffAddress,
             glyph: AppGlyph.mapPin,
           ),
+
           const SizedBox(height: 10),
 
-          // NOTE: your InlineMapPicker widget (already localized inside itself if needed)
+          // Inline map + search with autocomplete
           InlineMapPicker(
             latCtrl: form.dLat,
             lonCtrl: form.dLon,
             addrCtrl: form.dAddr,
-            googleApiKey: 'YOUR_PLACES_WEB_API_KEY',
+            googleApiKey: 'AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw',
             height: 240,
             onChanged: () {},
           ),
@@ -1208,10 +1410,9 @@ class _Gallery extends StatefulWidget {
 }
 
 class _GalleryState extends State<_Gallery> {
-  static const _kMinH = 180.0;
-  static const _kMaxH = 420.0;
-  static const _kAspect = 16 / 10;
-
+  static const _kMinH = 170.0; // ↓ a bit
+  static const _kMaxH = 400.0; // ↓ a bit
+  static const _kAspect = 12 / 9.6; // slightly wider look
   late final PageController _pc;
   Timer? _timer;
   int _index = 0;

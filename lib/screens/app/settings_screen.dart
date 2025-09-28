@@ -13,7 +13,7 @@ import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
-import 'package:heavy_new/screens/super_admin_screen.dart';
+//import 'package:heavy_new/screens/super_admin_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -211,48 +211,33 @@ class SettingsScreen extends StatelessWidget {
                       ),
                       onPressed: () async {
                         final yes = await showDialog<bool>(
-                          context: context,
-                          builder: (_) => AlertDialog(
+                          context: context, // OK to pass the outer context here
+                          builder: (dialogCtx) => AlertDialog(
                             title: Text(L10nX(context).l10n.logoutConfirmTitle),
                             content: Text(
                               L10nX(context).l10n.logoutConfirmBody,
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.pop(context, false),
+                                onPressed: () => Navigator.of(
+                                  dialogCtx,
+                                ).pop(false), // <-- use dialogCtx
                                 child: Text(L10nX(context).l10n.cancel),
-                                style: TextButton.styleFrom(
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(
-                                    horizontal: -2,
-                                    vertical: -2,
-                                  ),
-                                ),
                               ),
                               FilledButton(
-                                onPressed: () => Navigator.pop(context, true),
+                                onPressed: () => Navigator.of(
+                                  dialogCtx,
+                                ).pop(true), // <-- use dialogCtx
                                 child: Text(L10nX(context).l10n.actionSignOut),
-                                style: FilledButton.styleFrom(
-                                  tapTargetSize:
-                                      MaterialTapTargetSize.shrinkWrap,
-                                  visualDensity: const VisualDensity(
-                                    horizontal: -2,
-                                    vertical: -2,
-                                  ),
-                                ),
                               ),
                             ],
                           ),
                         );
+
                         if (yes == true) {
                           await auth.logout();
-                          if (context.mounted) {
-                            AppSnack.info(
-                              context,
-                              L10nX(context).l10n.signedOut,
-                            );
-                          }
+                          if (!context.mounted) return;
+                          context.go('/'); // or to your auth/welcome route
                         }
                       },
                     ),
@@ -352,19 +337,6 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const MyRequestsScreen(),
-                        ),
-                      ),
-                      width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,
-                    ),
-
-                  if (isSuperAdmin)
-                    _ActionCard(
-                      icon: AppGlyph.Settings,
-                      title: L10nX(context).l10n.superAdminTitle,
-                      subtitle: L10nX(context).l10n.superAdminSubtitle,
-                      onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (_) => const SuperAdminHubScreen(),
                         ),
                       ),
                       width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,

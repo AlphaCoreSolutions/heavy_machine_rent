@@ -1,6 +1,9 @@
 // lib/widgets/inline_map_picker.dart
 import 'dart:async';
 import 'dart:convert';
+
+import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
@@ -25,6 +28,13 @@ class InlineMapPicker extends StatefulWidget {
     this.height = 220,
     this.onChanged,
     this.showExpandButton = true,
+
+    // Back-compat / advanced tuning
+    this.showSearchDropdown = true,
+    this.minSearchChars = 2,
+    this.debounceMs = 350,
+    this.centerOnSelection = true,
+    this.onPlaceSelected,
   });
 
   final TextEditingController latCtrl;
@@ -35,6 +45,11 @@ class InlineMapPicker extends StatefulWidget {
   final double height;
   final VoidCallback? onChanged;
   final bool showExpandButton;
+  final bool showSearchDropdown;
+  final int minSearchChars;
+  final int debounceMs;
+  final bool centerOnSelection;
+  final ValueChanged<LatLng>? onPlaceSelected;
 
   @override
   State<InlineMapPicker> createState() => _InlineMapPickerState();
@@ -43,6 +58,45 @@ class InlineMapPicker extends StatefulWidget {
 class _InlineMapPickerState extends State<InlineMapPicker> {
   final Completer<GoogleMapController> _mapCtrl = Completer();
   final TextEditingController _searchCtrl = TextEditingController();
+
+  LatLng? _lastKnownCenter; // remember where we centered the small map
+  String? _centerCountryCode; // country from current center
+  bool _writingBack =
+      false; // prevent feedback loops when writing to controllers
+
+  void _attachControllerListeners() {
+    widget.latCtrl.addListener(_onExternalCoordsChanged);
+    widget.lonCtrl.addListener(_onExternalCoordsChanged);
+  }
+
+  void _detachControllerListeners() {
+    widget.latCtrl.removeListener(_onExternalCoordsChanged);
+    widget.lonCtrl.removeListener(_onExternalCoordsChanged);
+  }
+
+  void _onExternalCoordsChanged() async {
+    if (_writingBack) return;
+    final lat = double.tryParse(widget.latCtrl.text);
+    final lon = double.tryParse(widget.lonCtrl.text);
+    if (lat == null || lon == null) return;
+    final p = LatLng(lat, lon);
+    if (_picked != null &&
+        (_picked!.latitude == p.latitude &&
+            _picked!.longitude == p.longitude)) {
+      return;
+    }
+    setState(() {
+      _picked = p;
+      _lastKnownCenter = p;
+    });
+    final c = await _mapCtrl.future;
+    await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+  }
+
+  LatLng _biasCenter() {
+    // Prefer the most relevant center we know
+    return _picked ?? _lastKnownCenter ?? widget.initialCenter;
+  }
 
   // Places session token (reuse during the user's search session)
   final String _placesSession = const Uuid().v4();
@@ -57,14 +111,65 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   void initState() {
     super.initState();
     _bootstrap();
-    // We will NOT add a listener here; we handle debounce in onChanged directly.
+    _attachControllerListeners();
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
+    _detachControllerListeners();
     _searchCtrl.dispose();
     super.dispose();
+  }
+
+  Future<String?> _reverseGeocode(LatLng p) async {
+    try {
+      final lang = Localizations.localeOf(context).languageCode;
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json'
+          '?latlng=${p.latitude},${p.longitude}'
+          '&language=$lang'
+          '&key=${widget.googleApiKey}';
+      final r = await http.get(Uri.parse(url));
+      final j = jsonDecode(r.body) as Map<String, dynamic>;
+      if ((j['status'] as String?) == 'OK') {
+        final results = (j['results'] as List?) ?? const [];
+        if (results.isNotEmpty) {
+          return (results.first['formatted_address'] as String?)?.trim();
+        }
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  Future<String?> _countryCodeAt(LatLng p) async {
+    try {
+      final lang = Localizations.localeOf(context).languageCode;
+      final url =
+          'https://maps.googleapis.com/maps/api/geocode/json'
+          '?latlng=${p.latitude},${p.longitude}'
+          '&language=$lang'
+          '&key=${widget.googleApiKey}';
+      final r = await http.get(Uri.parse(url));
+      final j = jsonDecode(r.body) as Map<String, dynamic>;
+      if ((j['status'] as String?) == 'OK') {
+        final results = (j['results'] as List?) ?? const [];
+        if (results.isNotEmpty) {
+          final comps =
+              (results.first['address_components'] as List?) ?? const [];
+          for (final c in comps) {
+            final types = (c['types'] as List?)?.cast<String>() ?? const [];
+            if (types.contains('country')) {
+              final shortName = (c['short_name'] as String?)?.trim();
+              if (shortName != null && shortName.length == 2) {
+                return shortName.toLowerCase();
+              }
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<void> _bootstrap() async {
@@ -88,8 +193,10 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       if (!mounted) return;
       setState(() {
         _picked = center;
+        _lastKnownCenter = center;
         _locating = false;
       });
+      _centerCountryCode = await _countryCodeAt(center);
       _writeBack(center, keepAddress: true); // don’t overwrite addr yet
     } catch (_) {
       if (mounted) setState(() => _locating = false);
@@ -99,30 +206,35 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   void _onSearchChanged(String raw) {
     final q = raw.trim();
     _debounce?.cancel();
-    if (q.length < 2) {
+    if (q.length < widget.minSearchChars) {
       setState(() => _suggestions = []);
       return;
     }
-    _debounce = Timer(const Duration(milliseconds: 350), () {
+    _debounce = Timer(Duration(milliseconds: widget.debounceMs), () {
       _fetchAutocomplete(q);
     });
   }
 
   Future<void> _fetchAutocomplete(String q) async {
+    final lang = Localizations.localeOf(context).languageCode;
+    final center = _biasCenter();
+    final bias = 'circle:50000@${center.latitude},${center.longitude}'; // ~50km
+    final comps = (_centerCountryCode != null)
+        ? '&components=country:${_centerCountryCode}'
+        : '';
     if (q.isEmpty) {
       if (mounted) setState(() => _suggestions = []);
       return;
     }
     setState(() => _loadingPlaces = true);
 
-    final lang = Localizations.localeOf(context).languageCode;
-
     try {
       final url =
           'https://maps.googleapis.com/maps/api/place/autocomplete/json'
           '?input=${Uri.encodeComponent(q)}'
-          '&types=geocode'
+          '$comps'
           '&language=$lang'
+          '&locationbias=${Uri.encodeComponent(bias)}'
           '&sessiontoken=$_placesSession'
           '&key=${widget.googleApiKey}';
 
@@ -141,12 +253,9 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
             .toList();
         if (mounted) setState(() => _suggestions = preds);
       } else {
-        // You can uncomment this to see why (REQUEST_DENIED, OVER_QUERY_LIMIT, etc.)
-        // debugPrint('Places Autocomplete status: $status');
         if (mounted) setState(() => _suggestions = []);
       }
-    } catch (e) {
-      // debugPrint('Places Autocomplete error: $e');
+    } catch (_) {
       if (mounted) setState(() => _suggestions = []);
     } finally {
       if (mounted) setState(() => _loadingPlaces = false);
@@ -179,15 +288,24 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     if (loc is Map) {
       final lat = (loc['lat'] as num).toDouble();
       final lng = (loc['lng'] as num).toDouble();
+
+      final p = LatLng(lat, lng);
       final addr =
           (result?['formatted_address'] as String?) ?? fallbackAddress ?? '';
-      final p = LatLng(lat, lng);
 
-      final c = await _mapCtrl.future;
-      await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+      if (widget.centerOnSelection) {
+        final c = await _mapCtrl.future;
+        await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+      }
+      _lastKnownCenter = p;
+      _centerCountryCode = await _countryCodeAt(p);
+
       if (!mounted) return;
       setState(() => _picked = p);
       _writeBack(p, addressOverride: addr);
+
+      // legacy callback, if provided
+      widget.onPlaceSelected?.call(p);
     }
   }
 
@@ -196,6 +314,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     bool keepAddress = false,
     String? addressOverride,
   }) {
+    _writingBack = true;
     widget.latCtrl.text = p.latitude.toStringAsFixed(7);
     widget.lonCtrl.text = p.longitude.toStringAsFixed(7);
     if (!keepAddress) {
@@ -207,6 +326,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
             '${context.l10n.mapLngLabel(p.longitude.toStringAsFixed(6))}';
       }
     }
+    _writingBack = false;
     widget.onChanged?.call();
   }
 
@@ -225,6 +345,12 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     String langFor(BuildContext c) => Localizations.localeOf(c).languageCode;
 
     Future<void> dlgFetchAuto(BuildContext ctx, String q) async {
+      final lang = Localizations.localeOf(context).languageCode;
+      final center = _biasCenter();
+      final bias = 'circle:50000@${center.latitude},${center.longitude}';
+      final comps = (_centerCountryCode != null)
+          ? '&components=country:${_centerCountryCode}'
+          : '';
       if (q.isEmpty) {
         dlgSuggestions = [];
         (ctx as Element).markNeedsBuild();
@@ -236,8 +362,9 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
         final url =
             'https://maps.googleapis.com/maps/api/place/autocomplete/json'
             '?input=${Uri.encodeComponent(q)}'
-            '&types=geocode'
-            '&language=${langFor(ctx)}'
+            '$comps'
+            '&language=$lang'
+            '&locationbias=${Uri.encodeComponent(bias)}'
             '&sessiontoken=$_placesSession'
             '&key=${widget.googleApiKey}';
         final r = await http.get(Uri.parse(url));
@@ -253,7 +380,6 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
               )
               .toList();
         } else {
-          // surface empty so user sees “no results” panel
           dlgSuggestions = [];
         }
       } catch (_) {
@@ -299,12 +425,18 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (ctx, setDlgState) {
-            // rebuild safely via setDlgState instead of markNeedsBuild when possible
             Future<void> safeFetch(String v) async {
               dlgDebounce?.cancel();
-              dlgDebounce = Timer(const Duration(milliseconds: 350), () {
-                dlgFetchAuto(ctx, v.trim());
-              });
+              if (v.trim().length < widget.minSearchChars) {
+                setDlgState(() => dlgSuggestions = []);
+                return;
+              }
+              dlgDebounce = Timer(
+                Duration(milliseconds: widget.debounceMs),
+                () {
+                  dlgFetchAuto(ctx, v.trim());
+                },
+              );
             }
 
             return Dialog(
@@ -345,12 +477,20 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
                               markerId: const MarkerId('dlg'),
                               position: tempPicked!,
                               draggable: true,
-                              onDragEnd: (p) {
-                                setDlgState(() => tempPicked = p);
+                              onDragEnd: (p) async {
+                                // update ONLY dialog-local state
+                                setDlgState(() {
+                                  tempPicked = p;
+                                });
                               },
                             ),
                         },
-                        onTap: (p) => setDlgState(() => tempPicked = p),
+                        onTap: (p) async {
+                          // FIX: update dialog-local state so the pin appears
+                          setDlgState(() {
+                            tempPicked = p;
+                          });
+                        },
                       ),
                     ),
 
@@ -394,25 +534,41 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
                             onPressed: () => Navigator.pop(ctx),
                             child: Text(ctx.l10n.mapCancel),
                           ),
-                          const Spacer(),
-                          FilledButton.icon(
-                            onPressed: tempPicked == null
-                                ? null
-                                : () {
-                                    setState(() {
-                                      _picked = tempPicked;
-                                      _writeBack(
-                                        _picked!,
-                                        addressOverride: tempAddress.isNotEmpty
-                                            ? tempAddress
-                                            : null,
-                                      );
-                                    });
-                                    Navigator.pop(ctx);
-                                  },
-                            icon: const Icon(Icons.check),
-                            label: Text(ctx.l10n.mapUseThisLocation),
+                          Expanded(
+                            child: Center(
+                              child: FilledButton.icon(
+                                onPressed: tempPicked == null
+                                    ? null
+                                    : () async {
+                                        // Commit dialog choice back to parent
+                                        setState(() {
+                                          _picked = tempPicked;
+                                        });
+                                        _lastKnownCenter = tempPicked;
+                                        _centerCountryCode =
+                                            await _countryCodeAt(tempPicked!);
+
+                                        // Resolve a friendly address after confirm
+                                        final name = await _reverseGeocode(
+                                          tempPicked!,
+                                        );
+                                        _writeBack(
+                                          _picked!,
+                                          addressOverride:
+                                              (name ?? tempAddress).isNotEmpty
+                                              ? (name ?? tempAddress)
+                                              : null,
+                                        );
+                                        if (mounted) {
+                                          Navigator.pop(ctx);
+                                        }
+                                      },
+                                icon: const Icon(Icons.check),
+                                label: Text(ctx.l10n.mapUseThisLocation),
+                              ),
+                            ),
                           ),
+                          const SizedBox(width: 48),
                         ],
                       ),
                     ),
@@ -435,8 +591,10 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
               markerId: const MarkerId('picked'),
               position: _picked!,
               draggable: true,
-              onDragEnd: (p) {
+              onDragEnd: (p) async {
                 setState(() => _picked = p);
+                _lastKnownCenter = p;
+                _centerCountryCode = await _countryCodeAt(p);
                 _writeBack(p);
               },
             ),
@@ -457,13 +615,24 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
               myLocationEnabled: true,
               myLocationButtonEnabled: false,
               markers: marker,
-              onTap: (p) {
+              onTap: (p) async {
                 setState(() => _picked = p);
-                _writeBack(p);
+                _lastKnownCenter = p;
+                _centerCountryCode = await _countryCodeAt(p);
+
+                final name = await _reverseGeocode(p);
+                _writeBack(p, addressOverride: name);
               },
               compassEnabled: true,
               mapToolbarEnabled: false,
               zoomControlsEnabled: false,
+
+              // ⬇️ Give the map priority for gestures so it doesn’t fight with parent scroll
+              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                Factory<OneSequenceGestureRecognizer>(
+                  () => EagerGestureRecognizer(),
+                ),
+              },
             ),
           ),
 
@@ -527,33 +696,28 @@ class _SuggestionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Always render a panel space; if empty show a small "no results" only when the
-    // user has typed something (handled by the parent passing empty list vs not).
-    if (suggestions.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (suggestions.isEmpty) return const SizedBox.shrink();
+
     return Material(
       elevation: 6,
       borderRadius: BorderRadius.circular(8),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 240),
-        child: suggestions.isEmpty
-            ? ListTile(title: Text(noResultsText), dense: true)
-            : ListView.separated(
-                shrinkWrap: true,
-                padding: EdgeInsets.zero,
-                itemCount: suggestions.length,
-                separatorBuilder: (_, __) => const Divider(height: 1),
-                itemBuilder: (_, i) {
-                  final s = suggestions[i];
-                  return ListTile(
-                    dense: true,
-                    leading: const Icon(Icons.place_outlined),
-                    title: Text(s.description, maxLines: 2),
-                    onTap: () => onSelect(s),
-                  );
-                },
-              ),
+        child: ListView.separated(
+          padding: const EdgeInsets.only(top: 0, bottom: 14),
+          shrinkWrap: true,
+          itemCount: suggestions.length,
+          separatorBuilder: (_, __) => const Divider(height: 1),
+          itemBuilder: (_, i) {
+            final s = suggestions[i];
+            return ListTile(
+              dense: true,
+              leading: const Icon(Icons.place_outlined),
+              title: Text(s.description, maxLines: 2),
+              onTap: () => onSelect(s),
+            );
+          },
+        ),
       ),
     );
   }

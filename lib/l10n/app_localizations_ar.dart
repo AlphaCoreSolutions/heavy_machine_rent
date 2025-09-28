@@ -829,7 +829,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get nameArReq => 'الاسم (عربي) *';
 
   @override
-  String get typeDomain10Req => 'النوع (المجال 10) *';
+  String get typeDomain10Req => 'النوع*';
 
   @override
   String get issueDateReq => 'تاريخ الإصدار *';
@@ -1796,4 +1796,179 @@ class AppLocalizationsAr extends AppLocalizations {
   String mapLngLabel(String value) {
     return 'خط الطول: $value';
   }
+
+  @override
+  String get actionLogin => 'تسجيل الدخول';
+
+  @override
+  String get actionLogout => 'تسجيل الخروج';
+
+  @override
+  String get sameDropoffForAll => 'استخدام نفس موقع التسليم لكل الوحدات';
+
+  @override
+  String errUnitAddress(int index) {
+    return 'الوحدة $index: يرجى إدخال موقع التسليم';
+  }
+
+  @override
+  String get infoCompleteProfileFirst => 'يرجى إكمال ملفك الشخصي أولًا.';
+
+  @override
+  String get leaveEmpty => 'اتركها فارغة لتكون 0%';
+
+  @override
+  String get errSelectEquipmentType => 'اختر نوع المعدّة';
+
+  @override
+  String get errSelectEquipmentFromList => 'اختر معدّة من القائمة';
+
+  @override
+  String get errSelectFactory => 'اختر المصنع';
+
+  @override
+  String get errEnterDescriptionEnOrAr => 'أدخل الوصف (بالإنجليزية أو العربية)';
+
+  @override
+  String get errSelectFuelResponsibility => 'اختر جهة تحمل الوقود';
+
+  @override
+  String get errSelectTransferType => 'اختر نوع النقل';
+
+  @override
+  String get errSelectTransferResponsibility => 'اختر جهة تحمل النقل';
+
+  @override
+  String get errSelectDriverTransport => 'اختر مسؤولية تنقل السائق';
+
+  @override
+  String get errSelectDriverFood => 'اختر مسؤولية طعام السائق';
+
+  @override
+  String get errSelectDriverHousing => 'اختر مسؤولية سكن السائق';
+
+  @override
+  String get errPricePerDayGtZero => 'أدخل سعر اليوم (> 0).';
+
+  @override
+  String get errPricePerHourGtZero => 'أدخل سعر الساعة (> 0).';
+
+  @override
+  String get errQuantityGteOne => 'أدخل الكمية (≥ 1).';
+
+  @override
+  String get errPleaseCompleteForm => 'يرجى إكمال الحقول المطلوبة';
+
+  @override
+  String get errDescRequiredEnOrAr => 'مطلوب (إنجليزي أو عربي)';
+
+  @override
+  String get errRequired => 'مطلوب';
+
+  @override
+  String get failedToLoadEquipment => 'فشل تحميل المعدّة';
+
+  @override
+  String get unsavedChangesTitle => 'تغييرات غير محفوظة';
+
+  @override
+  String get unsavedChangesBody => 'لديك تغييرات غير محفوظة. هل تريد حفظها قبل المغادرة؟';
+
+  @override
+  String get actionDiscard => 'تجاهل';
+
+  @override
+  String get pickIssueAndExpire => 'يرجى اختيار تاريخ الإصدار وتاريخ الانتهاء معًا.';
+
+  @override
+  String get chooseType => 'يرجى اختيار النوع.';
+
+  @override
+  String get chooseDocumentFile => 'يرجى اختيار ملف المستند.';
+
+  @override
+  String get nameEnRequired => 'الاسم (إنجليزي) *';
+
+  @override
+  String get nameArRequired => 'الاسم (عربي) *';
+
+  @override
+  String get typeDomain10Required => 'النوع *';
+
+  @override
+  String get issueDateRequired => 'تاريخ الإصدار *';
+
+  @override
+  String get expireDateRequired => 'تاريخ الانتهاء *';
+
+  @override
+  String get deleteImageTitle => 'حذف الصورة';
+
+  @override
+  String get deleteImageBody => 'هل تريد إزالة هذه الصورة من الإعلان؟';
+
+  @override
+  String get deleteTermQ => 'حذف الشرط؟';
+
+  @override
+  String get addDriver => 'إضافة سائق';
+
+  @override
+  String get editDriver => 'تعديل السائق';
+
+  @override
+  String get nationalityRequired => 'الجنسية *';
+
+  @override
+  String get deleteDriverQ => 'حذف السائق؟';
+
+  @override
+  String get addDriverFile => 'إضافة ملف للسائق';
+
+  @override
+  String get serverFileName => 'اسم الملف على الخادم';
+
+  @override
+  String get fileTypeIdRequired => 'معرّف نوع الملف *';
+
+  @override
+  String get startDateYmd => 'البداية yyyy-MM-dd';
+
+  @override
+  String get endDateYmd => 'النهاية yyyy-MM-dd';
+
+  @override
+  String get actionAdd => 'إضافة';
+
+  @override
+  String addFailedWithMsg(Object msg) {
+    return 'فشل الإضافة: $msg';
+  }
+
+  @override
+  String get fileDescriptionOptionalAr => 'وصف الملف بالعربي (اختياري)';
+
+  @override
+  String get fileDescriptionOptionalEn => 'وصف الملف بالانجليزي (اختياري)';
+
+  @override
+  String get required => 'إلزامي';
+
+  @override
+  String get previewPdf => 'معاينة PDF';
+
+  @override
+  String get open => 'فتح';
+
+  @override
+  String get pickAFileFirst => 'يرجى اختيار ورفع ملف أولاً';
+
+  @override
+  String get savingDots => 'جارٍ الحفظ…';
+
+  @override
+  String get tryAgain => 'حاول مرة اخرى';
+
+  @override
+  String get all => 'الجميع';
 }

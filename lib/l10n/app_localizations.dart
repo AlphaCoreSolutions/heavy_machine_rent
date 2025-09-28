@@ -1664,7 +1664,7 @@ abstract class AppLocalizations {
   /// No description provided for @typeDomain10Req.
   ///
   /// In en, this message translates to:
-  /// **'Type (Domain 10) *'**
+  /// **'Type*'**
   String get typeDomain10Req;
 
   /// No description provided for @issueDateReq.
@@ -2150,7 +2150,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelStatusD11.
   ///
   /// In en, this message translates to:
-  /// **'Status (Domain 11)'**
+  /// **'Status'**
   String get labelStatusD11;
 
   /// No description provided for @sectionLogistics.
@@ -2162,31 +2162,31 @@ abstract class AppLocalizations {
   /// No description provided for @labelCategoryD9.
   ///
   /// In en, this message translates to:
-  /// **'Category (Domain 9)'**
+  /// **'Category'**
   String get labelCategoryD9;
 
   /// No description provided for @labelFuelRespD7.
   ///
   /// In en, this message translates to:
-  /// **'Fuel responsibility (Domain 7)'**
+  /// **'Fuel responsibility'**
   String get labelFuelRespD7;
 
   /// No description provided for @labelTransferTypeD8.
   ///
   /// In en, this message translates to:
-  /// **'Transfer type (Domain 8)'**
+  /// **'Transfer type'**
   String get labelTransferTypeD8;
 
   /// No description provided for @labelTransferRespD7.
   ///
   /// In en, this message translates to:
-  /// **'Transfer responsibility (Domain 7)'**
+  /// **'Transfer responsibility'**
   String get labelTransferRespD7;
 
   /// No description provided for @sectionDriverRespD7.
   ///
   /// In en, this message translates to:
-  /// **'Driver responsibilities (Domain 7)'**
+  /// **'Driver responsibilities'**
   String get sectionDriverRespD7;
 
   /// No description provided for @labelTransport.
@@ -2378,7 +2378,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionResponsibilities.
   ///
   /// In en, this message translates to:
-  /// **'Responsibilities (Domain 7)'**
+  /// **'Responsibilities'**
   String get sectionResponsibilities;
 
   /// No description provided for @sectionTerms.
@@ -3382,6 +3382,348 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Lng: {value}'**
   String mapLngLabel(String value);
+
+  /// Label for the auth button to sign in on the AppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Login'**
+  String get actionLogin;
+
+  /// Label for the auth button to sign out on the AppBar.
+  ///
+  /// In en, this message translates to:
+  /// **'Logout'**
+  String get actionLogout;
+
+  /// No description provided for @sameDropoffForAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Same Drop-off Location'**
+  String get sameDropoffForAll;
+
+  /// Shown when a driver location is missing address
+  ///
+  /// In en, this message translates to:
+  /// **'Unit {index}: please enter the drop-off address'**
+  String errUnitAddress(int index);
+
+  /// No description provided for @infoCompleteProfileFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete your profile first.'**
+  String get infoCompleteProfileFirst;
+
+  /// No description provided for @leaveEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Leave Empty For 0%'**
+  String get leaveEmpty;
+
+  /// No description provided for @errSelectEquipmentType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an equipment type'**
+  String get errSelectEquipmentType;
+
+  /// No description provided for @errSelectEquipmentFromList.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an equipment from the list'**
+  String get errSelectEquipmentFromList;
+
+  /// No description provided for @errSelectFactory.
+  ///
+  /// In en, this message translates to:
+  /// **'Select a factory'**
+  String get errSelectFactory;
+
+  /// No description provided for @errEnterDescriptionEnOrAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a description (English or Arabic)'**
+  String get errEnterDescriptionEnOrAr;
+
+  /// No description provided for @errSelectFuelResponsibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Select fuel responsibility'**
+  String get errSelectFuelResponsibility;
+
+  /// No description provided for @errSelectTransferType.
+  ///
+  /// In en, this message translates to:
+  /// **'Select transfer type'**
+  String get errSelectTransferType;
+
+  /// No description provided for @errSelectTransferResponsibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Select transfer responsibility'**
+  String get errSelectTransferResponsibility;
+
+  /// No description provided for @errSelectDriverTransport.
+  ///
+  /// In en, this message translates to:
+  /// **'Select driver transport responsibility'**
+  String get errSelectDriverTransport;
+
+  /// No description provided for @errSelectDriverFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Select driver food responsibility'**
+  String get errSelectDriverFood;
+
+  /// No description provided for @errSelectDriverHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Select driver housing responsibility'**
+  String get errSelectDriverHousing;
+
+  /// No description provided for @errPricePerDayGtZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter price per day (> 0).'**
+  String get errPricePerDayGtZero;
+
+  /// No description provided for @errPricePerHourGtZero.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter price per hour (> 0).'**
+  String get errPricePerHourGtZero;
+
+  /// No description provided for @errQuantityGteOne.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter quantity (≥ 1).'**
+  String get errQuantityGteOne;
+
+  /// No description provided for @errPleaseCompleteForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete the form'**
+  String get errPleaseCompleteForm;
+
+  /// No description provided for @errDescRequiredEnOrAr.
+  ///
+  /// In en, this message translates to:
+  /// **'Required (EN or AR)'**
+  String get errDescRequiredEnOrAr;
+
+  /// No description provided for @errRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get errRequired;
+
+  /// No description provided for @failedToLoadEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load equipment'**
+  String get failedToLoadEquipment;
+
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved changes'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You have unsaved changes. Save them before leaving?'**
+  String get unsavedChangesBody;
+
+  /// No description provided for @actionDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get actionDiscard;
+
+  /// No description provided for @pickIssueAndExpire.
+  ///
+  /// In en, this message translates to:
+  /// **'Please pick both Issue and Expire dates.'**
+  String get pickIssueAndExpire;
+
+  /// No description provided for @chooseType.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a Type.'**
+  String get chooseType;
+
+  /// No description provided for @chooseDocumentFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose a document file.'**
+  String get chooseDocumentFile;
+
+  /// No description provided for @nameEnRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (EN) *'**
+  String get nameEnRequired;
+
+  /// No description provided for @nameArRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Name (AR) *'**
+  String get nameArRequired;
+
+  /// No description provided for @typeDomain10Required.
+  ///
+  /// In en, this message translates to:
+  /// **'Type *'**
+  String get typeDomain10Required;
+
+  /// No description provided for @issueDateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Issue date *'**
+  String get issueDateRequired;
+
+  /// No description provided for @expireDateRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expire date *'**
+  String get expireDateRequired;
+
+  /// No description provided for @deleteImageTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete image'**
+  String get deleteImageTitle;
+
+  /// No description provided for @deleteImageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this image from the listing?'**
+  String get deleteImageBody;
+
+  /// No description provided for @deleteTermQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete term?'**
+  String get deleteTermQ;
+
+  /// No description provided for @addDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Add driver'**
+  String get addDriver;
+
+  /// No description provided for @editDriver.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit driver'**
+  String get editDriver;
+
+  /// No description provided for @nationalityRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Nationality *'**
+  String get nationalityRequired;
+
+  /// No description provided for @deleteDriverQ.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete driver?'**
+  String get deleteDriverQ;
+
+  /// No description provided for @addDriverFile.
+  ///
+  /// In en, this message translates to:
+  /// **'Add driver file'**
+  String get addDriverFile;
+
+  /// No description provided for @serverFileName.
+  ///
+  /// In en, this message translates to:
+  /// **'Server file name'**
+  String get serverFileName;
+
+  /// No description provided for @fileTypeIdRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'File type id *'**
+  String get fileTypeIdRequired;
+
+  /// No description provided for @startDateYmd.
+  ///
+  /// In en, this message translates to:
+  /// **'Start yyyy-MM-dd'**
+  String get startDateYmd;
+
+  /// No description provided for @endDateYmd.
+  ///
+  /// In en, this message translates to:
+  /// **'End yyyy-MM-dd'**
+  String get endDateYmd;
+
+  /// No description provided for @actionAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get actionAdd;
+
+  /// No description provided for @addFailedWithMsg.
+  ///
+  /// In en, this message translates to:
+  /// **'Add failed: {msg}'**
+  String addFailedWithMsg(Object msg);
+
+  /// Label for an optional file description field
+  ///
+  /// In en, this message translates to:
+  /// **'File description Arabic (optional)'**
+  String get fileDescriptionOptionalAr;
+
+  /// Label for an optional file description field
+  ///
+  /// In en, this message translates to:
+  /// **'File description English (optional)'**
+  String get fileDescriptionOptionalEn;
+
+  /// No description provided for @required.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get required;
+
+  /// No description provided for @previewPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'PDF preview'**
+  String get previewPdf;
+
+  /// No description provided for @open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open'**
+  String get open;
+
+  /// No description provided for @pickAFileFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please pick and upload a file first'**
+  String get pickAFileFirst;
+
+  /// No description provided for @savingDots.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get savingDots;
+
+  /// No description provided for @tryAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Try Again'**
+  String get tryAgain;
+
+  /// No description provided for @all.
+  ///
+  /// In en, this message translates to:
+  /// **'all'**
+  String get all;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

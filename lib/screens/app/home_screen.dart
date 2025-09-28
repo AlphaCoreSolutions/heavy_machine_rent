@@ -110,29 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
             overflow: TextOverflow.ellipsis,
           ),
           centerTitle: true,
+          leadingWidth: 110,
           backgroundColor: Theme.of(context).colorScheme.surface,
-          leading: IconButton(
-            tooltip: AuthStore.instance.isLoggedIn
-                ? context.l10n.tooltipLogout
-                : context.l10n.tooltipLogin,
-            icon: AIcon(
-              AuthStore.instance.isLoggedIn ? AppGlyph.logout : AppGlyph.login,
-            ),
-            onPressed: () async {
-              if (AuthStore.instance.isLoggedIn) {
-                await AuthStore.instance.logout();
-                if (!context.mounted) return;
-                AppSnack.info(context, context.l10n.signedOut);
-              } else {
-                final ok = await Navigator.of(context).push<bool>(
-                  MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
-                );
-                if (ok == true && context.mounted) {
-                  AppSnack.success(context, context.l10n.signedIn);
-                }
-              }
-            },
+          leading: Padding(
+            padding: const EdgeInsets.only(left: 8),
+            child: _AuthButton(),
           ),
+
           actions: [
             // Admin button (conditionally visible)
             ValueListenableBuilder<AuthUser?>(
@@ -296,23 +280,22 @@ class _HomeScreenState extends State<HomeScreen> {
                               // Breakpoints tuned for your row-card layout
                               final int cols;
                               final double aspect; // width / height
+                              // in grid layout calculations:
                               if (gridW >= 1400) {
-                                // desktop XL
                                 cols = 4;
-                                aspect = 1.90;
-                              } else if (gridW >= 1080) {
-                                // desktop / laptop
+                                aspect = 2.10;
+                              } // was 1.90
+                              else if (gridW >= 1080) {
                                 cols = 3;
-                                aspect = 1.80;
-                              } else if (gridW >= 720) {
-                                // tablet
+                                aspect = 1.95;
+                              } // was 1.80
+                              else if (gridW >= 720) {
                                 cols = 2;
-                                aspect = 1.65;
+                                aspect = 1.75;
                               } else {
-                                // phones
                                 cols = 1;
-                                aspect = 1.85;
-                              }
+                                aspect = 2.295;
+                              } // was 1.85
 
                               return GridView.builder(
                                 shrinkWrap: true,
@@ -402,13 +385,22 @@ class _HomeScreenState extends State<HomeScreen> {
                                                 e.rentPerDayDouble ?? 0,
                                             distanceKm: e.distanceKilo
                                                 ?.toDouble(),
-                                            image: FallbackNetworkImage(
-                                              candidates: thumbCandidates,
-                                              placeholderColor: Theme.of(
-                                                context,
-                                              ).colorScheme.surfaceVariant,
-                                              fit: BoxFit.cover,
+                                            image: DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                color: Theme.of(context)
+                                                    .colorScheme
+                                                    .surfaceContainerHighest,
+                                              ),
+                                              child: FallbackNetworkImage(
+                                                candidates: thumbCandidates,
+                                                placeholderColor: Theme.of(
+                                                  context,
+                                                ).colorScheme.surfaceVariant,
+                                                fit: BoxFit
+                                                    .cover, // ← back to cover
+                                              ),
                                             ),
+
                                             onTap: () =>
                                                 Navigator.of(context).push(
                                                   MaterialPageRoute(
@@ -513,13 +505,16 @@ class _HoverScaleGlowState extends State<HoverScaleGlow> {
                       borderRadius: widget.radius,
                       boxShadow: [
                         BoxShadow(
-                          color: glow.withOpacity(0.25),
+                          color: glow.withAlpha((0.25 * 255).toInt()),
                           blurRadius: 28,
                           spreadRadius: 2,
                         ),
                       ],
                       gradient: RadialGradient(
-                        colors: [glow.withOpacity(0.25), glow.withOpacity(0.0)],
+                        colors: [
+                          glow.withAlpha((0.25 * 255).toInt()),
+                          glow.withAlpha(0),
+                        ],
                         radius: 0.85,
                       ),
                     ),
@@ -555,48 +550,42 @@ class SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+
     return LayoutBuilder(
       builder: (context, bc) {
-        final wrap = bc.maxWidth < 420;
-        final titleW = Text(
+        final titleText = Text(
           title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            fontWeight: FontWeight.w800,
-            letterSpacing: 0.2,
-          ),
+          style: t.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         );
 
         final underline = Container(
           height: 3,
-          width: 46,
-          margin: const EdgeInsets.only(top: 6),
+          width: 38, // a bit smaller
+          margin: const EdgeInsets.only(top: 4),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(2),
             gradient: LinearGradient(
-              colors: [cs.primary, cs.primary.withOpacity(0.3)],
+              colors: [cs.primary, cs.primary.withAlpha((0.3 * 255).toInt())],
             ),
           ),
         );
 
         final left = Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [titleW, underline],
+          children: [titleText, underline],
         );
 
-        if (!wrap) {
-          return Row(
-            children: [
-              Expanded(child: left),
-              const SizedBox(width: 12),
-              action,
-            ],
-          );
-        }
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [left, const SizedBox(height: 10), action],
+        // Always inline; title flexes, button keeps its size.
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(child: left), // ← lets the title take remaining space
+            const SizedBox(width: 10),
+            action, // ← stays beside the title
+          ],
         );
       },
     );
@@ -610,7 +599,6 @@ class HomeEquipmentCard extends StatelessWidget {
     required this.subtitle,
     required this.pricePerDay,
     required this.image,
-    this.distanceKm,
     this.onTap,
     this.onRent,
   });
@@ -618,7 +606,6 @@ class HomeEquipmentCard extends StatelessWidget {
   final String title;
   final String subtitle;
   final double pricePerDay;
-  final double? distanceKm;
   final Widget image;
   final VoidCallback? onTap;
   final VoidCallback? onRent;
@@ -640,10 +627,12 @@ class HomeEquipmentCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
           color: cs.surface,
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
+          border: Border.all(
+            color: cs.outlineVariant.withAlpha((0.5 * 255).toInt()),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.06),
+              color: Colors.black.withAlpha((0.06 * 255).toInt()),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -659,7 +648,18 @@ class HomeEquipmentCard extends StatelessWidget {
               Expanded(
                 child: Stack(
                   children: [
-                    Positioned.fill(child: image),
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: cs.surfaceContainerHighest,
+                        ),
+                        child: FallbackNetworkImage(
+                          candidates:
+                              [], // Provide a valid list of image URLs here
+                          fit: BoxFit.contain, // show full image
+                        ),
+                      ),
+                    ),
                     // subtle top gradient for legibility if you add labels later
                     Positioned.fill(
                       child: IgnorePointer(
@@ -669,7 +669,7 @@ class HomeEquipmentCard extends StatelessWidget {
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
                               colors: [
-                                Colors.black.withOpacity(0.08),
+                                Colors.black.withAlpha((0.08 * 255).toInt()),
                                 Colors.transparent,
                               ],
                             ),
@@ -707,73 +707,49 @@ class HomeEquipmentCard extends StatelessWidget {
 
                     const SizedBox(height: 10),
 
-                    // Distance row
-                    if (distanceKm != null) _DistanceChip(km: distanceKm!),
-
                     // Price under distance (this is the key change)
                     const SizedBox(height: 6),
                     Text(
-                      context.l10n.fromPerDay(_fmtPrice(pricePerDay)), // ✅
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: t.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      context.l10n.from, // single word “from”
+                      style: t.labelSmall?.copyWith(color: cs.onSurfaceVariant),
                     ),
-
-                    // Rent button (optional, small and unobtrusive)
-                    if (onRent != null) ...[
-                      const SizedBox(height: 10),
-                      SizedBox(
-                        height: 34,
-                        child: FilledButton.tonalIcon(
-                          onPressed: onRent,
-                          icon: const Icon(
-                            Icons.shopping_cart_outlined,
-                            size: 18,
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        Text(
+                          context.l10n.pricePerDay(
+                            _fmtPrice(pricePerDay),
+                          ), // e.g., “$120 / day”
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: t.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w700,
                           ),
-                          label: Text(context.l10n.rent),
                         ),
-                      ),
-                    ],
+                        const Spacer(),
+                        if (onRent != null)
+                          SizedBox(
+                            height: 30,
+                            child: FilledButton.tonalIcon(
+                              onPressed: onRent,
+                              icon: const Icon(
+                                Icons.shopping_cart_outlined,
+                                size: 16,
+                              ),
+                              label: Text(
+                                context.l10n.rent,
+                                style: t.labelSmall,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _DistanceChip extends StatelessWidget {
-  const _DistanceChip({required this.km});
-  final double km;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final t = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: cs.secondaryContainer,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.place_outlined, size: 14, color: cs.onSecondaryContainer),
-          const SizedBox(width: 4),
-          Text(
-            context.l10n.distanceKm(
-              km.toStringAsFixed(km >= 100 ? 0 : 1),
-            ), // e.g., '12.5 km' / '١٢٫٥ كم'
-            style: t.labelSmall?.copyWith(color: cs.onSecondaryContainer),
-          ),
-        ],
       ),
     );
   }
@@ -813,10 +789,12 @@ class RowEquipmentCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           color: cs.surface,
-          border: Border.all(color: cs.outlineVariant.withOpacity(0.45)),
+          border: Border.all(
+            color: cs.outlineVariant.withAlpha((0.45 * 255).toInt()),
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withAlpha((0.05 * 255).toInt()),
               blurRadius: 12,
               offset: const Offset(0, 6),
             ),
@@ -835,34 +813,39 @@ class RowEquipmentCard extends StatelessWidget {
               final comfy = w >= 340; // show everything
 
               // Left image width: proportion + clamps so it never dominates
-              final imgW = (w * (compact ? 0.30 : 0.28)).clamp(100.0, 150.0);
+              final imgW = (w * (compact ? 0.42 : 0.40)).clamp(130.0, 210.0);
 
               return Row(
                 children: [
                   // LEFT: Image
                   SizedBox(
                     width: imgW,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        image,
-                        Positioned.fill(
-                          child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: cs.surfaceContainerHighest,
+                      ),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // use what you already pass in from the grid (FallbackNetworkImage with BoxFit.cover)
+                          image,
+                          // optional soft top gradient
+                          IgnorePointer(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
-                                  begin: Alignment.centerLeft,
-                                  end: Alignment.centerRight,
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.black.withOpacity(0.05),
+                                    Colors.black.withOpacity(0.08),
                                     Colors.transparent,
                                   ],
                                 ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
 
@@ -881,14 +864,14 @@ class RowEquipmentCard extends StatelessWidget {
                           // Title
                           Text(
                             title,
-                            maxLines: 1,
+                            maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: t.titleMedium?.copyWith(
+                            style: t.titleSmall?.copyWith(
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.1,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
 
                           // Subtitle (hide on ultra tight)
                           if (!ultraTight)
@@ -901,44 +884,48 @@ class RowEquipmentCard extends StatelessWidget {
                               ),
                             ),
 
-                          SizedBox(height: compact ? 6 : 8),
+                          SizedBox(height: compact ? 1 : 2),
 
-                          // Distance chip (hide on ultra tight)
-                          if (!ultraTight && distanceKm != null)
-                            _DistanceChip(km: distanceKm!),
-
-                          SizedBox(height: compact ? 4 : 6),
-
-                          // Price under distance
                           Text(
-                            context.l10n.fromPerDay(
-                              _fmtPrice(pricePerDay),
-                            ), // ✅
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: t.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w800,
+                            context.l10n.from,
+                            style: t.labelSmall?.copyWith(
+                              color: cs.onSurfaceVariant,
                             ),
                           ),
 
-                          const Spacer(),
-
-                          // Small Rent button (hide if ultra tight)
-                          if (!ultraTight && onRent != null)
-                            Align(
-                              alignment: Alignment.bottomRight,
-                              child: SizedBox(
-                                height: comfy ? 32 : 30,
-                                child: FilledButton.tonalIcon(
-                                  onPressed: onRent,
-                                  icon: const Icon(
-                                    Icons.shopping_cart_outlined,
-                                    size: 18,
-                                  ),
-                                  label: Text(context.l10n.rent),
+                          Row(
+                            children: [
+                              Text(
+                                context.l10n.pricePerDay(
+                                  _fmtPrice(pricePerDay),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: t.titleSmall?.copyWith(
+                                  fontWeight: FontWeight.w700,
                                 ),
                               ),
-                            ),
+                              const Spacer(),
+                              if (onRent != null)
+                                SizedBox(
+                                  height: comfy ? 30 : 28,
+                                  child: FilledButton.icon(
+                                    onPressed: onRent,
+                                    icon: const Icon(
+                                      Icons.shopping_cart_outlined,
+                                      size: 16,
+                                      color: Colors.white,
+                                    ),
+                                    label: Text(
+                                      context.l10n.rent,
+                                      style: t.labelSmall?.copyWith(
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -949,6 +936,44 @@ class RowEquipmentCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AuthButton extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final t = Theme.of(context).textTheme;
+    final isIn = AuthStore.instance.isLoggedIn;
+
+    return TextButton.icon(
+      style: TextButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+        visualDensity: VisualDensity.compact,
+        foregroundColor: cs.primary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+      icon: AIcon(isIn ? AppGlyph.logout : AppGlyph.login),
+      label: Text(
+        isIn ? context.l10n.actionLogout : context.l10n.actionLogin,
+        style: t.labelLarge, // smaller, app-standard size
+        overflow: TextOverflow.ellipsis,
+      ),
+      onPressed: () async {
+        if (isIn) {
+          await AuthStore.instance.logout();
+          if (!context.mounted) return;
+          AppSnack.info(context, context.l10n.signedOut);
+        } else {
+          final ok = await Navigator.of(context).push<bool>(
+            MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
+          );
+          if (ok == true && context.mounted) {
+            AppSnack.success(context, context.l10n.signedIn);
+          }
+        }
+      },
     );
   }
 }

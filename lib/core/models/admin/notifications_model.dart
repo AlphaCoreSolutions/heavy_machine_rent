@@ -20,6 +20,8 @@ class NotificationsModel {
       'platformId': platformId,
     };
   }
+
+  static empty() {}
 }
 
 class UserMessage {

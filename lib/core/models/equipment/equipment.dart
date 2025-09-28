@@ -63,52 +63,6 @@ class EquipmentListSummary {
   };
 }
 
-class EquipmentDriverFileBrief {
-  final int? equipmentDriverFileId;
-  final int? fileTypeId;
-  final String? filePath;
-  final String? fileDescription;
-  final String? startDate;
-  final String? endDate;
-  final bool? isActive;
-  final bool? isExpire;
-  final bool? isImage;
-  EquipmentDriverFileBrief({
-    this.equipmentDriverFileId,
-    this.fileTypeId,
-    this.filePath,
-    this.fileDescription,
-    this.startDate,
-    this.endDate,
-    this.isActive,
-    this.isExpire,
-    this.isImage,
-  });
-  factory EquipmentDriverFileBrief.fromJson(Map<String, dynamic> json) =>
-      EquipmentDriverFileBrief(
-        equipmentDriverFileId: json['equipmentDriverFileId'],
-        fileTypeId: json['fileTypeId'],
-        filePath: json['filePath'],
-        fileDescription: json['fileDescription'],
-        startDate: json['startDate'],
-        endDate: json['endDate'],
-        isActive: json['isActive'],
-        isExpire: json['isExpire'],
-        isImage: json['isImage'],
-      );
-  Map<String, dynamic> toJson() => {
-    'equipmentDriverFileId': equipmentDriverFileId,
-    'fileTypeId': fileTypeId,
-    'filePath': filePath,
-    'fileDescription': fileDescription,
-    'startDate': startDate,
-    'endDate': endDate,
-    'isActive': isActive,
-    'isExpire': isExpire,
-    'isImage': isImage,
-  };
-}
-
 class EquipmentDriver {
   final int? equipmentDriverId;
   final int? equipmentId;
@@ -118,7 +72,7 @@ class EquipmentDriver {
   final bool? isActive;
   final DateTime? createDateTime;
   final DateTime? modifyDateTime;
-  final List<EquipmentDriverFileBrief>? equipmentDriverFiles;
+  final List<EquipmentDriverFile>? equipmentDriverFiles;
 
   EquipmentDriver({
     this.equipmentDriverId,
@@ -145,7 +99,7 @@ class EquipmentDriver {
         equipmentDriverFiles: (json['equipmentDriverFiles'] is List)
             ? (json['equipmentDriverFiles'] as List)
                   .map(
-                    (e) => EquipmentDriverFileBrief.fromJson(
+                    (e) => EquipmentDriverFile.fromJson(
                       Map<String, dynamic>.from(e),
                     ),
                   )
@@ -685,7 +639,8 @@ class EquipmentDriverFile {
   final int? equipmentDriverId;
   final String? filePath;
   final int? fileTypeId;
-  final String? fileDescription;
+  final String? fileDescriptionEnglish;
+  final String? fileDescriptionArabic;
   final String? startDate; // yyyy-MM-dd
   final String? endDate; // yyyy-MM-dd
   final bool? isActive;
@@ -699,7 +654,8 @@ class EquipmentDriverFile {
     this.equipmentDriverId,
     this.filePath,
     this.fileTypeId,
-    this.fileDescription,
+    this.fileDescriptionEnglish,
+    this.fileDescriptionArabic,
     this.startDate,
     this.endDate,
     this.isActive,
@@ -715,7 +671,8 @@ class EquipmentDriverFile {
         equipmentDriverId: json['equipmentDriverId'],
         filePath: json['filePath'],
         fileTypeId: json['fileTypeId'],
-        fileDescription: json['fileDescription'],
+        fileDescriptionEnglish: json['fileDescriptionEnglish'],
+        fileDescriptionArabic: json['fileDescriptionArabic'],
         startDate: json['startDate'],
         endDate: json['endDate'],
         isActive: json['isActive'],
@@ -730,7 +687,8 @@ class EquipmentDriverFile {
     'equipmentDriverId': equipmentDriverId,
     'filePath': filePath,
     'fileTypeId': fileTypeId,
-    'fileDescription': fileDescription,
+    'fileDescriptionEnglish': fileDescriptionEnglish,
+    'fileDescriptionArabic': fileDescriptionArabic,
     'startDate': startDate,
     'endDate': endDate,
     'isActive': isActive,

@@ -333,7 +333,7 @@
     "pdfSelected": "تم اختيار PDF",
     "nameEnReq": "الاسم (إنجليزي) *",
     "nameArReq": "الاسم (عربي) *",
-    "typeDomain10Req": "النوع (المجال 10) *",
+    "typeDomain10Req": "النوع*",
     "issueDateReq": "تاريخ الإصدار *",
     "expireDateReq": "تاريخ الانتهاء *",
     "isImage": "صورة؟",
@@ -793,5 +793,97 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "actionLogin": "تسجيل الدخول",
+    "@actionLogin": {
+        "description": "نص زر تسجيل الدخول في شريط التطبيق."
+    },
+    "actionLogout": "تسجيل الخروج",
+    "@actionLogout": {
+        "description": "نص زر تسجيل الخروج في شريط التطبيق."
+    },
+    "sameDropoffForAll": "استخدام نفس موقع التسليم لكل الوحدات",
+    "errUnitAddress": "الوحدة {index}: يرجى إدخال موقع التسليم",
+    "@errUnitAddress": {
+        "description": "تظهر عند عدم إدخال عنوان التسليم لإحدى الوحدات",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "infoCompleteProfileFirst": "يرجى إكمال ملفك الشخصي أولًا.",
+    "leaveEmpty": "اتركها فارغة لتكون 0%",
+    "errSelectEquipmentType": "اختر نوع المعدّة",
+    "errSelectEquipmentFromList": "اختر معدّة من القائمة",
+    "errSelectFactory": "اختر المصنع",
+    "errEnterDescriptionEnOrAr": "أدخل الوصف (بالإنجليزية أو العربية)",
+    "errSelectFuelResponsibility": "اختر جهة تحمل الوقود",
+    "errSelectTransferType": "اختر نوع النقل",
+    "errSelectTransferResponsibility": "اختر جهة تحمل النقل",
+    "errSelectDriverTransport": "اختر مسؤولية تنقل السائق",
+    "errSelectDriverFood": "اختر مسؤولية طعام السائق",
+    "errSelectDriverHousing": "اختر مسؤولية سكن السائق",
+    "errPricePerDayGtZero": "أدخل سعر اليوم (> 0).",
+    "errPricePerHourGtZero": "أدخل سعر الساعة (> 0).",
+    "errQuantityGteOne": "أدخل الكمية (≥ 1).",
+    "errPleaseCompleteForm": "يرجى إكمال الحقول المطلوبة",
+    "errDescRequiredEnOrAr": "مطلوب (إنجليزي أو عربي)",
+    "errRequired": "مطلوب",
+    "failedToLoadEquipment": "فشل تحميل المعدّة",
+    "unsavedChangesTitle": "تغييرات غير محفوظة",
+    "unsavedChangesBody": "لديك تغييرات غير محفوظة. هل تريد حفظها قبل المغادرة؟",
+    "actionDiscard": "تجاهل",
+    "pickIssueAndExpire": "يرجى اختيار تاريخ الإصدار وتاريخ الانتهاء معًا.",
+    "chooseType": "يرجى اختيار النوع.",
+    "chooseDocumentFile": "يرجى اختيار ملف المستند.",
+    "nameEnRequired": "الاسم (إنجليزي) *",
+    "nameArRequired": "الاسم (عربي) *",
+    "typeDomain10Required": "النوع *",
+    "issueDateRequired": "تاريخ الإصدار *",
+    "expireDateRequired": "تاريخ الانتهاء *",
+    "deleteImageTitle": "حذف الصورة",
+    "deleteImageBody": "هل تريد إزالة هذه الصورة من الإعلان؟",
+    "deleteTermQ": "حذف الشرط؟",
+    "@orderSaveFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "addDriver": "إضافة سائق",
+    "editDriver": "تعديل السائق",
+    "nationalityRequired": "الجنسية *",
+    "deleteDriverQ": "حذف السائق؟",
+    "addDriverFile": "إضافة ملف للسائق",
+    "serverFileName": "اسم الملف على الخادم",
+    "fileTypeIdRequired": "معرّف نوع الملف *",
+    "startDateYmd": "البداية yyyy-MM-dd",
+    "endDateYmd": "النهاية yyyy-MM-dd",
+    "actionAdd": "إضافة",
+    "addFailedWithMsg": "فشل الإضافة: {msg}",
+    "@addFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "@deleteFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "fileDescriptionOptionalAr": "وصف الملف بالعربي (اختياري)",
+    "@fileDescriptionOptionalAr": {
+        "description": "تسمية لحقل وصف الملف الاختياري"
+    },
+    "fileDescriptionOptionalEn": "وصف الملف بالانجليزي (اختياري)",
+    "@fileDescriptionOptionalEn": {
+        "description": "تسمية لحقل وصف الملف الاختياري"
+    },
+    "required": "إلزامي",
+    "previewPdf": "معاينة PDF",
+    "open": "فتح",
+    "pickAFileFirst": "يرجى اختيار ورفع ملف أولاً",
+    "savingDots": "جارٍ الحفظ…",
+    "tryAgain": "حاول مرة اخرى",
+    "all": "الجميع"
 }

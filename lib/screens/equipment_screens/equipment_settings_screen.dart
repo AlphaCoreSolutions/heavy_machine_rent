@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:developer' as dev;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/gestures.dart';
@@ -1258,10 +1260,7 @@ class _TermsTabState extends State<_TermsTab> {
                       children: [
                         _StatusChip(active: active),
                         SizedBox(height: 5),
-                        _ActionsPill(
-                          onEdit: () => _edit(t),
-                          onDelete: () => _delete(t),
-                        ),
+                        _ActionsPill(onDelete: () => _delete(t)),
                       ],
                     ),
                   ],
@@ -1475,29 +1474,60 @@ class _DriversTabState extends State<_DriversTab> {
   late Future<List<EquipmentDriver>> _future;
   List<Nationality>? _nats;
 
+  // ---- domain(10) file types for driver files ----
+  List<DomainDetail> _fileTypes = [];
+  bool _loadingFileTypes = true;
+
+  // ------------ logging helpers ------------
+  static const JsonEncoder _pretty = JsonEncoder.withIndent('  ');
+  void _log(String msg, [Object? data]) {
+    if (data == null) {
+      dev.log(msg, name: 'DriversTab');
+    } else {
+      dev.log(
+        '$msg: ${data is String ? data : _pretty.convert(data)}',
+        name: 'DriversTab',
+      );
+    }
+  }
+  // -----------------------------------------
+
   @override
   void initState() {
     super.initState();
     _future = api.Api.getEquipmentDriversByEquipmentId(widget.equipmentId);
     _loadNats();
+    _loadFileTypes();
   }
 
   Future<void> _loadNats() async {
     try {
       final n = await api.Api.getNationalities();
       if (!mounted) return;
-      setState(() {
-        _nats = n;
-      });
+      setState(() => _nats = n);
     } catch (_) {}
   }
 
+  Future<void> _loadFileTypes() async {
+    try {
+      final list = await api.Api.getDomainDetailsByDomainId(10);
+      if (!mounted) return;
+      setState(() {
+        _fileTypes = list;
+        _loadingFileTypes = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _loadingFileTypes = false);
+    }
+  }
+
   Future<void> _reload() async {
-    setState(
-      () => _future = api.Api.getEquipmentDriversByEquipmentId(
-        widget.equipmentId,
-      ),
-    );
+    if (!mounted) return;
+    setState(() {
+      _future = api.Api.getEquipmentDriversByEquipmentId(widget.equipmentId);
+    });
+    // do not await here; FutureBuilder will handle it
     widget.onChanged();
   }
 
@@ -1511,47 +1541,65 @@ class _DriversTabState extends State<_DriversTab> {
       builder: (dialogCtx) => StatefulBuilder(
         builder: (dialogCtx, setSB) {
           return AlertDialog(
-            title: Text(d == null ? 'Add driver' : 'Edit driver'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                AInput(
-                  controller: en,
-                  label: 'Name (EN) *',
-                  glyph: AppGlyph.edit,
-                ),
-                const SizedBox(height: 8),
-                AInput(
-                  controller: ar,
-                  label: 'Name (AR) *',
-                  glyph: AppGlyph.edit,
-                ),
-                const SizedBox(height: 8),
-                DropdownButtonFormField<int>(
-                  value: natId,
-                  items: (_nats ?? const <Nationality>[])
-                      .map(
-                        (n) => DropdownMenuItem<int>(
-                          value: n.nationalityId,
-                          child: Text(n.nationalityNameEnglish ?? '—'),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (v) => setSB(() => natId = v),
-                  decoration: const InputDecoration(labelText: 'Nationality *'),
-                ),
-              ],
+            title: Text(
+              d == null ? context.l10n.addDriver : context.l10n.editDriver,
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AInput(
+                    controller: en,
+                    label: context.l10n.nameEnRequired,
+                    glyph: AppGlyph.edit,
+                  ),
+                  const SizedBox(height: 8),
+                  AInput(
+                    controller: ar,
+                    label: context.l10n.nameArRequired,
+                    glyph: AppGlyph.edit,
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: DropdownButtonFormField<int>(
+                      value: natId,
+                      isExpanded: true,
+                      alignment: AlignmentDirectional.centerStart,
+                      items: (_nats ?? const <Nationality>[])
+                          .map(
+                            (n) => DropdownMenuItem<int>(
+                              value: n.nationalityId,
+                              child: Text(
+                                n.nationalityNameEnglish ?? '—',
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                textAlign: TextAlign.start,
+                              ),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (v) => setSB(() => natId = v),
+                      menuMaxHeight: 360,
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        isDense: true,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             actions: [
               TextButton(
                 onPressed: () =>
                     Navigator.of(dialogCtx, rootNavigator: true).pop(false),
-                child: const Text('Cancel'),
+                child: Text(context.l10n.actionCancel),
               ),
               FilledButton(
                 onPressed: () =>
                     Navigator.of(dialogCtx, rootNavigator: true).pop(true),
-                child: const Text('Save'),
+                child: Text(context.l10n.actionSave),
               ),
             ],
           );
@@ -1561,7 +1609,7 @@ class _DriversTabState extends State<_DriversTab> {
 
     if (ok == true) {
       if (en.text.trim().isEmpty || ar.text.trim().isEmpty || natId == null) {
-        AppSnack.error(context, 'All fields are required');
+        AppSnack.error(context, context.l10n.allFieldsRequired);
         return;
       }
       try {
@@ -1579,198 +1627,419 @@ class _DriversTabState extends State<_DriversTab> {
           await api.Api.updateEquipmentDriver(payload);
         }
         if (!mounted) return;
-        AppSnack.success(context, 'Saved');
+        AppSnack.success(context, context.l10n.saved);
         _reload();
       } catch (e) {
         if (!mounted) return;
-        AppSnack.error(context, 'Save failed: $e');
+        AppSnack.error(context, context.l10n.saveFailedWithMsg('$e'));
       }
     }
   }
 
-  Future<void> _deleteDriver(EquipmentDriver d) async {
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (dialogCtx) => AlertDialog(
-        title: const Text('Delete driver?'),
-        actions: [
-          TextButton(
-            onPressed: () =>
-                Navigator.of(dialogCtx, rootNavigator: true).pop(false),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () =>
-                Navigator.of(dialogCtx, rootNavigator: true).pop(true),
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-    if (ok != true) return;
+  /// Always return "driverdocFiles/<basename>" for storage.
+  String _driverDocStorableFromName(String filename) {
+    final base = filename.replaceAll('\\', '/').split('/').last.trim();
+    return base.isEmpty ? '' : '${api.Api.driverDocsFolder}/$base';
+  }
+
+  // ---- date helpers (expiry is true only if endDate < today) ----
+  DateTime? _parseYmd(String? ymd) {
+    if (ymd == null || ymd.trim().isEmpty) return null;
     try {
-      await api.Api.deleteEquipmentDriver(d.equipmentDriverId ?? 0);
-      if (!mounted) return;
-      AppSnack.success(context, 'Deleted');
-      _reload();
-    } catch (e) {
-      if (!mounted) return;
-      AppSnack.error(context, 'Delete failed: $e');
+      final p = ymd.split('-');
+      if (p.length != 3) return null;
+      return DateTime(int.parse(p[0]), int.parse(p[1]), int.parse(p[2]));
+    } catch (_) {
+      return null;
     }
   }
 
-  Future<void> _addDriverFile(EquipmentDriver d) async {
-    final pathCtrl = TextEditingController();
-    final typeCtrl = TextEditingController();
-    final startCtrl = TextEditingController();
-    final endCtrl = TextEditingController();
-    bool isImage = false;
-    String? uploadedName;
+  bool _isExpiredYmd(String? endYmd) {
+    final end = _parseYmd(endYmd);
+    if (end == null) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return end.isBefore(today); // inclusive end date
+  }
 
-    final ok = await showDialog<bool>(
+  Future<void> _addDriverFile(EquipmentDriver d) async {
+    final formKey = GlobalKey<FormState>();
+
+    int? typeId;
+    DateTime? startDt;
+    DateTime? endDt;
+
+    final descENCtrl = TextEditingController();
+    final descARCtrl = TextEditingController();
+
+    PlatformFile? picked; // NOT uploaded; only used to derive name & preview
+    bool isImage = false; // auto from extension; user can toggle
+
+    bool saving = false;
+    String? errorText;
+
+    bool _looksLikeImage(String name) {
+      final n = name.toLowerCase();
+      return n.endsWith('.png') ||
+          n.endsWith('.jpg') ||
+          n.endsWith('.jpeg') ||
+          n.endsWith('.webp');
+    }
+
+    Future<void> pickFile(StateSetter setSB) async {
+      final result = await FilePicker.platform.pickFiles(
+        withData: true,
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png', 'webp', 'pdf'],
+      );
+      if (result == null || result.files.isEmpty) {
+        _log('File picker: user cancelled');
+        return;
+      }
+      picked = result.files.single;
+      isImage = _looksLikeImage(picked!.name);
+      _log('Picked file', {
+        'name': picked!.name,
+        'bytes': picked!.bytes?.lengthInBytes ?? 0,
+        'path': picked!.path,
+        'guessedIsImage': isImage,
+      });
+      setSB(() {});
+    }
+
+    Future<void> pickDate(StateSetter setSB, {required bool isStart}) async {
+      final base = isStart
+          ? (startDt ?? DateTime.now())
+          : (endDt ?? DateTime.now());
+      final chosen = await showDatePicker(
+        context: context,
+        initialDate: base,
+        firstDate: DateTime(2000),
+        lastDate: DateTime(2100),
+      );
+      if (chosen != null) {
+        if (isStart) {
+          startDt = chosen;
+        } else {
+          endDt = chosen;
+        }
+        setSB(() {});
+      }
+    }
+
+    await showDialog<void>(
       context: context,
+      barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (dialogCtx, setSB) {
+          Widget preview() {
+            if (picked == null) return const SizedBox.shrink();
+            if (isImage && picked!.bytes != null) {
+              return Center(
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.memory(
+                    picked!.bytes!,
+                    width: 220,
+                    height: 150,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              );
+            }
+            return Center(
+              child: Container(
+                width: 220,
+                height: 150,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: Theme.of(dialogCtx).colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  isImage
+                      ? Icons.broken_image_outlined
+                      : Icons.picture_as_pdf_outlined,
+                  size: 36,
+                ),
+              ),
+            );
+          }
+
+          Future<void> handleSave() async {
+            if (typeId == null) {
+              errorText = context.l10n.fileTypeIdRequired;
+              (dialogCtx as Element).markNeedsBuild();
+              return;
+            }
+            if (picked == null) {
+              errorText = context.l10n.chooseDocumentFile;
+              (dialogCtx as Element).markNeedsBuild();
+              return;
+            }
+            if (!(formKey.currentState?.validate() ?? true)) return;
+
+            saving = true;
+            errorText = null;
+            (dialogCtx as Element).markNeedsBuild();
+
+            // Capture count before, to detect success via reload if the API throws on parse.
+            int beforeCount = d.equipmentDriverFiles?.length ?? 0;
+
+            // Build payload
+            final storable = _driverDocStorableFromName(picked!.name);
+            final isImageFinal = _looksLikeImage(storable);
+            final startYmd = startDt == null ? null : _toYmd(startDt!);
+            final endYmd = endDt == null ? null : _toYmd(endDt!);
+
+            final payload = EquipmentDriverFile(
+              equipmentDriverFileId: 0,
+              equipmentDriverId: d.equipmentDriverId,
+              filePath: storable,
+              fileTypeId: typeId,
+              fileDescriptionEnglish: descENCtrl.text.trim().isEmpty
+                  ? ' '
+                  : descENCtrl.text.trim(),
+              fileDescriptionArabic: descARCtrl.text.trim().isEmpty
+                  ? ' '
+                  : descARCtrl.text.trim(),
+              startDate: startYmd,
+              endDate: endYmd,
+              isImage: isImageFinal,
+              isActive: true,
+              isExpire: _isExpiredYmd(endYmd),
+              createDateTime: DateTime.now(),
+              modifyDateTime: DateTime.now(),
+            );
+
+            _log('addEquipmentDriverFile.payload', payload.toJson());
+
+            bool committed = false;
+
+            // 1) Try the call, but NEVER let a parsing error crash the UI
+            try {
+              await api.Api.addEquipmentDriverFile(payload);
+              committed = true; // if we get here, no exception thrown
+            } catch (e, st) {
+              _log(
+                'addEquipmentDriverFile.throw (ignored—for envelope-only backend)',
+                {'error': e.toString(), 'stack': st.toString()},
+              );
+              // We’ll confirm by reload below.
+            }
+
+            // 2) Close the dialog FIRST so we never call markNeedsBuild on a dead context.
+            if (mounted) {
+              Navigator.of(dialogCtx, rootNavigator: true).pop();
+            }
+
+            // 3) Reload quietly and infer success (even if the call threw)
+            try {
+              await _reload();
+            } catch (e) {
+              _log('_reload.throw (ignored)', e.toString());
+            }
+
+            // 4) Best-effort success toast: check if count increased
+            try {
+              final latest =
+                  await _future; // safe: FutureBuilder will drive it too
+              final me = latest.firstWhere(
+                (x) => x.equipmentDriverId == d.equipmentDriverId,
+                orElse: () => d,
+              );
+              final after = me.equipmentDriverFiles?.length ?? beforeCount;
+              if (committed || after > beforeCount) {
+                if (mounted) AppSnack.success(context, context.l10n.fileAdded);
+              } else {
+                if (mounted) {
+                  AppSnack.error(
+                    context,
+                    context.l10n.addFailedWithMsg(context.l10n.tryAgain),
+                  );
+                }
+              }
+            } catch (e) {
+              // Even if this fails, the UI won’t crash.
+              _log('post-reload verification failed', e.toString());
+              if (mounted) {
+                AppSnack.success(context, context.l10n.saved); // optimistic
+              }
+            }
+          }
+
           return AlertDialog(
-            title: const Text('Add driver file'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Row(
+            insetPadding: const EdgeInsets.symmetric(
+              horizontal: 24,
+              vertical: 24,
+            ),
+            title: Text(context.l10n.addDriverFile),
+            content: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 900, maxHeight: 680),
+              child: SingleChildScrollView(
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      FilledButton.icon(
-                        onPressed: () async {
-                          final picked = await FilePicker.platform.pickFiles(
-                            withData: true,
-                            type: FileType.custom,
-                            allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
-                          );
-                          if (picked == null || picked.files.isEmpty) return;
-                          final f = picked.files.single;
-                          try {
-                            uploadedName = (f.bytes != null)
-                                ? await api.Api.uploadStaticBytes(
-                                    folderName: api.Api.driverDocsFolder,
-                                    bytes: f.bytes!,
-                                    filename: f.name,
-                                  )
-                                : await api.Api.uploadStaticPath(
-                                    folderName: api.Api.driverDocsFolder,
-                                    path: f.path!,
-                                  );
-                            setSB(() {
-                              pathCtrl.text = uploadedName ?? f.name;
-                              isImage = _looksLikeImage(uploadedName ?? f.name);
-                            });
-                          } catch (e) {
-                            AppSnack.error(context, 'Upload failed: $e');
-                          }
-                        },
-                        icon: const Icon(Icons.upload_file),
-                        label: const Text('Pick file'),
+                      Row(
+                        children: [
+                          FilledButton.icon(
+                            onPressed: saving ? null : () => pickFile(setSB),
+                            icon: const Icon(Icons.upload_file),
+                            label: Text(context.l10n.chooseFile),
+                          ),
+                          const SizedBox(width: 8),
+                          TextButton.icon(
+                            onPressed: saving || picked == null
+                                ? null
+                                : () {
+                                    _log('Clear pressed');
+                                    picked = null;
+                                    isImage = false;
+                                    setSB(() {});
+                                  },
+                            icon: const Icon(Icons.close_rounded),
+                            label: const Text('Clear'),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: AInput(
-                          controller: pathCtrl,
-                          label: 'Server file name',
-                          glyph: AppGlyph.file,
-                          readOnly: true,
+                      const SizedBox(height: 12),
+                      preview(),
+                      const SizedBox(height: 12),
+
+                      // File type (Domain 10)
+                      DropdownButtonFormField<int>(
+                        value: typeId,
+                        isExpanded: true,
+                        decoration: InputDecoration(
+                          labelText: context.l10n.fileTypeIdRequired,
                         ),
+                        items: (!_loadingFileTypes && _fileTypes.isNotEmpty)
+                            ? _fileTypes.map((d) {
+                                final label =
+                                    (d.detailNameEnglish?.trim().isNotEmpty ??
+                                        false)
+                                    ? d.detailNameEnglish!.trim()
+                                    : (d.detailNameArabic?.trim().isNotEmpty ??
+                                          false)
+                                    ? d.detailNameArabic!.trim()
+                                    : '#${d.domainDetailId ?? 0}';
+                                return DropdownMenuItem<int>(
+                                  value: d.domainDetailId,
+                                  child: Text(label),
+                                );
+                              }).toList()
+                            : const [],
+                        onChanged: saving
+                            ? null
+                            : (v) => setSB(() => typeId = v),
+                        validator: (_) => (typeId == null) ? 'Required' : null,
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  AInput(
-                    controller: typeCtrl,
-                    label: 'File type id *',
-                    glyph: AppGlyph.info,
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 8),
-                  Column(
-                    children: [
+                      const SizedBox(height: 12),
+
+                      // Dates
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextFormField(
+                              readOnly: true,
+                              controller: TextEditingController(
+                                text: startDt != null ? _toYmd(startDt!) : '',
+                              ),
+                              decoration: InputDecoration(
+                                labelText: context.l10n.startDateYmd,
+                              ),
+                              onTap: saving
+                                  ? null
+                                  : () => pickDate(setSB, isStart: true),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: TextFormField(
+                              readOnly: true,
+                              controller: TextEditingController(
+                                text: endDt != null ? _toYmd(endDt!) : '',
+                              ),
+                              decoration: InputDecoration(
+                                labelText: context.l10n.endDateYmd,
+                              ),
+                              onTap: saving
+                                  ? null
+                                  : () => pickDate(setSB, isStart: false),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Optional descriptions
                       AInput(
-                        controller: startCtrl,
-                        label: 'Start yyyy-MM-dd',
-                        glyph: AppGlyph.calendar,
+                        controller: descENCtrl,
+                        label: context.l10n.fileDescriptionOptionalEn,
+                        glyph: AppGlyph.edit,
                       ),
                       const SizedBox(height: 8),
                       AInput(
-                        controller: endCtrl,
-                        label: 'End yyyy-MM-dd',
-                        glyph: AppGlyph.calendar,
+                        controller: descARCtrl,
+                        label: context.l10n.fileDescriptionOptionalAr,
+                        glyph: AppGlyph.edit,
                       ),
+                      const SizedBox(height: 12),
+
+                      // Is image (auto; user can still toggle)
+                      Row(
+                        children: [
+                          Switch.adaptive(
+                            value: isImage,
+                            onChanged: saving
+                                ? null
+                                : (v) {
+                                    isImage = v;
+                                    (dialogCtx as Element).markNeedsBuild();
+                                  },
+                          ),
+                          const SizedBox(width: 8),
+                          Text(context.l10n.isImage),
+                        ],
+                      ),
+
+                      if (errorText != null) ...[
+                        const SizedBox(height: 10),
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            errorText!,
+                            style: TextStyle(
+                              color: Theme.of(dialogCtx).colorScheme.error,
+                            ),
+                          ),
+                        ),
+                      ],
                     ],
                   ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Switch.adaptive(
-                        value: isImage,
-                        onChanged: (v) => setSB(() => isImage = v),
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('Is image'),
-                    ],
-                  ),
-                ],
+                ),
               ),
             ),
             actions: [
               TextButton(
-                onPressed: () =>
-                    Navigator.of(dialogCtx, rootNavigator: true).pop(false),
-                child: const Text('Cancel'),
+                onPressed: saving
+                    ? null
+                    : () => Navigator.of(dialogCtx, rootNavigator: true).pop(),
+                child: Text(context.l10n.actionCancel),
               ),
               FilledButton(
-                onPressed: () =>
-                    Navigator.of(dialogCtx, rootNavigator: true).pop(true),
-                child: const Text('Add'),
+                onPressed: saving ? null : handleSave,
+                child: Text(
+                  saving ? context.l10n.savingEllipsis : context.l10n.actionAdd,
+                ),
               ),
             ],
           );
         },
       ),
     );
-
-    if (ok == true) {
-      if ((uploadedName ?? '').isEmpty ||
-          (int.tryParse(typeCtrl.text.trim()) == null)) {
-        AppSnack.error(context, 'File and Type ID are required');
-        return;
-      }
-      try {
-        await api.Api.addEquipmentDriverFile(
-          EquipmentDriverFile(
-            equipmentDriverId: d.equipmentDriverId,
-            filePath: uploadedName,
-            fileTypeId: int.tryParse(typeCtrl.text.trim()),
-            startDate: startCtrl.text.trim().isEmpty
-                ? null
-                : startCtrl.text.trim(),
-            endDate: endCtrl.text.trim().isEmpty ? null : endCtrl.text.trim(),
-            isImage: isImage,
-            isActive: true,
-          ),
-        );
-        if (!mounted) return;
-        AppSnack.success(context, 'File added');
-        _reload();
-      } catch (e) {
-        if (!mounted) return;
-        AppSnack.error(context, 'Add failed: $e');
-      }
-    }
-  }
-
-  bool _looksLikeImage(String name) {
-    final n = name.toLowerCase();
-    return n.endsWith('.png') ||
-        n.endsWith('.jpg') ||
-        n.endsWith('.jpeg') ||
-        n.endsWith('.webp');
   }
 
   @override
@@ -1815,8 +2084,13 @@ class _DriversTabState extends State<_DriversTab> {
               ...drivers.map((d) {
                 final files = d.equipmentDriverFiles ?? const [];
 
+                _log('Rendering driver row', {
+                  'driverId': d.equipmentDriverId,
+                  'filesCount': files.length,
+                  'files': files.map((f) => f.toJson()).toList(),
+                });
+
                 return Padding(
-                  // <<—— spacing between items
                   padding: const EdgeInsets.only(bottom: 12),
                   child: Glass(
                     radius: 18,
@@ -1825,7 +2099,7 @@ class _DriversTabState extends State<_DriversTab> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Header row (icon + titles)
+                          // Header row
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -1884,16 +2158,20 @@ class _DriversTabState extends State<_DriversTab> {
                             )
                           else
                             ...files.map((f) {
-                              final expired =
-                                  (f.endDate?.isNotEmpty == true) &&
-                                      DateTime.tryParse(
-                                            '${f.endDate}T00:00:00',
-                                          ) !=
-                                          null
-                                  ? DateTime.parse(
-                                      '${f.endDate}T00:00:00',
-                                    ).isBefore(DateTime.now())
-                                  : false;
+                              final expired = _isExpiredYmd(f.endDate);
+
+                              final displayTitle =
+                                  (f.fileDescriptionEnglish
+                                          ?.trim()
+                                          .isNotEmpty ??
+                                      false)
+                                  ? f.fileDescriptionEnglish!.trim()
+                                  : (f.fileDescriptionArabic
+                                            ?.trim()
+                                            .isNotEmpty ??
+                                        false)
+                                  ? f.fileDescriptionArabic!.trim()
+                                  : (f.filePath ?? '—');
 
                               return ListTile(
                                 dense: true,
@@ -1902,10 +2180,7 @@ class _DriversTabState extends State<_DriversTab> {
                                   Icons.insert_drive_file_outlined,
                                 ),
                                 title: Text(
-                                  (f.fileDescription?.trim().isNotEmpty ??
-                                          false)
-                                      ? f.fileDescription!
-                                      : (f.filePath ?? '—'),
+                                  displayTitle,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -1930,7 +2205,7 @@ class _DriversTabState extends State<_DriversTab> {
 
                           const SizedBox(height: 8),
 
-                          // Bottom action row
+                          // Bottom actions
                           Row(
                             children: [
                               FilledButton.icon(
@@ -1953,7 +2228,7 @@ class _DriversTabState extends State<_DriversTab> {
                                     tooltip: context.l10n.actionDelete,
                                     style: ButtonStyle(
                                       foregroundColor: WidgetStateProperty.all(
-                                        cs.error,
+                                        Theme.of(context).colorScheme.error,
                                       ),
                                     ),
                                   ),
@@ -1973,36 +2248,118 @@ class _DriversTabState extends State<_DriversTab> {
     );
   }
 
-  Future<void> _deleteDriverFile(int? id) async {
-    if (id == null) return;
+  Future<void> _deleteDriver(EquipmentDriver d) async {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Delete file?'),
+        title: Text(context.l10n.deleteDriverQ),
         actions: [
           TextButton(
             onPressed: () =>
                 Navigator.of(dialogCtx, rootNavigator: true).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.of(dialogCtx, rootNavigator: true).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),
     );
     if (ok != true) return;
     try {
-      await api.Api.deleteEquipmentDriverFile(id);
+      await api.Api.deleteEquipmentDriver(d.equipmentDriverId ?? 0);
       if (!mounted) return;
-      AppSnack.success(context, 'Deleted');
+      AppSnack.success(context, context.l10n.deleted);
       _reload();
     } catch (e) {
       if (!mounted) return;
-      AppSnack.error(context, 'Delete failed: $e');
+      AppSnack.error(context, context.l10n.deleteFailedWithMsg('$e'));
     }
+  }
+
+  Future<void> _deleteDriverFile(int? id) async {
+    if (id == null) return;
+
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (dialogCtx) => AlertDialog(
+        title: Text(context.l10n.deleteFileQ),
+        actions: [
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogCtx, rootNavigator: true).pop(false),
+            child: Text(context.l10n.actionCancel),
+          ),
+          FilledButton(
+            onPressed: () =>
+                Navigator.of(dialogCtx, rootNavigator: true).pop(true),
+            child: Text(context.l10n.actionDelete),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+
+    // snapshot counts to infer success after reload
+    int beforeCount = 0;
+    try {
+      final current = await _future;
+      final allFiles = current
+          .expand(
+            (ed) => ed.equipmentDriverFiles ?? const <EquipmentDriverFile>[],
+          )
+          .toList(growable: false);
+      beforeCount = allFiles.length;
+    } catch (_) {}
+
+    bool committed = false;
+    try {
+      await api.Api.deleteEquipmentDriverFile(id);
+      committed = true;
+    } catch (e, st) {
+      _log('deleteDriverFile.throw (ignored—for envelope-only backend)', {
+        'error': e.toString(),
+        'stack': st.toString(),
+      });
+    }
+
+    try {
+      await _reload();
+    } catch (e) {
+      _log('_reload.throw (ignored)', e.toString());
+    }
+
+    try {
+      final latest = await _future;
+      final afterCount = latest
+          .expand(
+            (ed) => ed.equipmentDriverFiles ?? const <EquipmentDriverFile>[],
+          )
+          .length;
+      if (committed || afterCount < beforeCount) {
+        if (mounted) AppSnack.success(context, context.l10n.deleted);
+      } else {
+        if (mounted)
+          AppSnack.error(
+            context,
+            context.l10n.deleteFailedWithMsg(context.l10n.tryAgain),
+          );
+      }
+    } catch (e) {
+      _log('post-reload verification failed', e.toString());
+      if (mounted)
+        AppSnack.success(context, context.l10n.deleted); // optimistic
+    }
+  }
+
+  // ---- simple Y-M-D helper for UI inputs ----
+  String _toYmd(DateTime dt) {
+    final y = dt.year.toString().padLeft(4, '0');
+    final m = dt.month.toString().padLeft(2, '0');
+    final d = dt.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 }
 
@@ -2097,17 +2454,17 @@ class _CertificatesTabState extends State<_CertificatesTab> {
         Future<void> handleSave() async {
           if (!formKey.currentState!.validate()) return;
           if (issueDt == null || expireDt == null) {
-            errorText = 'Please pick both Issue and Expire dates.';
+            errorText = context.l10n.pickIssueAndExpire;
             (dialogCtx as Element).markNeedsBuild();
             return;
           }
           if (typeId == null) {
-            errorText = 'Please choose a Type.';
+            errorText = context.l10n.chooseType;
             (dialogCtx as Element).markNeedsBuild();
             return;
           }
           if (docServerName == null && picked == null) {
-            errorText = 'Please choose a document file.';
+            errorText = context.l10n.chooseDocumentFile;
             (dialogCtx as Element).markNeedsBuild();
             return;
           }
@@ -2117,7 +2474,6 @@ class _CertificatesTabState extends State<_CertificatesTab> {
           (dialogCtx as Element).markNeedsBuild();
 
           try {
-            // CASE A: New file selected => two-step save (DB row + SaveUploadFile)
             // CASE A: New file selected => two-step save (DB row + SaveUploadFile)
             if (picked != null) {
               if (picked!.bytes != null) {
@@ -2166,7 +2522,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                 isActive: true,
                 createDateTime: c?.createDateTime ?? now,
                 modifyDateTime: now,
-                documentPath: docServerName, // keep old file name
+                documentPath: docServerName,
                 documentType: null,
                 isImage: isImage,
               );
@@ -2179,12 +2535,12 @@ class _CertificatesTabState extends State<_CertificatesTab> {
             }
 
             if (!mounted) return;
-            AppSnack.success(context, 'Saved');
+            AppSnack.success(context, context.l10n.saved);
             Navigator.of(dialogCtx, rootNavigator: true).pop();
             widget.onChanged();
           } catch (e) {
             saving = false;
-            errorText = 'Save failed: $e';
+            errorText = context.l10n.saveFailedWithMsg('$e');
             (dialogCtx).markNeedsBuild();
           }
         }
@@ -2192,7 +2548,11 @@ class _CertificatesTabState extends State<_CertificatesTab> {
         final typesReady = !_loadingTypes && _types.isNotEmpty;
 
         return AlertDialog(
-          title: Text(c == null ? 'Add certificate' : 'Edit certificate'),
+          title: Text(
+            c == null
+                ? context.l10n.addCertificate
+                : context.l10n.editCertificate,
+          ),
           content: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 760, maxHeight: 620),
             child: SingleChildScrollView(
@@ -2201,60 +2561,81 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Row(
+                    // A) Replace the current Row(..) that contains Choose file + preview with:
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         FilledButton.icon(
                           onPressed: saving ? null : pickFile,
                           icon: const Icon(Icons.upload_file),
-                          label: const Text('Choose file'),
+                          label: Text(context.l10n.chooseFile),
                         ),
-                        const SizedBox(height: 20, width: 20),
-                        if (picked != null)
-                          (isImage && picked!.bytes != null)
-                              ? ClipRRect(
-                                  borderRadius: BorderRadius.circular(12),
-                                  child: Image.memory(
-                                    picked!.bytes!,
-                                    width: 260,
-                                    height: 180,
-                                    fit: BoxFit.cover,
-                                  ),
-                                )
-                              : const Text('PDF selected'),
-                        if ((docServerName ?? '').isNotEmpty && isImage)
-                          ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: CachedNetworkImage(
-                              imageUrl: _publicUrlFromStoredPath(
-                                docServerName,
-                                defaultFolder: 'equipcertFiles',
+                        const SizedBox(height: 12),
+
+                        if (picked != null ||
+                            ((docServerName ?? '').isNotEmpty && isImage)) ...[
+                          Center(
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(
+                                maxWidth: 220,
+                                maxHeight: 160,
                               ),
-                              width: 260,
-                              height: 180,
-                              fit: BoxFit.cover,
-                              placeholder: (_, __) => const SizedBox(
-                                width: 260,
-                                height: 180,
-                                child: Center(
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Builder(
+                                  builder: (_) {
+                                    if (picked != null &&
+                                        isImage &&
+                                        picked!.bytes != null) {
+                                      return Image.memory(
+                                        picked!.bytes!,
+                                        fit: BoxFit.cover,
+                                      );
+                                    }
+                                    if ((docServerName ?? '').isNotEmpty &&
+                                        isImage) {
+                                      return CachedNetworkImage(
+                                        imageUrl: _publicUrlFromStoredPath(
+                                          docServerName,
+                                          defaultFolder: 'equipcertFiles',
+                                        ),
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, __) => const SizedBox(
+                                          height: 160,
+                                          child: Center(
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                            ),
+                                          ),
+                                        ),
+                                        errorWidget: (_, __, ___) => Container(
+                                          color: Theme.of(
+                                            context,
+                                          ).colorScheme.surfaceVariant,
+                                          child: const Icon(
+                                            Icons.broken_image_outlined,
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return Container(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceVariant,
+                                      child: Center(
+                                        child: Text(context.l10n.pdfSelected),
+                                      ),
+                                    );
+                                  },
                                 ),
-                              ),
-                              errorWidget: (_, __, ___) => Container(
-                                width: 260,
-                                height: 180,
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.surfaceVariant,
-                                child: const Icon(Icons.broken_image_outlined),
                               ),
                             ),
                           ),
-
-                        const SizedBox(width: 8),
+                          const SizedBox(height: 12),
+                        ],
                       ],
                     ),
+
                     if (errorText != null) ...[
                       const SizedBox(height: 8),
                       Align(
@@ -2269,8 +2650,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
 
                     TextFormField(
                       initialValue: nameEn,
-                      decoration: const InputDecoration(
-                        labelText: 'Name (EN) *',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.nameEnRequired,
                       ),
                       onChanged: (v) => nameEn = v,
                       validator: (v) =>
@@ -2279,8 +2660,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                     const SizedBox(height: 8),
                     TextFormField(
                       initialValue: nameAr,
-                      decoration: const InputDecoration(
-                        labelText: 'Name (AR) *',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.nameArRequired,
                       ),
                       onChanged: (v) => nameAr = v,
                       validator: (v) =>
@@ -2290,8 +2671,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
 
                     DropdownButtonFormField<int>(
                       value: typeId,
-                      decoration: const InputDecoration(
-                        labelText: 'Type (Domain 10) *',
+                      decoration: InputDecoration(
+                        labelText: context.l10n.typeDomain10Required,
                       ),
                       items: typesReady
                           ? _types.map((d) {
@@ -2322,8 +2703,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                             controller: TextEditingController(
                               text: issueDt != null ? _toYmd(issueDt!) : '',
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Issue date *',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.issueDateRequired,
                             ),
                             onTap: saving
                                 ? null
@@ -2339,8 +2720,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                             controller: TextEditingController(
                               text: expireDt != null ? _toYmd(expireDt!) : '',
                             ),
-                            decoration: const InputDecoration(
-                              labelText: 'Expire date *',
+                            decoration: InputDecoration(
+                              labelText: context.l10n.expireDateRequired,
                             ),
                             onTap: saving
                                 ? null
@@ -2351,6 +2732,49 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 8),
+                    if (expireDt != null && expireDt!.isBefore(DateTime.now()))
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.errorContainer,
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onErrorContainer.withOpacity(.25),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.warning_amber_rounded,
+                                size: 16,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onErrorContainer,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                context.l10n.expired,
+                                style: Theme.of(context).textTheme.labelMedium
+                                    ?.copyWith(
+                                      color: Theme.of(
+                                        context,
+                                      ).colorScheme.onErrorContainer,
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
                     const SizedBox(height: 12),
 
                     Row(
@@ -2365,7 +2789,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                 },
                         ),
                         const SizedBox(width: 8),
-                        const Text('Is image'),
+                        Text(context.l10n.isImage),
                       ],
                     ),
                   ],
@@ -2378,11 +2802,13 @@ class _CertificatesTabState extends State<_CertificatesTab> {
               onPressed: saving
                   ? null
                   : () => Navigator.of(dialogCtx, rootNavigator: true).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.actionCancel),
             ),
             FilledButton(
               onPressed: saving ? null : handleSave,
-              child: Text(saving ? 'Saving…' : 'Save'),
+              child: Text(
+                saving ? context.l10n.savingEllipsis : context.l10n.actionSave,
+              ),
             ),
           ],
         );
@@ -2394,17 +2820,17 @@ class _CertificatesTabState extends State<_CertificatesTab> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Delete certificate?'),
+        title: Text(context.l10n.deleteCertificateQ),
         actions: [
           TextButton(
             onPressed: () =>
                 Navigator.of(dialogCtx, rootNavigator: true).pop(false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () =>
                 Navigator.of(dialogCtx, rootNavigator: true).pop(true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),
@@ -2413,11 +2839,11 @@ class _CertificatesTabState extends State<_CertificatesTab> {
     try {
       await api.Api.deleteEquipmentCertificate(c.equipmentCertificateId ?? 0);
       if (!mounted) return;
-      AppSnack.success(context, 'Deleted');
+      AppSnack.success(context, context.l10n.deleted);
       widget.onChanged();
     } catch (e) {
       if (!mounted) return;
-      AppSnack.error(context, 'Delete failed: $e');
+      AppSnack.error(context, context.l10n.deleteFailedWithMsg('$e'));
     }
   }
 
@@ -2572,144 +2998,151 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                   '${c.expireDate}T00:00:00',
                 ).isBefore(DateTime.now());
 
-            return Glass(
-              radius: 16,
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Thumbnail
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(10),
-                          child: SizedBox(
-                            width: 72,
-                            height: 72,
-                            child: showImg
-                                ? InkWell(
-                                    onTap: () => _previewImageUrl(context, url),
-                                    child: CachedNetworkImage(
-                                      imageUrl: url,
-                                      fit: BoxFit.cover,
-                                      placeholder: (_, __) => Container(
-                                        color: cs.surfaceVariant,
-                                        child: const Center(
-                                          child: SizedBox(
-                                            width: 16,
-                                            height: 16,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 14),
+              child: Glass(
+                radius: 16,
+                child: Padding(
+                  padding: const EdgeInsets.all(10),
+                  child: Column(
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Thumbnail
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: SizedBox(
+                              width: 72,
+                              height: 72,
+                              child: showImg
+                                  ? InkWell(
+                                      onTap: () =>
+                                          _previewImageUrl(context, url),
+                                      child: CachedNetworkImage(
+                                        imageUrl: url,
+                                        fit: BoxFit.cover,
+                                        placeholder: (_, __) => Container(
+                                          color: cs.surfaceVariant,
+                                          child: const Center(
+                                            child: SizedBox(
+                                              width: 16,
+                                              height: 16,
+                                              child: CircularProgressIndicator(
+                                                strokeWidth: 2,
+                                              ),
                                             ),
                                           ),
                                         ),
-                                      ),
-                                      errorWidget: (_, __, ___) => Container(
-                                        color: cs.surfaceVariant,
-                                        child: const Icon(
-                                          Icons.broken_image_outlined,
+                                        errorWidget: (_, __, ___) => Container(
+                                          color: cs.surfaceVariant,
+                                          child: const Icon(
+                                            Icons.broken_image_outlined,
+                                          ),
                                         ),
                                       ),
+                                    )
+                                  : Container(
+                                      color: cs.surfaceVariant,
+                                      child: const Center(
+                                        child: Icon(Icons.verified_outlined),
+                                      ),
                                     ),
-                                  )
-                                : Container(
-                                    color: cs.surfaceVariant,
-                                    child: const Center(
-                                      child: Icon(Icons.verified_outlined),
-                                    ),
-                                  ),
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
+                          const SizedBox(width: 12),
 
-                        // Text + meta
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Title
-                              Text(
-                                c.nameEnglish ?? c.nameArabic ?? '—',
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: 6),
+                          // Text + meta
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Title
+                                Text(
+                                  c.nameEnglish ?? c.nameArabic ?? '—',
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 6),
 
-                              // Dates
-                              Row(
-                                children: [
-                                  const Icon(Icons.event_outlined, size: 16),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      '${context.l10n.issueDate} ${c.issueDate ?? '—'}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant,
-                                          ),
+                                // Dates
+                                Row(
+                                  children: [
+                                    const Icon(Icons.event_outlined, size: 16),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '${context.l10n.issueDate} ${c.issueDate ?? '—'}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                      ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Row(
-                                children: [
-                                  const Icon(Icons.schedule_outlined, size: 16),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      '${context.l10n.expireDate} ${c.expireDate ?? '—'}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: cs.onSurfaceVariant,
-                                          ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.schedule_outlined,
+                                      size: 16,
                                     ),
-                                  ),
-                                ],
-                              ),
+                                    const SizedBox(width: 6),
+                                    Expanded(
+                                      child: Text(
+                                        '${context.l10n.expireDate} ${c.expireDate ?? '—'}',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: cs.onSurfaceVariant,
+                                            ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
 
-                              const SizedBox(height: 8),
-                              _statusChip(expired),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 10),
-                    const Divider(height: 1),
-
-                    // Bottom actions (right aligned)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Wrap(
-                        spacing: 6,
-                        children: [
-                          IconButton.filledTonal(
-                            onPressed: () => _edit(c),
-                            icon: const Icon(Icons.edit),
-                            tooltip: context.l10n.actionEdit,
-                          ),
-                          IconButton.filledTonal(
-                            onPressed: () => _delete(c),
-                            icon: const Icon(Icons.delete_outline),
-                            tooltip: context.l10n.actionDelete,
+                                const SizedBox(height: 8),
+                                _statusChip(expired),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                    ),
-                  ],
+
+                      const SizedBox(height: 10),
+                      const Divider(height: 1),
+
+                      // Bottom actions (right aligned)
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Wrap(
+                          spacing: 6,
+                          children: [
+                            IconButton.filledTonal(
+                              onPressed: () => _edit(c),
+                              icon: const Icon(Icons.edit),
+                              tooltip: context.l10n.actionEdit,
+                            ),
+                            IconButton.filledTonal(
+                              onPressed: () => _delete(c),
+                              icon: const Icon(Icons.delete_outline),
+                              tooltip: context.l10n.actionDelete,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -2801,8 +3234,7 @@ class _StatusChip extends StatelessWidget {
 }
 
 class _ActionsPill extends StatelessWidget {
-  const _ActionsPill({required this.onEdit, required this.onDelete});
-  final VoidCallback onEdit;
+  const _ActionsPill({required this.onDelete});
   final VoidCallback onDelete;
 
   @override
@@ -2818,21 +3250,6 @@ class _ActionsPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          IconButton.filledTonal(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit, size: 18),
-            tooltip: 'Edit',
-            style: ButtonStyle(
-              minimumSize: WidgetStateProperty.all(const Size(36, 36)),
-              padding: WidgetStateProperty.all(EdgeInsets.zero),
-              shape: WidgetStateProperty.all(
-                RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
           IconButton.filledTonal(
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline, size: 18),

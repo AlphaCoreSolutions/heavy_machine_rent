@@ -359,7 +359,7 @@
     "pdfSelected": "PDF selected",
     "nameEnReq": "Name (EN) *",
     "nameArReq": "Name (AR) *",
-    "typeDomain10Req": "Type (Domain 10) *",
+    "typeDomain10Req": "Type*",
     "issueDateReq": "Issue date *",
     "expireDateReq": "Expire date *",
     "isImage": "Is image",
@@ -443,13 +443,13 @@
     "labelFactory": "Factory",
     "hintSelectFactory": "Select a factory",
     "tooltipRefreshFactories": "Refresh factories",
-    "labelStatusD11": "Status (Domain 11)",
+    "labelStatusD11": "Status",
     "sectionLogistics": "Logistics",
-    "labelCategoryD9": "Category (Domain 9)",
-    "labelFuelRespD7": "Fuel responsibility (Domain 7)",
-    "labelTransferTypeD8": "Transfer type (Domain 8)",
-    "labelTransferRespD7": "Transfer responsibility (Domain 7)",
-    "sectionDriverRespD7": "Driver responsibilities (Domain 7)",
+    "labelCategoryD9": "Category",
+    "labelFuelRespD7": "Fuel responsibility",
+    "labelTransferTypeD8": "Transfer type",
+    "labelTransferRespD7": "Transfer responsibility",
+    "sectionDriverRespD7": "Driver responsibilities",
     "labelTransport": "Transport",
     "labelFood": "Food",
     "labelHousing": "Housing",
@@ -486,7 +486,7 @@
     "sectionParties": "Parties",
     "sectionRequestSummary": "Request Summary",
     "sectionEquipment": "Equipment",
-    "sectionResponsibilities": "Responsibilities (Domain 7)",
+    "sectionResponsibilities": "Responsibilities",
     "sectionTerms": "Terms",
     "sectionDriverAssignments": "Driver Assignments (per requested unit)",
     "sectionSignatures": "Signatures",
@@ -830,5 +830,87 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "actionLogin": "Login",
+    "@actionLogin": {
+        "description": "Label for the auth button to sign in on the AppBar."
+    },
+    "actionLogout": "Logout",
+    "@actionLogout": {
+        "description": "Label for the auth button to sign out on the AppBar."
+    },
+    "sameDropoffForAll": "Same Drop-off Location",
+    "errUnitAddress": "Unit {index}: please enter the drop-off address",
+    "@errUnitAddress": {
+        "description": "Shown when a driver location is missing address",
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "infoCompleteProfileFirst": "Please complete your profile first.",
+    "leaveEmpty": "Leave Empty For 0%",
+    "errSelectEquipmentType": "Select an equipment type",
+    "errSelectEquipmentFromList": "Select an equipment from the list",
+    "errSelectFactory": "Select a factory",
+    "errEnterDescriptionEnOrAr": "Enter a description (English or Arabic)",
+    "errSelectFuelResponsibility": "Select fuel responsibility",
+    "errSelectTransferType": "Select transfer type",
+    "errSelectTransferResponsibility": "Select transfer responsibility",
+    "errSelectDriverTransport": "Select driver transport responsibility",
+    "errSelectDriverFood": "Select driver food responsibility",
+    "errSelectDriverHousing": "Select driver housing responsibility",
+    "errPricePerDayGtZero": "Enter price per day (> 0).",
+    "errPricePerHourGtZero": "Enter price per hour (> 0).",
+    "errQuantityGteOne": "Enter quantity (≥ 1).",
+    "errPleaseCompleteForm": "Please complete the form",
+    "errDescRequiredEnOrAr": "Required (EN or AR)",
+    "errRequired": "Required",
+    "failedToLoadEquipment": "Failed to load equipment",
+    "unsavedChangesTitle": "Unsaved changes",
+    "unsavedChangesBody": "You have unsaved changes. Save them before leaving?",
+    "actionDiscard": "Discard",
+    "pickIssueAndExpire": "Please pick both Issue and Expire dates.",
+    "chooseType": "Please choose a Type.",
+    "chooseDocumentFile": "Please choose a document file.",
+    "nameEnRequired": "Name (EN) *",
+    "nameArRequired": "Name (AR) *",
+    "typeDomain10Required": "Type *",
+    "issueDateRequired": "Issue date *",
+    "expireDateRequired": "Expire date *",
+    "deleteImageTitle": "Delete image",
+    "deleteImageBody": "Remove this image from the listing?",
+    "deleteTermQ": "Delete term?",
+    "addDriver": "Add driver",
+    "editDriver": "Edit driver",
+    "nationalityRequired": "Nationality *",
+    "deleteDriverQ": "Delete driver?",
+    "addDriverFile": "Add driver file",
+    "serverFileName": "Server file name",
+    "fileTypeIdRequired": "File type id *",
+    "startDateYmd": "Start yyyy-MM-dd",
+    "endDateYmd": "End yyyy-MM-dd",
+    "actionAdd": "Add",
+    "addFailedWithMsg": "Add failed: {msg}",
+    "@addFailedWithMsg": {
+        "placeholders": {
+            "msg": {}
+        }
+    },
+    "fileDescriptionOptionalAr": "File description Arabic (optional)",
+    "@fileDescriptionOptionalAr": {
+        "description": "Label for an optional file description field"
+    },
+    "fileDescriptionOptionalEn": "File description English (optional)",
+    "@fileDescriptionOptionalEn": {
+        "description": "Label for an optional file description field"
+    },
+    "required": "Required",
+    "previewPdf": "PDF preview",
+    "open": "Open",
+    "pickAFileFirst": "Please pick and upload a file first",
+    "savingDots": "Saving…",
+    "tryAgain": "Try Again",
+    "all": "all"
 }

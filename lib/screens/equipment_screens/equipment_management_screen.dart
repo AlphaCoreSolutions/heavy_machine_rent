@@ -40,6 +40,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
   @override
   void initState() {
     super.initState();
+    _future = Future.value(const <Equipment>[]);
     _bootstrap();
   }
 
@@ -54,17 +55,11 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
     if (!auth.isLoggedIn) return;
 
     try {
-      setState(() {
-        _loadingMapping = true;
-      });
+      setState(() => _loadingMapping = true);
 
       _userId = auth.user.value?.id;
 
-      // Get all org-users visible to this token
       final all = await api.Api.getOrganizationUsers();
-      debugPrint('[EquipMgmt] org-users fetched = ${all.length}');
-
-      // Find mapping row: applicationUserId == logged-in id
       OrganizationUser? me;
       for (final ou in all) {
         if (ou.applicationUserId == _userId) {
@@ -74,35 +69,23 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
       }
 
       if (me != null) {
-        _orgUserId = me.organizationUserId; // vendorId row id
-        _orgId = me.organizationId; // ← used as vendorId for Equipment
-        debugPrint(
-          '[EquipMgmt] mapping: orgUserId=$_orgUserId orgId=$_orgId userId=$_userId',
-        );
+        _orgUserId = me.organizationUserId;
+        _orgId = me.organizationId;
 
-        // Seed list using ONLY the vendor endpoint
-        setState(() {
-          _future = _fetchVendorList();
-        });
+        // ⬇️ initial load uses the same path as pull-to-refresh
+        if (mounted) await _refresh();
       } else {
         debugPrint(
           '[EquipMgmt] no OrganizationUser row for applicationUserId=$_userId',
         );
-        setState(() {
-          _future = Future.value(const <Equipment>[]);
-        });
+        if (mounted)
+          setState(() => _future = Future.value(const <Equipment>[]));
       }
     } catch (e) {
       debugPrint('[EquipMgmt] bootstrap error: $e');
-      setState(() {
-        _future = Future.error(e);
-      });
+      if (mounted) setState(() => _future = Future.error(e));
     } finally {
-      if (mounted) {
-        setState(() {
-          _loadingMapping = false;
-        });
-      }
+      if (mounted) setState(() => _loadingMapping = false);
     }
   }
 
@@ -428,12 +411,23 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
               itemBuilder: (_, i) {
                 final e = items[i];
 
-                final primaryName = e.coverPath ?? e.equipmentList?.imagePath;
-                final candidates = <String>{
-                  if ((primaryName ?? '').isNotEmpty)
-                    api.Api.fileUrlFromName(primaryName),
-                  ...api.Api.imageCandidates(primaryName),
-                }.toList();
+                final String? primaryName = (e.coverPath?.isNotEmpty ?? false)
+                    ? e.coverPath
+                    : (e.equipmentImages
+                              ?.firstWhere(
+                                (img) => (img.equipmentPath ?? '').isNotEmpty,
+                                orElse: () => EquipmentImage(),
+                              )
+                              .equipmentPath ??
+                          e.equipmentList?.imagePath);
+                final List<String> candidates =
+                    api.Api.equipmentImageCandidates(primaryName);
+                debugPrint(
+                  '[Mgmt] image for #${e.equipmentId} primary="$primaryName"',
+                );
+                for (final u in candidates) {
+                  debugPrint('  → $u');
+                }
 
                 return SlidableEquipmentTile(
                   title: e.title,
@@ -444,7 +438,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
                   pricePerDay: e.rentPerDayDouble ?? 0,
                   imageWidget: FallbackNetworkImage(
                     candidates: candidates,
-                    headers: api.Api.imageAuthHeaders(),
+
                     placeholderColor: Theme.of(
                       context,
                     ).colorScheme.surfaceVariant,
