@@ -74,6 +74,11 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   bool _writingBack =
       false; // prevent feedback loops when writing to controllers
 
+  bool get _usesInlineMap =>
+      // We only build the inline GoogleMap when not in the iOS placeholder mode
+      !(defaultTargetPlatform == TargetPlatform.iOS &&
+          widget.inlineInteractive == false);
+
   void _attachControllerListeners() {
     widget.latCtrl.addListener(_onExternalCoordsChanged);
     widget.lonCtrl.addListener(_onExternalCoordsChanged);
@@ -99,8 +104,10 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       _picked = p;
       _lastKnownCenter = p;
     });
-    final c = await _mapCtrl.future;
-    await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+    if (_usesInlineMap) {
+      final c = await _mapCtrl.future;
+      await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+    }
   }
 
   LatLng _biasCenter() {
@@ -200,12 +207,14 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
         final pos = await Geolocator.getCurrentPosition();
         center = LatLng(pos.latitude, pos.longitude);
       }
-      final c = await _mapCtrl.future;
-      await c.moveCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: center, zoom: 15),
-        ),
-      );
+      if (_usesInlineMap) {
+        final c = await _mapCtrl.future;
+        await c.moveCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: center, zoom: 15),
+          ),
+        );
+      }
       if (!mounted) return;
       setState(() {
         _picked = center;
@@ -310,7 +319,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       final res = await webPlaceDetails(placeId);
       if (res == null) return;
       final (p, addr) = res;
-      if (widget.centerOnSelection) {
+      if (widget.centerOnSelection && _usesInlineMap) {
         final c = await _mapCtrl.future;
         await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
       }
@@ -342,7 +351,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       final p = LatLng(lat, lng);
       final addr =
           (result?['formatted_address'] as String?) ?? fallbackAddress ?? '';
-      if (widget.centerOnSelection) {
+      if (widget.centerOnSelection && _usesInlineMap) {
         final c = await _mapCtrl.future;
         await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
       }
