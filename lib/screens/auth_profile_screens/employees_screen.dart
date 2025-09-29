@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:heavy_new/core/models/admin/employee.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -431,7 +430,7 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
                       children: [
                         CircleAvatar(
                           radius: 34,
-                          backgroundColor: cs.surfaceVariant,
+                          backgroundColor: cs.surfaceContainerHighest,
                           backgroundImage: _pickedAvatar != null
                               ? FileImage(_pickedAvatar!)
                               : null,
@@ -609,7 +608,7 @@ class _Avatar extends StatelessWidget {
             }
             return _fallback(initials, cs);
           },
-          placeholder: (_, __) => Container(color: cs.surfaceVariant),
+          placeholder: (_, __) => Container(color: cs.surfaceContainerHighest),
         ),
       ),
     );
@@ -618,7 +617,7 @@ class _Avatar extends StatelessWidget {
   Widget _fallback(String initials, ColorScheme cs) {
     final base = CircleAvatar(
       radius: radius,
-      backgroundColor: cs.surfaceVariant,
+      backgroundColor: cs.surfaceContainerHighest,
       child: Text(
         initials,
         style: TextStyle(
@@ -637,8 +636,9 @@ class _Avatar extends StatelessWidget {
         .where((e) => e.isNotEmpty)
         .toList();
     if (parts.isEmpty) return '—';
-    if (parts.length == 1)
+    if (parts.length == 1) {
       return parts.first.characters.take(2).toString().toUpperCase();
+    }
     return (parts.first.characters.take(1).toString() +
             parts.last.characters.take(1).toString())
         .toUpperCase();

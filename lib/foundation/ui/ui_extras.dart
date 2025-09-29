@@ -97,12 +97,14 @@ class OfflineBanner extends StatefulWidget {
 
 class _OfflineBannerState extends State<OfflineBanner> {
   bool _offline = false;
+  StreamSubscription<List<ConnectivityResult>>? _sub;
 
   @override
   void initState() {
     super.initState();
-    Connectivity().onConnectivityChanged.listen((res) {
+    _sub = Connectivity().onConnectivityChanged.listen((res) {
       final isOffline = res.contains(ConnectivityResult.none);
+      if (!mounted) return;
       if (isOffline != _offline) setState(() => _offline = isOffline);
     });
     // initial status (non-blocking)
@@ -110,6 +112,12 @@ class _OfflineBannerState extends State<OfflineBanner> {
       final isOffline = res.contains(ConnectivityResult.none);
       if (mounted) setState(() => _offline = isOffline);
     });
+  }
+
+  @override
+  void dispose() {
+    _sub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -247,8 +255,8 @@ Future<void> showFilterSheet(BuildContext context) {
                     const Spacer(),
                     GhostButton(
                       onPressed: () => Navigator.of(c).maybePop(),
-                      child: const Text('Close'),
                       icon: AIcon(AppGlyph.close),
+                      child: const Text('Close'),
                     ),
                   ],
                 ),
@@ -361,7 +369,7 @@ class SlidableEquipmentTile extends StatelessWidget {
                   imageWidget ??
                   (imageUrl == null
                       ? Container(
-                          color: cs.surfaceVariant,
+                          color: cs.surfaceContainerHighest,
                           child: const Icon(Icons.broken_image),
                         )
                       : Image.network(
@@ -369,9 +377,9 @@ class SlidableEquipmentTile extends StatelessWidget {
                           fit: BoxFit.cover,
                           loadingBuilder: (c, w, p) => p == null
                               ? w
-                              : Container(color: cs.surfaceVariant),
+                              : Container(color: cs.surfaceContainerHighest),
                           errorBuilder: (_, __, ___) => Container(
-                            color: cs.surfaceVariant,
+                            color: cs.surfaceContainerHighest,
                             child: const Icon(Icons.broken_image),
                           ),
                         )),
@@ -491,7 +499,7 @@ class SlidableEquipmentTile extends StatelessWidget {
                 AppSnack.error(context, 'Share failed');
               }
             },
-            backgroundColor: cs.surfaceVariant,
+            backgroundColor: cs.surfaceContainerHighest,
             foregroundColor: cs.onSurface,
             icon: Icons.ios_share,
             label: 'Share',
@@ -797,7 +805,7 @@ class _FallbackNetworkImageState extends State<FallbackNetworkImage> {
   @override
   Widget build(BuildContext context) {
     final bg =
-        widget.placeholderColor ?? Theme.of(context).colorScheme.surfaceVariant;
+        widget.placeholderColor ?? Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (widget.candidates.isEmpty) {
       return Container(color: bg, child: const Icon(Icons.broken_image));

@@ -207,7 +207,7 @@ class _ContractDetailsScreenState extends State<ContractDetailsScreen> {
     return Scaffold(
       backgroundColor: Theme.of(
         context,
-      ).colorScheme.surfaceVariant.withOpacity(.25),
+      ).colorScheme.surfaceContainerHighest.withOpacity(.25),
       appBar: AppBar(
         title: Text(context.l10n.contractTitle),
         actions: [
@@ -632,7 +632,7 @@ class _LogoBox extends StatelessWidget {
               width: 120,
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: cs.surfaceVariant,
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
@@ -768,7 +768,7 @@ class _DriverUnitCard extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant.withOpacity(.35),
+        color: cs.surfaceContainerHighest.withOpacity(.35),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.outlineVariant.withOpacity(.5)),
       ),

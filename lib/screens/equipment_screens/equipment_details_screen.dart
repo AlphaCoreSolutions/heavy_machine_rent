@@ -1237,7 +1237,7 @@ class _MiniPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
@@ -1251,7 +1251,7 @@ class _MiniPill extends StatelessWidget {
 }
 
 class _LocCard extends StatelessWidget {
-  _LocCard({
+  const _LocCard({
     required this.index,
     required this.form,
     required this.nationalities,
@@ -1321,7 +1321,7 @@ class _LocCard extends StatelessWidget {
           const SizedBox(height: 10),
 
           DropdownButtonFormField<int>(
-            value: hasOptions ? form.nationalityId : null,
+            initialValue: hasOptions ? form.nationalityId : null,
             decoration: InputDecoration(
               labelText: context.l10n.labelDriverNationality,
             ),
@@ -1471,7 +1471,7 @@ class _GalleryState extends State<_Gallery> {
           child: Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              color: cs.surfaceVariant,
+              color: cs.surfaceContainerHighest,
             ),
             child: Center(child: Text(context.l10n.noImages)),
           ),
@@ -1504,7 +1504,7 @@ class _GalleryState extends State<_Gallery> {
                       final cands = api.Api.equipmentImageCandidates(name);
                       return FallbackNetworkImage(
                         candidates: cands,
-                        placeholderColor: cs.surfaceVariant,
+                        placeholderColor: cs.surfaceContainerHighest,
                         fit: BoxFit.cover,
                       );
                     },
@@ -1573,7 +1573,7 @@ class MiniPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(

@@ -120,7 +120,7 @@ dynamic _handleResponse(http.Response r) {
       final errs = (parsed['errors'] as Map).entries
           .map((e) => '${e.key}: ${(e.value as List?)?.join(" | ") ?? e.value}')
           .join(' • ');
-      if (errs.isNotEmpty) msg = '${msg}: $errs';
+      if (errs.isNotEmpty) msg = '$msg: $errs';
     }
   } else if (r.body.isNotEmpty) {
     msg = '$msg: ${r.body}';
@@ -410,18 +410,35 @@ class Api {
   }) async {
     final uri = _uri(path);
     final h = _mergeJsonHeaders(headers);
+    try {
+      final resp = await http.post(uri, headers: h, body: _encodeBody(body));
+      final text = resp.body;
 
-    final resp = await http.post(uri, headers: h, body: _encodeBody(body));
-    final text = resp.body;
+      if (kDebugMode) {
+        debugPrint('[Api._post] $path -> ${resp.statusCode} $text');
+      }
 
-    if (kDebugMode) {
-      debugPrint('[Api._post] $path -> ${resp.statusCode} $text');
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        return text.isEmpty ? null : _decodeBody(text);
+      }
+      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}', statusCode: resp.statusCode);
+    } on TimeoutException {
+      throw ApiException('The request timed out. Please check your connection.');
+    } on SocketException {
+      throw ApiException('No internet connection. Please try again.');
+    } on http.ClientException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('xmlhttprequest') || msg.contains('failed to fetch')) {
+        throw ApiException(
+          'Network error. If you are running on Web, this may be blocked by CORS or the server is unreachable.',
+          statusCode: 0,
+          details: {'error': e.toString()},
+        );
+      }
+      throw ApiException('Network error: ${e.message}', statusCode: 0);
+    } on FormatException catch (e) {
+      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
     }
-
-    if (resp.statusCode >= 200 && resp.statusCode < 300) {
-      return text.isEmpty ? null : _decodeBody(text);
-    }
-    throw Exception('POST $path failed: ${resp.statusCode} $text');
   }
 
   static Future<dynamic> _postJsonRdl(
@@ -439,34 +456,70 @@ class Api {
       name: 'API',
     );
 
-    final resp = await http.post(uri, headers: h, body: payload);
-    final text = resp.body;
+    try {
+      final resp = await http.post(uri, headers: h, body: payload);
+      final text = resp.body;
 
-    if (kDebugMode) {
-      debugPrint('[Api._postJsonRdl] $path <- ${resp.statusCode} $text');
-    }
+      if (kDebugMode) {
+        debugPrint('[Api._postJsonRdl] $path <- ${resp.statusCode} $text');
+      }
 
-    if (resp.statusCode >= 200 && resp.statusCode < 300) {
-      return text.isEmpty ? null : _decodeBody(text);
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        return text.isEmpty ? null : _decodeBody(text);
+      }
+      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}', statusCode: resp.statusCode);
+    } on TimeoutException {
+      throw ApiException('The request timed out. Please check your connection.');
+    } on SocketException {
+      throw ApiException('No internet connection. Please try again.');
+    } on http.ClientException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('xmlhttprequest') || msg.contains('failed to fetch')) {
+        throw ApiException(
+          'Network error. If you are running on Web, this may be blocked by CORS or the server is unreachable.',
+          statusCode: 0,
+          details: {'error': e.toString()},
+        );
+      }
+      throw ApiException('Network error: ${e.message}', statusCode: 0);
+    } on FormatException catch (e) {
+      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
     }
-    throw Exception('POST $path failed: ${resp.statusCode} $text');
   }
 
   static Future<Map<String, dynamic>> _getJson(String route) async {
     final uri = Uri.parse('https://sr.visioncit.com/api/$route');
     final headers = <String, String>{'Accept': 'application/json'};
-    final resp = await http.get(uri, headers: headers);
-    _d('← GET $route status=${resp.statusCode} body=${resp.body}');
-    if (resp.statusCode < 200 || resp.statusCode >= 300) {
-      throw ApiException(
-        'HTTP ${resp.statusCode}',
-        statusCode: resp.statusCode,
-      );
+    try {
+      final resp = await http.get(uri, headers: headers);
+      _d('← GET $route status=${resp.statusCode} body=${resp.body}');
+      if (resp.statusCode < 200 || resp.statusCode >= 300) {
+        throw ApiException(
+          'HTTP ${resp.statusCode}',
+          statusCode: resp.statusCode,
+        );
+      }
+      final decoded = jsonDecode(resp.body);
+      return (decoded is Map<String, dynamic>)
+          ? decoded
+          : <String, dynamic>{'data': decoded};
+    } on TimeoutException {
+      throw ApiException('The request timed out. Please check your connection.');
+    } on SocketException {
+      throw ApiException('No internet connection. Please try again.');
+    } on http.ClientException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('xmlhttprequest') || msg.contains('failed to fetch')) {
+        throw ApiException(
+          'Network error. If you are running on Web, this may be blocked by CORS or the server is unreachable.',
+          statusCode: 0,
+          details: {'error': e.toString()},
+        );
+      }
+      throw ApiException('Network error: ${e.message}', statusCode: 0);
+    } on FormatException catch (e) {
+      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
     }
-    final decoded = jsonDecode(resp.body);
-    return (decoded is Map<String, dynamic>)
-        ? decoded
-        : <String, dynamic>{'data': decoded};
   }
 
   static Future<dynamic> _put(
@@ -481,17 +534,35 @@ class Api {
       name: 'API',
     );
 
-    final resp = await http.put(uri, headers: h, body: _encodeBody(body));
-    final text = resp.body;
+    try {
+      final resp = await http.put(uri, headers: h, body: _encodeBody(body));
+      final text = resp.body;
 
-    if (kDebugMode) {
-      debugPrint('[Api._put] $path -> ${resp.statusCode} $text');
-    }
+      if (kDebugMode) {
+        debugPrint('[Api._put] $path -> ${resp.statusCode} $text');
+      }
 
-    if (resp.statusCode >= 200 && resp.statusCode < 300) {
-      return text.isEmpty ? null : _decodeBody(text);
+      if (resp.statusCode >= 200 && resp.statusCode < 300) {
+        return text.isEmpty ? null : _decodeBody(text);
+      }
+      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'PUT failed' : text}', statusCode: resp.statusCode);
+    } on TimeoutException {
+      throw ApiException('The request timed out. Please check your connection.');
+    } on SocketException {
+      throw ApiException('No internet connection. Please try again.');
+    } on http.ClientException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('xmlhttprequest') || msg.contains('failed to fetch')) {
+        throw ApiException(
+          'Network error. If you are running on Web, this may be blocked by CORS or the server is unreachable.',
+          statusCode: 0,
+          details: {'error': e.toString()},
+        );
+      }
+      throw ApiException('Network error: ${e.message}', statusCode: 0);
+    } on FormatException catch (e) {
+      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
     }
-    throw Exception('PUT $path failed: ${resp.statusCode} $text');
   }
 
   static Future<dynamic> _delete(String path, {Duration? timeout}) async {
@@ -527,6 +598,18 @@ class Api {
       );
     } on SocketException {
       throw ApiException('No internet connection. Please try again.');
+    } on http.ClientException catch (e) {
+      final msg = e.message.toLowerCase();
+      if (msg.contains('xmlhttprequest') || msg.contains('failed to fetch')) {
+        throw ApiException(
+          'Network error. If you are running on Web, this may be blocked by CORS or the server is unreachable.',
+          statusCode: 0,
+          details: {'error': e.toString()},
+        );
+      }
+      throw ApiException('Network error: ${e.message}', statusCode: 0);
+    } on FormatException catch (e) {
+      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
     } catch (e) {
       // _handleResponse throws ApiException for HTTP errors; keep that behavior
       if (e is ApiException) rethrow;
@@ -971,7 +1054,7 @@ class Api {
 
   // -------- NOTIF MESSAGE --------
   static Future<UserMessage> getNotifMessageById(UserMessage id) async {
-    final raw = await _get('UserMessage/${id}');
+    final raw = await _get('UserMessage/$id');
     return UserMessage.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
   }
 
@@ -986,7 +1069,7 @@ class Api {
   // -------- AUTH --------
 
   // Toggleable debug flag
-  static bool _debugApi = true;
+  static final bool _debugApi = true;
 
   // Tiny safe logger
   static void _d(String msg) {
@@ -1163,7 +1246,7 @@ class Api {
   }
 
   // In api.Api
-  static String _kUploadEndpoint = 'StaticFiles';
+  static final String _kUploadEndpoint = 'StaticFiles';
 
   // Helper: do one attempt with specific field names / url
   static Future<http.Response> _attemptUpload({
@@ -1803,12 +1886,12 @@ class Api {
     Map<String, dynamic> body,
   ) async {
     // IMPORTANT: don’t strip 0/false; only nulls.
-    Map<String, dynamic> _stripNulls(Map<String, dynamic> m) {
+    Map<String, dynamic> stripNulls(Map<String, dynamic> m) {
       final out = <String, dynamic>{};
       m.forEach((k, v) {
         if (v == null) return;
         if (v is Map<String, dynamic>) {
-          final child = _stripNulls(v);
+          final child = stripNulls(v);
           if (child.isNotEmpty) out[k] = child;
         } else if (v is List) {
           out[k] = v.where((e) => e != null).toList();
@@ -1819,7 +1902,7 @@ class Api {
       return out;
     }
 
-    final clean = _stripNulls(body);
+    final clean = stripNulls(body);
     debugPrint('[Api.addEquipmentRaw] payload -> $clean');
 
     final raw = await _post('Equipment/add', body: clean); // keep endpoint
@@ -2690,14 +2773,14 @@ class Api {
     _logBig('[API] Request/add ← envelope', env.toJson());
 
     // ... your existing logic below ...
-    Map<String, dynamic>? _asModelMap(dynamic any) {
+    Map<String, dynamic>? asModelMap(dynamic any) {
       if (any == null) return null;
       if (any is Map<String, dynamic>) return any;
       if (any is Map) return Map<String, dynamic>.from(any);
       return null;
     }
 
-    final directMap = _asModelMap(env.data);
+    final directMap = asModelMap(env.data);
     if (directMap != null) {
       return AddRequestResult(
         success: (env.flag ?? true),
@@ -2712,7 +2795,7 @@ class Api {
         final got = await _getJson('Request/$id');
         _logBig('[API] Request/$id ← raw', got);
 
-        final gotDirect = _asModelMap(got);
+        final gotDirect = asModelMap(got);
         if (gotDirect != null) {
           return AddRequestResult(
             success: (env.flag ?? true),
@@ -2723,7 +2806,7 @@ class Api {
         final gotEnv = ApiEnvelope.fromAny(got);
         _logBig('[API] Request/$id ← envelope', gotEnv.toJson());
 
-        final gotData = _asModelMap(gotEnv.data);
+        final gotData = asModelMap(gotEnv.data);
         if (gotData != null) {
           return AddRequestResult(
             success: (env.flag ?? true),
@@ -2737,8 +2820,9 @@ class Api {
     }
 
     final ok = (env.flag ?? true);
-    if (!ok)
+    if (!ok) {
       throw ApiException(env.message ?? 'Request/add failed', statusCode: 0);
+    }
 
     return AddRequestResult(
       success: true,

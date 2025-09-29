@@ -46,24 +46,24 @@ class RequestDriverLocation {
   };
 
   factory RequestDriverLocation.fromJson(Map<String, dynamic> j) {
-    String _s(dynamic v, {String d = ''}) => (v?.toString() ?? d);
-    int _i(dynamic v) =>
+    String s(dynamic v, {String d = ''}) => (v?.toString() ?? d);
+    int i(dynamic v) =>
         (v is num) ? v.toInt() : int.tryParse('${v ?? 0}') ?? 0;
 
     return RequestDriverLocation(
-      requestDriverLocationId: _i(j['requestDriverLocationId']),
-      requestId: _i(j['requestId']),
-      equipmentId: _i(j['equipmentId']),
-      equipmentNumber: _s(j['equipmentNumber']),
-      driverNationalityId: _i(j['driverNationalityId']),
-      equipmentDriverId: _i(j['equipmentDriverId']),
-      otherNotes: _s(j['otherNotes']),
-      pickupAddress: _s(j['pickupAddress'], d: ' '),
-      pLongitude: _s(j['pLongitude'], d: '0'),
-      pLatitude: _s(j['pLatitude'], d: '0'),
-      dropoffAddress: _s(j['dropoffAddress']),
-      dLongitude: _s(j['dLongitude']),
-      dLatitude: _s(j['dLatitude']),
+      requestDriverLocationId: i(j['requestDriverLocationId']),
+      requestId: i(j['requestId']),
+      equipmentId: i(j['equipmentId']),
+      equipmentNumber: s(j['equipmentNumber']),
+      driverNationalityId: i(j['driverNationalityId']),
+      equipmentDriverId: i(j['equipmentDriverId']),
+      otherNotes: s(j['otherNotes']),
+      pickupAddress: s(j['pickupAddress'], d: ' '),
+      pLongitude: s(j['pLongitude'], d: '0'),
+      pLatitude: s(j['pLatitude'], d: '0'),
+      dropoffAddress: s(j['dropoffAddress']),
+      dLongitude: s(j['dLongitude']),
+      dLatitude: s(j['dLatitude']),
     );
   }
 

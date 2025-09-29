@@ -146,7 +146,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
               child: ValueListenableBuilder<NotificationPrefs>(
                 valueListenable: prefs.notifications,
                 builder: (_, np, __) {
-                  String _fmt(TimeOfDay? t) {
+                  String fmt(TimeOfDay? t) {
                     if (t == null) return '—';
                     // Use current locale for formatting
                     final locale = Localizations.localeOf(
@@ -229,7 +229,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                               },
                               icon: const Icon(Icons.nightlight_round),
                               label: Text(
-                                '${context.l10n.from}: ${_fmt(np.quietFrom)}',
+                                '${context.l10n.from}: ${fmt(np.quietFrom)}',
                               ), // ← new key
                             ),
                           ),
@@ -246,7 +246,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                               },
                               icon: const Icon(Icons.sunny_snowing),
                               label: Text(
-                                '${context.l10n.to}: ${_fmt(np.quietTo)}',
+                                '${context.l10n.to}: ${fmt(np.quietTo)}',
                               ), // ← new key
                             ),
                           ),

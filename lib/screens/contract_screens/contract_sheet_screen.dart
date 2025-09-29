@@ -416,8 +416,9 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
                       // values to display (pending or saved)
                       valueFor: (dayIdx) => _mergedRow(unitIndex, dayIdx),
                       onChangedNumber: (dayIdx, field, value) {
-                        if (_finalized.contains(_key(unitIndex, dayIdx)))
+                        if (_finalized.contains(_key(unitIndex, dayIdx))) {
                           return;
+                        }
                         switch (field) {
                           case 'daily':
                             if (rules.canEditNumbers) {
@@ -458,8 +459,9 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
                         }
                       },
                       onChangedText: (dayIdx, which, value) {
-                        if (_finalized.contains(_key(unitIndex, dayIdx)))
+                        if (_finalized.contains(_key(unitIndex, dayIdx))) {
                           return;
+                        }
                         if (which == 'cust') {
                           if (rules.canEditCustomerNote) {
                             _markPending(
@@ -491,7 +493,7 @@ class _ContractSheetScreenState extends State<ContractSheetScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant,
+        color: cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(

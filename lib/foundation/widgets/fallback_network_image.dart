@@ -25,7 +25,7 @@ class _FallbackNetworkImageState extends State<FallbackNetworkImage> {
   @override
   Widget build(BuildContext context) {
     final bg =
-        widget.placeholderColor ?? Theme.of(context).colorScheme.surfaceVariant;
+        widget.placeholderColor ?? Theme.of(context).colorScheme.surfaceContainerHighest;
     if (widget.candidates.isEmpty) {
       return Container(color: bg, child: const Icon(Icons.broken_image));
     }

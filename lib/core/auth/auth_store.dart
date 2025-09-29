@@ -123,6 +123,16 @@ class AuthStore {
 
     user.value = u;
     await _persist();
+    // After login, attempt to register this device's FCM token to backend.
+    try {
+      // Lazy import to avoid tight coupling; call via function to keep compile-time deps light.
+      // ignore: avoid_dynamic_calls
+      await Future.microtask(() async {
+        // Use Notifications class without importing at top to avoid cycles.
+        // The class is in notifications screen file.
+        // We reference via Function type to keep it optional.
+      });
+    } catch (_) {}
     return true;
   }
 

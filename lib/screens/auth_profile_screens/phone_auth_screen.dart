@@ -76,6 +76,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       AppSnack.success(context, context.l10n.signedIn); // you already have this
 
       if (!mounted) return;
+      // Persist FCM token for this user, then optionally send welcome.
+      try {
+        await Notifications().getDeviceToken();
+      } catch (_) {}
       Notifications().sendNotification();
       Navigator.of(context).pop(true);
     } catch (e) {
@@ -189,7 +193,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: cs.surfaceVariant,
+                                color: cs.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -326,7 +330,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: cs.surfaceVariant,
+                                    color: cs.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   child: Row(

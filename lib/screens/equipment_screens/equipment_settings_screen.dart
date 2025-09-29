@@ -117,10 +117,11 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
 
   void _markDirty() {
     if (_hydrating) return;
-    if (!_dirtyOverview)
+    if (!_dirtyOverview) {
       setState(() {
         _dirtyOverview = true;
       });
+    }
   }
 
   int? _toInt(String s) => int.tryParse(s.trim());
@@ -753,8 +754,9 @@ class _ImagesTabState extends State<_ImagesTab> {
     if (name.isEmpty ||
         name == '#' ||
         name.contains('\n') ||
-        name.contains('/'))
+        name.contains('/')) {
       return '';
+    }
     return name;
   }
 
@@ -893,7 +895,7 @@ class _ImagesTabState extends State<_ImagesTab> {
                                       milliseconds: 150,
                                     ),
                                     placeholder: (c, u) => Container(
-                                      color: cs.surfaceVariant,
+                                      color: cs.surfaceContainerHighest,
                                       child: const Center(
                                         child: SizedBox(
                                           width: 22,
@@ -905,7 +907,7 @@ class _ImagesTabState extends State<_ImagesTab> {
                                       ),
                                     ),
                                     errorWidget: (c, u, e) => Container(
-                                      color: cs.surfaceVariant,
+                                      color: cs.surfaceContainerHighest,
                                       child: const Center(
                                         child: Icon(
                                           Icons.broken_image_outlined,
@@ -1160,7 +1162,7 @@ class _TermsTabState extends State<_TermsTab> {
             end: Alignment.bottomRight,
             colors: [
               cs.surface.withOpacity(0.95),
-              cs.surfaceVariant.withOpacity(0.35),
+              cs.surfaceContainerHighest.withOpacity(0.35),
             ],
           ),
           border: Border.all(color: cs.outlineVariant.withOpacity(0.5)),
@@ -1563,7 +1565,7 @@ class _DriversTabState extends State<_DriversTab> {
                   SizedBox(
                     width: double.infinity,
                     child: DropdownButtonFormField<int>(
-                      value: natId,
+                      initialValue: natId,
                       isExpanded: true,
                       alignment: AlignmentDirectional.centerStart,
                       items: (_nats ?? const <Nationality>[])
@@ -1678,7 +1680,7 @@ class _DriversTabState extends State<_DriversTab> {
     bool saving = false;
     String? errorText;
 
-    bool _looksLikeImage(String name) {
+    bool looksLikeImage(String name) {
       final n = name.toLowerCase();
       return n.endsWith('.png') ||
           n.endsWith('.jpg') ||
@@ -1697,7 +1699,7 @@ class _DriversTabState extends State<_DriversTab> {
         return;
       }
       picked = result.files.single;
-      isImage = _looksLikeImage(picked!.name);
+      isImage = looksLikeImage(picked!.name);
       _log('Picked file', {
         'name': picked!.name,
         'bytes': picked!.bytes?.lengthInBytes ?? 0,
@@ -1753,7 +1755,7 @@ class _DriversTabState extends State<_DriversTab> {
                 height: 150,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Theme.of(dialogCtx).colorScheme.surfaceVariant,
+                  color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1788,7 +1790,7 @@ class _DriversTabState extends State<_DriversTab> {
 
             // Build payload
             final storable = _driverDocStorableFromName(picked!.name);
-            final isImageFinal = _looksLikeImage(storable);
+            final isImageFinal = looksLikeImage(storable);
             final startYmd = startDt == null ? null : _toYmd(startDt!);
             final endYmd = endDt == null ? null : _toYmd(endDt!);
 
@@ -1910,7 +1912,7 @@ class _DriversTabState extends State<_DriversTab> {
 
                       // File type (Domain 10)
                       DropdownButtonFormField<int>(
-                        value: typeId,
+                        initialValue: typeId,
                         isExpanded: true,
                         decoration: InputDecoration(
                           labelText: context.l10n.fileTypeIdRequired,
@@ -2341,16 +2343,18 @@ class _DriversTabState extends State<_DriversTab> {
       if (committed || afterCount < beforeCount) {
         if (mounted) AppSnack.success(context, context.l10n.deleted);
       } else {
-        if (mounted)
+        if (mounted) {
           AppSnack.error(
             context,
             context.l10n.deleteFailedWithMsg(context.l10n.tryAgain),
           );
+        }
       }
     } catch (e) {
       _log('post-reload verification failed', e.toString());
-      if (mounted)
+      if (mounted) {
         AppSnack.success(context, context.l10n.deleted); // optimistic
+      }
     }
   }
 
@@ -2611,7 +2615,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                         errorWidget: (_, __, ___) => Container(
                                           color: Theme.of(
                                             context,
-                                          ).colorScheme.surfaceVariant,
+                                          ).colorScheme.surfaceContainerHighest,
                                           child: const Icon(
                                             Icons.broken_image_outlined,
                                           ),
@@ -2621,7 +2625,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                     return Container(
                                       color: Theme.of(
                                         context,
-                                      ).colorScheme.surfaceVariant,
+                                      ).colorScheme.surfaceContainerHighest,
                                       child: Center(
                                         child: Text(context.l10n.pdfSelected),
                                       ),
@@ -2670,7 +2674,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                     const SizedBox(height: 12),
 
                     DropdownButtonFormField<int>(
-                      value: typeId,
+                      initialValue: typeId,
                       decoration: InputDecoration(
                         labelText: context.l10n.typeDomain10Required,
                       ),
@@ -2932,7 +2936,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
     final items = widget.certs;
     final cs = Theme.of(context).colorScheme;
 
-    Widget _statusChip(bool expired) {
+    Widget statusChip(bool expired) {
       final bg = expired ? cs.errorContainer : cs.secondaryContainer;
       final fg = expired ? cs.onErrorContainer : cs.onSecondaryContainer;
       return Container(
@@ -3023,7 +3027,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                         imageUrl: url,
                                         fit: BoxFit.cover,
                                         placeholder: (_, __) => Container(
-                                          color: cs.surfaceVariant,
+                                          color: cs.surfaceContainerHighest,
                                           child: const Center(
                                             child: SizedBox(
                                               width: 16,
@@ -3035,7 +3039,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                           ),
                                         ),
                                         errorWidget: (_, __, ___) => Container(
-                                          color: cs.surfaceVariant,
+                                          color: cs.surfaceContainerHighest,
                                           child: const Icon(
                                             Icons.broken_image_outlined,
                                           ),
@@ -3043,7 +3047,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                       ),
                                     )
                                   : Container(
-                                      color: cs.surfaceVariant,
+                                      color: cs.surfaceContainerHighest,
                                       child: const Center(
                                         child: Icon(Icons.verified_outlined),
                                       ),
@@ -3112,7 +3116,7 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                                 ),
 
                                 const SizedBox(height: 8),
-                                _statusChip(expired),
+                                statusChip(expired),
                               ],
                             ),
                           ),
@@ -3200,7 +3204,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = active ? cs.secondaryContainer : cs.surfaceVariant;
+    final bg = active ? cs.secondaryContainer : cs.surfaceContainerHighest;
     final fg = active ? cs.onSecondaryContainer : cs.onSurfaceVariant;
     final label = active ? 'Active' : 'Hidden';
 

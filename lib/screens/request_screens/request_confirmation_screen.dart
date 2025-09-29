@@ -87,7 +87,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
   }
 
   String get _rangeHuman =>
-      '${_fmtDate(widget.from)} → ${_fmtDate(widget.to)}  (${_inclusiveDays} ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})';
+      '${_fmtDate(widget.from)} → ${_fmtDate(widget.to)}  ($_inclusiveDays ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})';
 
   Future<void> _copyDetails(BuildContext context) async {
     final statusText =
@@ -100,7 +100,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
       '${context.l10n.requestLabel} $_reqNoSafe',
       '${context.l10n.statusLabel} $statusText',
       '${context.l10n.dateRangeLabel} ${_fmtDate(widget.from)} ${context.l10n.toDateSep} ${_fmtDate(widget.to)} '
-          '(${_inclusiveDays} ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})',
+          '($_inclusiveDays ${_inclusiveDays == 1 ? context.l10n.daySingular : context.l10n.daysSuffix})',
       '${context.l10n.totalLabel} ${_fmtSar(widget.totalSar)}',
     ].join('\n');
 
@@ -149,7 +149,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: cs.surfaceVariant,
+                      color: cs.surfaceContainerHighest,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -172,7 +172,7 @@ class _RequestConfirmationScreenState extends State<RequestConfirmationScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: cs.surfaceVariant,
+                color: cs.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Column(

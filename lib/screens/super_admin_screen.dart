@@ -100,7 +100,7 @@ class _GateScreen extends StatelessWidget {
                   children: [
                     CircleAvatar(
                       radius: 28,
-                      backgroundColor: cs.surfaceVariant,
+                      backgroundColor: cs.surfaceContainerHighest,
                       child: AIcon(AppGlyph.info, color: cs.primary),
                     ),
                     const SizedBox(height: 12),
@@ -242,7 +242,7 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                     aspectRatio: 16 / 10,
                     child: FallbackNetworkImage(
                       candidates: [url],
-                      placeholderColor: cs.surfaceVariant,
+                      placeholderColor: cs.surfaceContainerHighest,
                       fit: BoxFit.contain,
                     ),
                   )
@@ -314,7 +314,7 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(12),
                         leading: CircleAvatar(
-                          backgroundColor: cs.surfaceVariant,
+                          backgroundColor: cs.surfaceContainerHighest,
                           child: AIcon(
                             f.isImage == true ? AppGlyph.image : AppGlyph.file,
                             color: cs.onSurfaceVariant,
@@ -528,7 +528,7 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(12),
                         leading: CircleAvatar(
-                          backgroundColor: cs.surfaceVariant,
+                          backgroundColor: cs.surfaceContainerHighest,
                           child: AIcon(
                             AppGlyph.user,
                             color: cs.onSurfaceVariant,
@@ -542,7 +542,7 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Text(
-                          'Org #${u.organizationId ?? '—'}  •  ${emailOrMobile}  •  ${(u.isActive ?? false) ? 'Active' : 'Inactive'}',
+                          'Org #${u.organizationId ?? '—'}  •  $emailOrMobile  •  ${(u.isActive ?? false) ? 'Active' : 'Inactive'}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -703,7 +703,7 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
                       child: ListTile(
                         contentPadding: const EdgeInsets.all(12),
                         leading: CircleAvatar(
-                          backgroundColor: cs.surfaceVariant,
+                          backgroundColor: cs.surfaceContainerHighest,
                           child: AIcon(
                             AppGlyph.invoice,
                             color: cs.onSurfaceVariant,

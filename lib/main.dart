@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer' show log;
 
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -57,11 +58,43 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Initialize notifications after Firebase. On iOS Simulator, FCM token
+  // may not be immediately available due to missing APNs; our init handles it.
   await Notifications().init();
   await notificationsStore.init();
-  await Notifications().initLocalNotifications();
+  if (!kIsWeb) {
+    await Notifications().initLocalNotifications();
+  }
 
-  FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
+  // Ensure FCM auto-init and foreground presentation (iOS)
+  try {
+    await FirebaseMessaging.instance.setAutoInitEnabled(true);
+    await FirebaseMessaging.instance
+        .setForegroundNotificationPresentationOptions(
+          alert: true,
+          badge: true,
+          sound: true,
+        );
+  } catch (_) {}
+
+  // Register/save FCM token to backend when signed-in user is available.
+  // If a user is already signed in, save immediately; also listen for changes.
+  try {
+    final current = FirebaseAuth.instance.currentUser;
+    if (current != null) {
+      await Notifications().getDeviceToken();
+    }
+    FirebaseAuth.instance.authStateChanges().listen((user) async {
+      if (user != null) {
+        await Notifications().getDeviceToken();
+      }
+    });
+  } catch (_) {}
+
+  if (!kIsWeb) {
+    // Not supported on web; web uses a service worker.
+    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
+  }
 
   FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
     if (message.notification != null) {
@@ -76,7 +109,7 @@ void main() async {
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
     final hasNotif = message.notification != null;
     final payloadData = message.data.isEmpty ? null : jsonEncode(message.data);
-    if (hasNotif) {
+    if (hasNotif && !kIsWeb) {
       try {
         await Notifications.showSimpleNotifications(
           title: message.notification!.title ?? 'Notification',
@@ -103,12 +136,16 @@ void main() async {
 
   const androidEmuBase = 'https://sr.visioncit.com/api/';
   const prodBase = 'https://sr.visioncit.com/api/';
+  // Allow overriding the API base via --dart-define=API_BASE_URL=...
+  const envBase = String.fromEnvironment('API_BASE_URL');
 
-  Api.init(
-    baseUrl: (defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
-        ? androidEmuBase
-        : prodBase,
-  );
+  final baseUrl = kIsWeb
+      ? (envBase.isNotEmpty ? envBase : prodBase)
+      : ((defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
+            ? androidEmuBase
+            : (envBase.isNotEmpty ? envBase : prodBase));
+
+  Api.init(baseUrl: baseUrl);
 
   runApp(const HeavyApp());
 }
@@ -166,7 +203,7 @@ final GoRouter _router = GoRouter(
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) =>
-          AppShell(child: child, path: state.uri.path),
+          AppShell(path: state.uri.path, child: child),
       routes: [
         // ===== Home & catalog =====
         GoRoute(

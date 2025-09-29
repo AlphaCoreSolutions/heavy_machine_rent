@@ -11,6 +11,9 @@ import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
 import 'package:heavy_new/l10n/app_localizations.dart';
 
+// Conditional import for web interop
+import 'places_web_stub.dart' if (dart.library.html) 'places_web.dart';
+
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;
 }
@@ -18,7 +21,7 @@ extension _L10nX on BuildContext {
 /// A compact inline map + search + draggable marker with "Expand" popup.
 /// Writes back to [latCtrl], [lonCtrl], and [addrCtrl] when a location is chosen.
 class InlineMapPicker extends StatefulWidget {
-  const InlineMapPicker({
+  InlineMapPicker({
     super.key,
     required this.latCtrl,
     required this.lonCtrl,
@@ -35,7 +38,12 @@ class InlineMapPicker extends StatefulWidget {
     this.debounceMs = 350,
     this.centerOnSelection = true,
     this.onPlaceSelected,
-  });
+
+    // On iOS, embedding GoogleMap inside large scrolls can cause freezes/crashes.
+    // Default to a lightweight placeholder inline that opens a dialog map.
+    bool? inlineInteractive,
+  }) : inlineInteractive =
+           inlineInteractive ?? (defaultTargetPlatform != TargetPlatform.iOS);
 
   final TextEditingController latCtrl;
   final TextEditingController lonCtrl;
@@ -50,6 +58,8 @@ class InlineMapPicker extends StatefulWidget {
   final int debounceMs;
   final bool centerOnSelection;
   final ValueChanged<LatLng>? onPlaceSelected;
+  // if false (default on iOS), show a non-interactive placeholder inline and open dialog for picking
+  final bool inlineInteractive;
 
   @override
   State<InlineMapPicker> createState() => _InlineMapPickerState();
@@ -123,6 +133,12 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   }
 
   Future<String?> _reverseGeocode(LatLng p) async {
+    // On web, prefer JS Geocoder to avoid CORS and key restrictions
+    if (kIsWeb) {
+      try {
+        return await webReverseGeocode(p);
+      } catch (_) {}
+    }
     try {
       final lang = Localizations.localeOf(context).languageCode;
       final url =
@@ -220,7 +236,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     final center = _biasCenter();
     final bias = 'circle:50000@${center.latitude},${center.longitude}'; // ~50km
     final comps = (_centerCountryCode != null)
-        ? '&components=country:${_centerCountryCode}'
+        ? '&components=country:$_centerCountryCode'
         : '';
     if (q.isEmpty) {
       if (mounted) setState(() => _suggestions = []);
@@ -229,31 +245,49 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     setState(() => _loadingPlaces = true);
 
     try {
-      final url =
-          'https://maps.googleapis.com/maps/api/place/autocomplete/json'
-          '?input=${Uri.encodeComponent(q)}'
-          '$comps'
-          '&language=$lang'
-          '&locationbias=${Uri.encodeComponent(bias)}'
-          '&sessiontoken=$_placesSession'
-          '&key=${widget.googleApiKey}';
-
-      final r = await http.get(Uri.parse(url));
-      final j = jsonDecode(r.body) as Map<String, dynamic>;
-      final status = (j['status'] as String?) ?? 'UNKNOWN_ERROR';
-
-      if (status == 'OK') {
-        final preds = (j['predictions'] as List)
-            .map(
-              (e) => _PlaceSug(
-                description: (e['description'] ?? '').toString(),
-                placeId: (e['place_id'] ?? '').toString(),
-              ),
-            )
-            .toList();
-        if (mounted) setState(() => _suggestions = preds);
+      if (kIsWeb) {
+        final preds = await webAutocomplete(
+          q,
+          center: center,
+          countryCode2: _centerCountryCode,
+        );
+        if (mounted) {
+          setState(
+            () => _suggestions = preds
+                .map(
+                  (e) =>
+                      _PlaceSug(description: e.description, placeId: e.placeId),
+                )
+                .toList(),
+          );
+        }
       } else {
-        if (mounted) setState(() => _suggestions = []);
+        final url =
+            'https://maps.googleapis.com/maps/api/place/autocomplete/json'
+            '?input=${Uri.encodeComponent(q)}'
+            '$comps'
+            '&language=$lang'
+            '&locationbias=${Uri.encodeComponent(bias)}'
+            '&sessiontoken=$_placesSession'
+            '&key=${widget.googleApiKey}';
+
+        final r = await http.get(Uri.parse(url));
+        final j = jsonDecode(r.body) as Map<String, dynamic>;
+        final status = (j['status'] as String?) ?? 'UNKNOWN_ERROR';
+
+        if (status == 'OK') {
+          final preds = (j['predictions'] as List)
+              .map(
+                (e) => _PlaceSug(
+                  description: (e['description'] ?? '').toString(),
+                  placeId: (e['place_id'] ?? '').toString(),
+                ),
+              )
+              .toList();
+          if (mounted) setState(() => _suggestions = preds);
+        } else {
+          if (mounted) setState(() => _suggestions = []);
+        }
       }
     } catch (_) {
       if (mounted) setState(() => _suggestions = []);
@@ -272,6 +306,23 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     String placeId, {
     String? fallbackAddress,
   }) async {
+    if (kIsWeb) {
+      final res = await webPlaceDetails(placeId);
+      if (res == null) return;
+      final (p, addr) = res;
+      if (widget.centerOnSelection) {
+        final c = await _mapCtrl.future;
+        await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+      }
+      _lastKnownCenter = p;
+      _centerCountryCode = await _countryCodeAt(p);
+      if (!mounted) return;
+      setState(() => _picked = p);
+      _writeBack(p, addressOverride: addr ?? fallbackAddress ?? '');
+      widget.onPlaceSelected?.call(p);
+      return;
+    }
+
     final lang = Localizations.localeOf(context).languageCode;
     final url =
         'https://maps.googleapis.com/maps/api/place/details/json'
@@ -288,23 +339,18 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     if (loc is Map) {
       final lat = (loc['lat'] as num).toDouble();
       final lng = (loc['lng'] as num).toDouble();
-
       final p = LatLng(lat, lng);
       final addr =
           (result?['formatted_address'] as String?) ?? fallbackAddress ?? '';
-
       if (widget.centerOnSelection) {
         final c = await _mapCtrl.future;
         await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
       }
       _lastKnownCenter = p;
       _centerCountryCode = await _countryCodeAt(p);
-
       if (!mounted) return;
       setState(() => _picked = p);
       _writeBack(p, addressOverride: addr);
-
-      // legacy callback, if provided
       widget.onPlaceSelected?.call(p);
     }
   }
@@ -349,7 +395,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       final center = _biasCenter();
       final bias = 'circle:50000@${center.latitude},${center.longitude}';
       final comps = (_centerCountryCode != null)
-          ? '&components=country:${_centerCountryCode}'
+          ? '&components=country:$_centerCountryCode'
           : '';
       if (q.isEmpty) {
         dlgSuggestions = [];
@@ -584,6 +630,15 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
 
   @override
   Widget build(BuildContext context) {
+    // On iOS by default, avoid embedding the platform view inline to prevent scroll freezes.
+    if (!widget.inlineInteractive &&
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      return _InlineMapPlaceholder(
+        height: widget.height,
+        addressText: widget.addrCtrl.text,
+        onOpen: _openLargeMapDialog,
+      );
+    }
     final marker = _picked == null
         ? <Marker>{}
         : {
@@ -602,81 +657,142 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
 
     return SizedBox(
       height: widget.height,
+      child: RepaintBoundary(
+        child: Stack(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: GoogleMap(
+                initialCameraPosition: CameraPosition(
+                  target: widget.initialCenter,
+                  zoom: 13,
+                ),
+                onMapCreated: (c) => _mapCtrl.complete(c),
+                myLocationEnabled: true,
+                myLocationButtonEnabled: false,
+                markers: marker,
+                onTap: (p) async {
+                  setState(() => _picked = p);
+                  _lastKnownCenter = p;
+                  _centerCountryCode = await _countryCodeAt(p);
+
+                  final name = await _reverseGeocode(p);
+                  _writeBack(p, addressOverride: name);
+                },
+                compassEnabled: true,
+                mapToolbarEnabled: false,
+                zoomControlsEnabled: false,
+
+                // ⬇️ Give the map priority for gestures so it doesn’t fight with parent scroll
+                gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
+                  Factory<OneSequenceGestureRecognizer>(
+                    () => EagerGestureRecognizer(),
+                  ),
+                },
+              ),
+            ),
+
+            // top search (inline)
+            Positioned(
+              left: 8,
+              right: 8,
+              top: 8,
+              child: _SearchBox(
+                controller: _searchCtrl,
+                busy: _loadingPlaces || _locating,
+                hint: context.l10n.mapSearchHint,
+                onChanged: _onSearchChanged,
+                onClear: () {
+                  _searchCtrl.clear();
+                  setState(() => _suggestions = []);
+                },
+              ),
+            ),
+
+            // suggestions dropdown (inline)
+            Positioned(
+              left: 8,
+              right: 8,
+              top: 56,
+              child: _SuggestionPanel(
+                suggestions: _suggestions,
+                onSelect: _selectPlace,
+                noResultsText: context.l10n.mapNoResults,
+              ),
+            ),
+
+            // expand button
+            if (widget.showExpandButton)
+              Positioned(
+                right: 8,
+                bottom: 8,
+                child: FloatingActionButton.small(
+                  heroTag: 'expand_map_$hashCode',
+                  onPressed: _openLargeMapDialog,
+                  tooltip: context.l10n.mapExpandTooltip,
+                  child: const Icon(Icons.open_in_full),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineMapPlaceholder extends StatelessWidget {
+  const _InlineMapPlaceholder({
+    required this.height,
+    required this.addressText,
+    required this.onOpen,
+  });
+  final double height;
+  final String addressText;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return SizedBox(
+      height: height,
       child: Stack(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(12),
-            child: GoogleMap(
-              initialCameraPosition: CameraPosition(
-                target: widget.initialCenter,
-                zoom: 13,
-              ),
-              onMapCreated: (c) => _mapCtrl.complete(c),
-              myLocationEnabled: true,
-              myLocationButtonEnabled: false,
-              markers: marker,
-              onTap: (p) async {
-                setState(() => _picked = p);
-                _lastKnownCenter = p;
-                _centerCountryCode = await _countryCodeAt(p);
-
-                final name = await _reverseGeocode(p);
-                _writeBack(p, addressOverride: name);
-              },
-              compassEnabled: true,
-              mapToolbarEnabled: false,
-              zoomControlsEnabled: false,
-
-              // ⬇️ Give the map priority for gestures so it doesn’t fight with parent scroll
-              gestureRecognizers: <Factory<OneSequenceGestureRecognizer>>{
-                Factory<OneSequenceGestureRecognizer>(
-                  () => EagerGestureRecognizer(),
+          Container(
+            decoration: BoxDecoration(
+              color: cs.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(Icons.map_outlined, color: cs.onSurfaceVariant),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    addressText.isEmpty
+                        ? context.l10n.mapSearchHint
+                        : addressText,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
                 ),
-              },
+              ],
             ),
           ),
-
-          // top search (inline)
           Positioned(
-            left: 8,
             right: 8,
-            top: 8,
-            child: _SearchBox(
-              controller: _searchCtrl,
-              busy: _loadingPlaces || _locating,
-              hint: context.l10n.mapSearchHint,
-              onChanged: _onSearchChanged,
-              onClear: () {
-                _searchCtrl.clear();
-                setState(() => _suggestions = []);
-              },
+            bottom: 8,
+            child: FloatingActionButton.small(
+              heroTag: 'expand_map_placeholder_$hashCode',
+              onPressed: onOpen,
+              tooltip: context.l10n.mapExpandTooltip,
+              child: const Icon(Icons.open_in_full),
             ),
           ),
-
-          // suggestions dropdown (inline)
-          Positioned(
-            left: 8,
-            right: 8,
-            top: 56,
-            child: _SuggestionPanel(
-              suggestions: _suggestions,
-              onSelect: _selectPlace,
-              noResultsText: context.l10n.mapNoResults,
-            ),
-          ),
-
-          // expand button
-          if (widget.showExpandButton)
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: FloatingActionButton.small(
-                heroTag: 'expand_map_${hashCode}',
-                onPressed: _openLargeMapDialog,
-                tooltip: context.l10n.mapExpandTooltip,
-                child: const Icon(Icons.open_in_full),
-              ),
-            ),
         ],
       ),
     );

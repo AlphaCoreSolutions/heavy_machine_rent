@@ -204,8 +204,9 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       }
     } catch (e, st) {
       _log('boot error: $e\n$st');
-      if (mounted)
+      if (mounted) {
         AppSnack.error(context, context.l10n.failedToLoadOrganization);
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -246,8 +247,9 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     }
 
     // Last resort: if we know the countryId, show it (better than "—")
-    if ((_orgSummary?.countryId ?? 0) > 0)
+    if ((_orgSummary?.countryId ?? 0) > 0) {
       return 'Country #${_orgSummary!.countryId}';
+    }
     return '—';
   }
 
@@ -322,11 +324,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       _orgSummary = org;
 
       _applySummaryToForm(org);
-      if (mounted)
+      if (mounted) {
         setState(() {
           _countryRO.text = _countryLabel();
           _refreshCountryRO();
         }); // reflect selects/country text
+      }
     } catch (e) {
       _log('getOrganizationById failed: $e');
     }
@@ -487,7 +490,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) {
-        DomainDetail? _localSel = selType;
+        DomainDetail? localSel = selType;
         return StatefulBuilder(
           builder: (context, setModal) {
             final cs = Theme.of(context).colorScheme;
@@ -518,7 +521,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                         child: Column(
                           children: [
                             DropdownButtonFormField<DomainDetail>(
-                              value: _localSel,
+                              initialValue: localSel,
                               items: _fileTypeOpts
                                   .map(
                                     (d) => DropdownMenuItem(
@@ -531,7 +534,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                     ),
                                   )
                                   .toList(),
-                              onChanged: (v) => setModal(() => _localSel = v),
+                              onChanged: (v) => setModal(() => localSel = v),
                               decoration: InputDecoration(
                                 labelText: context.l10n.fileType,
                               ),
@@ -627,7 +630,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                         Expanded(
                           child: BrandButton(
                             onPressed: () {
-                              if (_localSel == null) {
+                              if (localSel == null) {
                                 AppSnack.error(
                                   context,
                                   context.l10n.chooseFileType,
@@ -641,7 +644,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 );
                                 return;
                               }
-                              selType = _localSel;
+                              selType = localSel;
                               Navigator.pop(context, true);
                             },
 
@@ -895,7 +898,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                               _row2(
                                 twoCol,
                                 left: DropdownButtonFormField<DomainDetail>(
-                                  value: _selType,
+                                  initialValue: _selType,
                                   items: _typeOpts
                                       .map(
                                         (d) => DropdownMenuItem(
@@ -915,7 +918,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                   ),
                                 ),
                                 right: DropdownButtonFormField<DomainDetail>(
-                                  value: _selStatus,
+                                  initialValue: _selStatus,
                                   items: _statusOpts
                                       .map(
                                         (d) => DropdownMenuItem(
@@ -976,7 +979,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                 ),
 
                                 right: DropdownButtonFormField<City>(
-                                  value: _selCity,
+                                  initialValue: _selCity,
                                   items: _cities
                                       .map(
                                         (c) => DropdownMenuItem(
@@ -1141,7 +1144,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       decoration: BoxDecoration(
                                         color: Theme.of(
                                           context,
-                                        ).colorScheme.surfaceVariant,
+                                        ).colorScheme.surfaceContainerHighest,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: Row(
@@ -1352,7 +1355,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: value ? color.withOpacity(0.10) : cs.surfaceVariant,
+        color: value ? color.withOpacity(0.10) : cs.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: value ? color : cs.outlineVariant),
       ),

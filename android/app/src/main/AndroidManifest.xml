@@ -11,7 +11,7 @@
 
 
     <application
-        android:label="heavy_machinery"
+        android:label="ServicesRQ"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
          <meta-data

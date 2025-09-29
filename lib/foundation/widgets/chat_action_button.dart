@@ -4,7 +4,7 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/screens/chat_screens/chat_list_screen.dart';
 
 class ChatActionButton extends StatelessWidget {
-  const ChatActionButton();
+  const ChatActionButton({super.key});
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;

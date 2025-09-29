@@ -78,8 +78,9 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
         debugPrint(
           '[EquipMgmt] no OrganizationUser row for applicationUserId=$_userId',
         );
-        if (mounted)
+        if (mounted) {
           setState(() => _future = Future.value(const <Equipment>[]));
+        }
       }
     } catch (e) {
       debugPrint('[EquipMgmt] bootstrap error: $e');
@@ -441,7 +442,7 @@ class _EquipmentManagementScreenState extends State<EquipmentManagementScreen> {
 
                     placeholderColor: Theme.of(
                       context,
-                    ).colorScheme.surfaceVariant,
+                    ).colorScheme.surfaceContainerHighest,
                     fit: BoxFit.cover,
                   ),
                   onTap: () async {

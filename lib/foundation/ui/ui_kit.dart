@@ -464,8 +464,8 @@ extension Stagger on List<Widget> {
     return asMap().entries
         .map(
           (e) => AnimateIn(
-            child: e.value,
             delay: initial + Duration(milliseconds: e.key * stepMs),
+            child: e.value,
           ),
         )
         .toList();

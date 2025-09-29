@@ -341,7 +341,7 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                                 filled: true,
                                                 fillColor: Theme.of(context)
                                                     .colorScheme
-                                                    .surfaceVariant
+                                                    .surfaceContainerHighest
                                                     .withOpacity(.45),
                                                 contentPadding:
                                                     const EdgeInsets.symmetric(
@@ -499,8 +499,9 @@ class _EquipmentListScreenState extends State<EquipmentListScreen> {
                                     sliver: SliverList(
                                       delegate: SliverChildBuilderDelegate(
                                         (context, index) {
-                                          if (index.isOdd)
+                                          if (index.isOdd) {
                                             return const SizedBox(height: 0);
+                                          }
                                           final i = index ~/ 2;
                                           return ListTileTheme(
                                             dense: true,
@@ -591,7 +592,7 @@ class _EquipmentListTile extends StatelessWidget {
         pricePerDay: e.rentPerDayDouble ?? 0,
         imageWidget: FallbackNetworkImage(
           candidates: thumbCandidates,
-          placeholderColor: Theme.of(context).colorScheme.surfaceVariant,
+          placeholderColor: Theme.of(context).colorScheme.surfaceContainerHighest,
           fit: BoxFit.cover,
         ),
         distanceKm: e.distanceKilo?.toDouble(),
@@ -621,7 +622,7 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final bg = cs.surfaceVariant.withOpacity(.45);
+    final bg = cs.surfaceContainerHighest.withOpacity(.45);
     final fg = cs.onSurfaceVariant;
 
     // Cap width so long labels ellipsize, but allow smaller pills to shrink.
@@ -756,9 +757,9 @@ class _MiniShimmerState extends State<_MiniShimmer>
               begin: Alignment(-1 + 2 * t, 0),
               end: Alignment(1 + 2 * t, 0),
               colors: [
-                cs.surfaceVariant.withOpacity(.50),
-                cs.surfaceVariant.withOpacity(.35),
-                cs.surfaceVariant.withOpacity(.50),
+                cs.surfaceContainerHighest.withOpacity(.50),
+                cs.surfaceContainerHighest.withOpacity(.35),
+                cs.surfaceContainerHighest.withOpacity(.50),
               ],
               stops: const [0.25, 0.5, 0.75],
             ),

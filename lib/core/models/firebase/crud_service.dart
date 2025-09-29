@@ -1,6 +1,8 @@
 import 'dart:developer' as dev show log;
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:heavy_new/core/auth/auth_store.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:heavy_new/core/api/api_handler.dart';
 import 'package:heavy_new/core/models/admin/notifications_model.dart';
 
@@ -11,8 +13,7 @@ class CrudService {
   ///
   /// Returns the saved/existing NotificationsModel when possible.
   static Future<NotificationsModel?> saveUserToken(String token) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final userId = int.tryParse(user?.uid ?? '0');
+    final userId = AuthStore.instance.user.value?.id;
 
     if (userId == null || userId == 0) {
       dev.log('saveUserToken: no signed-in user; skipping');
@@ -39,9 +40,18 @@ class CrudService {
         return found;
       }
 
-      // 3) Otherwise, save as new
+      // 3) Otherwise, save as new with platform id (1=iOS, 2=Android, 3=Web)
+      final platformId = switch (defaultTargetPlatform) {
+        TargetPlatform.iOS => 1,
+        TargetPlatform.android => 2,
+        _ => 3,
+      };
       final saved = await Api.addNotfToken(
-        NotificationsModel(userId: userId, token: trimmedToken),
+        NotificationsModel(
+          userId: userId,
+          token: trimmedToken,
+          platformId: platformId,
+        ),
       );
       dev.log('User token saved successfully: $trimmedToken');
       return saved;
@@ -66,8 +76,7 @@ class CrudService {
     int modelId,
     int platformId,
   ) async {
-    final user = FirebaseAuth.instance.currentUser;
-    final currentUserId = int.tryParse(user?.uid ?? '0') ?? 0;
+    final currentUserId = AuthStore.instance.user.value?.id ?? 0;
 
     try {
       final msg = UserMessage(

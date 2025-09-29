@@ -121,7 +121,7 @@ class AIcon extends StatelessWidget {
   /// Map of semantic glyphs → IconData (no widgets here).
   IconData _resolve(AppGlyph g, AppIconStyle s, bool sel) {
     // Helper to pick a Phosphor style
-    PhosphorIconsStyle _pStyleFor(bool selected, AppIconStyle style) {
+    PhosphorIconsStyle pStyleFor(bool selected, AppIconStyle style) {
       if (selected) return PhosphorIconsStyle.fill;
       switch (style) {
         case AppIconStyle.filled:
@@ -144,7 +144,7 @@ class AIcon extends StatelessWidget {
       case AppGlyph.filter:
         return Iconsax.filter;
       case AppGlyph.calendar:
-        return PhosphorIcons.calendar(_pStyleFor(sel, s));
+        return PhosphorIcons.calendar(pStyleFor(sel, s));
       case AppGlyph.mapPin:
         // Filled when selected, outline when not
         return sel
@@ -169,7 +169,7 @@ class AIcon extends StatelessWidget {
       case AppGlyph.close:
         return LucideIcons.x;
       case AppGlyph.user:
-        return PhosphorIcons.user(_pStyleFor(sel, s));
+        return PhosphorIcons.user(pStyleFor(sel, s));
       case AppGlyph.organization:
         return Iconsax.building;
       case AppGlyph.terms:

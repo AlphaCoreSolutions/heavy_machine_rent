@@ -47,7 +47,7 @@ class NotificationPrefs {
   };
 
   factory NotificationPrefs.fromJson(Map<String, dynamic> json) {
-    TimeOfDay? _parse(String? hhmm) {
+    TimeOfDay? parse(String? hhmm) {
       if (hhmm == null || !hhmm.contains(':')) return null;
       final p = hhmm.split(':');
       final h = int.tryParse(p[0]) ?? 0;
@@ -60,8 +60,8 @@ class NotificationPrefs {
       inAppEnabled: json['inapp'] ?? true,
       emailEnabled: json['email'] ?? false,
       soundEnabled: json['sound'] ?? true,
-      quietFrom: _parse(json['qFrom']),
-      quietTo: _parse(json['qTo']),
+      quietFrom: parse(json['qFrom']),
+      quietTo: parse(json['qTo']),
     );
   }
 }

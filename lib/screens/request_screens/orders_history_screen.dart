@@ -81,7 +81,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
     }
 
     final sql =
-        'Select * From Requests Where VendorId = ${orgId}'; // tweak if needed
+        'Select * From Requests Where VendorId = $orgId'; // tweak if needed
     dev.log('[AdvanceSearch] $sql', name: 'orders');
 
     final all = await api.Api.advanceSearchRequests(sql);
@@ -126,7 +126,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
     final cs = Theme.of(context).colorScheme;
 
     // tiny helper for the status chip (local to build)
-    Widget _statusPill(String label) {
+    Widget statusPill(String label) {
       final showDash = label.trim().isEmpty;
       final text = showDash ? '—' : label.trim();
       return Container(
@@ -238,7 +238,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                             children: [
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: cs.surfaceVariant,
+                                backgroundColor: cs.surfaceContainerHighest,
                                 child: AIcon(
                                   AppGlyph.invoice,
                                   color: cs.onSurfaceVariant,
@@ -255,7 +255,7 @@ class _OrdersHistoryScreenState extends State<OrdersHistoryScreen> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              _statusPill(s),
+                              statusPill(s),
                               const SizedBox(width: 6),
                               const Icon(Icons.chevron_right),
                             ],

@@ -325,7 +325,7 @@ class _MyRequestsScreenState extends State<MyRequestsScreen> {
                               // Leading icon
                               CircleAvatar(
                                 radius: 18,
-                                backgroundColor: cs.surfaceVariant,
+                                backgroundColor: cs.surfaceContainerHighest,
                                 child: Icon(
                                   Icons.request_page_outlined,
                                   color: cs.onSurfaceVariant,

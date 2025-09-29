@@ -367,7 +367,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: cs.surfaceVariant,
+                        backgroundColor: cs.surfaceContainerHighest,
                         child: Icon(
                           Icons.request_page_outlined,
                           color: cs.onSurfaceVariant,
@@ -737,7 +737,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       key: ValueKey('tile_$keyForTile'),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant.withOpacity(.35),
+        color: cs.surfaceContainerHighest.withOpacity(.35),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: cs.outlineVariant.withOpacity(.5)),
       ),
@@ -790,7 +790,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
             DropdownButtonFormField<int>(
               key: ValueKey('dd_$keyForTile'),
               isExpanded: true,
-              value: sel,
+              initialValue: sel,
               items: drivers.map((d) {
                 final label = (d.driverNameEnglish?.trim().isNotEmpty ?? false)
                     ? d.driverNameEnglish!.trim()

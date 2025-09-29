@@ -2,9 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:developer';
 
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:heavy_new/core/api/api_handler.dart';
 import 'package:heavy_new/core/api/api_handler.dart' as api show Api;
@@ -34,15 +35,43 @@ class Notifications {
       sound: true,
     );
     log('message permission: ${settings.authorizationStatus}');
+    // iOS: ensure foreground notifications appear
+    try {
+      await _messaging.setForegroundNotificationPresentationOptions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+    } catch (_) {}
 
-    final token = await _messaging.getToken();
-    if (token != null) {
-      print('FCM Token: $token');
-    }
+    // Attempt to fetch and persist token if available (APNs may delay this on iOS)
+    try {
+      await getDeviceToken();
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        // Log current APNs token for debugging
+        try {
+          final apns = await _messaging.getAPNSToken();
+          log('APNs token (iOS): ${apns ?? 'null'}');
+        } catch (_) {}
+        // If FCM still not ready, retry for a short window
+        String? tok = await _getFcmTokenSafely();
+        if (tok == null || tok.isEmpty) {
+          for (int i = 0; i < 10; i++) {
+            await Future<void>.delayed(const Duration(seconds: 3));
+            tok = await _getFcmTokenSafely();
+            if (tok != null && tok.isNotEmpty) {
+              log('FCM token obtained on retry: $tok');
+              await CrudService.saveUserToken(tok);
+              break;
+            }
+          }
+        }
+      }
+    } catch (_) {}
   }
 
   Future getDeviceToken() async {
-    String? token = await _messaging.getToken();
+    final String? token = await _getFcmTokenSafely();
     log('device Token: $token');
     await CrudService.saveUserToken(token ?? '');
     log('token saved to database');
@@ -55,14 +84,29 @@ class Notifications {
   }
 
   Future<UserMessage> sendNotification() async {
-    final token = await _messaging.getToken();
+    String? token = await _getFcmTokenSafely();
     if (token == null || token.isEmpty) {
-      throw Exception('No FCM token available for this device.');
+      // Try to register and fetch again (best-effort on iOS right after login)
+      try {
+        await getDeviceToken();
+        token = await _getFcmTokenSafely();
+      } catch (_) {}
     }
-    User? user = FirebaseAuth.instance.currentUser;
+    if (token == null || token.isEmpty) {
+      log('sendNotification skipped: no FCM token yet (APNs not ready).');
+      // Return a dummy message object to keep callers happy
+      return UserMessage(
+        titleEnglish: 'Welcome',
+        titleArabic: 'أهلاً وسهلاً',
+        messageEnglish: 'We will notify you once notifications are ready.',
+        messageArabic: 'سننبهك عندما تصبح الإشعارات جاهزة.',
+        token: '',
+      );
+    }
+    final appUserId = AuthStore.instance.user.value?.id;
 
     final msg = UserMessage(
-      userId: int.tryParse(user?.uid ?? '0'),
+      userId: appUserId,
       messageArabic: 'من زمان عنك!',
       messageEnglish: 'It\'s been a long time, welcome back!',
       titleArabic: 'أهلاً وسهلاً',
@@ -81,6 +125,24 @@ class Notifications {
     );
 
     return Api.sendNotif(msg);
+  }
+
+  // On iOS, FCM token requires APNs token to be available. On Simulator, APNs
+  // is not provided, so getToken will throw. This helper avoids that crash.
+  Future<String?> _getFcmTokenSafely() async {
+    try {
+      if (defaultTargetPlatform == TargetPlatform.iOS) {
+        final apns = await _messaging.getAPNSToken();
+        if (apns == null) {
+          // APNs not set yet (or Simulator). Avoid calling getToken which throws.
+          return null;
+        }
+      }
+      return await _messaging.getToken();
+    } catch (e) {
+      log('getToken error: $e');
+      return null;
+    }
   }
 
   void handleMessage(RemoteMessage message) {
@@ -118,11 +180,20 @@ class Notifications {
           linux: linuxInitializationSettings,
         );
 
-    _localNotificationsPlugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()!
-        .requestNotificationsPermission();
+    // Request platform-specific notification permissions safely
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      await _localNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.requestNotificationsPermission();
+    } else if (defaultTargetPlatform == TargetPlatform.iOS) {
+      await _localNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+    }
 
     _localNotificationsPlugin.initialize(
       initializationSettings,
@@ -189,41 +260,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   String _query = '';
   String?
   _typeFilter; // 'chat_message' | 'contract_open' | 'request_updated' | null
-  StreamSubscription<User?>? _authSub;
+  VoidCallback? _unsubscribeAuth;
 
   // ---- lifecycle / auth wiring ----
   @override
   void initState() {
     super.initState();
     _ensureLoadedForCurrentUser(unreadOnly: true);
-
-    _authSub = FirebaseAuth.instance.authStateChanges().listen((user) async {
-      if (user == null) {
-        // logged out -> clear in-memory list
+    void onAuthChanged() async {
+      final u = AuthStore.instance.user.value;
+      if (u == null) {
         notificationsStore.clear();
         if (mounted) setState(() {});
       } else {
-        // logged in -> load unseen for this user
         await _ensureLoadedForCurrentUser(unreadOnly: true);
       }
-    });
+    }
+
+    AuthStore.instance.user.addListener(onAuthChanged);
+    _unsubscribeAuth = () =>
+        AuthStore.instance.user.removeListener(onAuthChanged);
   }
 
   @override
   void dispose() {
-    _authSub?.cancel();
+    _unsubscribeAuth?.call();
     super.dispose();
   }
 
   /// Resolve your backend's numeric userId. Prefer your own session/user model.
   Future<int?> _resolveAppUserId() async {
-    // TODO: If your app already knows the numeric user id, return it here, e.g.:
-    // return api.Api.currentUser?.userId;
-
-    // Fallback: sometimes your Firebase UID is numeric in your environment.
-    final uid = FirebaseAuth.instance.currentUser?.uid;
-    final fromUid = int.tryParse(uid ?? '');
-    return fromUid; // may be null
+    // Use your app's AuthStore (numeric id from your backend auth)
+    return AuthStore.instance.user.value?.id;
   }
 
   Future<void> _ensureLoadedForCurrentUser({bool unreadOnly = false}) async {
@@ -295,7 +363,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       case 'request_updated':
         return cs.secondaryContainer;
       default:
-        return cs.surfaceVariant;
+        return cs.surfaceContainerHighest;
     }
   }
 
@@ -436,9 +504,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                                 vertical: 10,
                               ),
                               filled: true,
-                              fillColor: Theme.of(
-                                context,
-                              ).colorScheme.surfaceVariant.withOpacity(.6),
+                              fillColor: Theme.of(context)
+                                  .colorScheme
+                                  .surfaceContainerHighest
+                                  .withOpacity(.6),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(14),
                                 borderSide: BorderSide.none,
@@ -637,7 +706,7 @@ class _FilterChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bg = selected
         ? cs.primaryContainer
-        : cs.surfaceVariant.withOpacity(.6);
+        : cs.surfaceContainerHighest.withOpacity(.6);
     final fg = selected ? cs.onPrimaryContainer : cs.onSurfaceVariant;
 
     return InkWell(
@@ -689,7 +758,7 @@ class _EmptyState extends StatelessWidget {
                 height: 96,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: cs.surfaceVariant,
+                  color: cs.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Icon(

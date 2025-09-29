@@ -175,7 +175,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         CircleAvatar(
                           radius: 28,
-                          backgroundColor: cs.surfaceVariant,
+                          backgroundColor: cs.surfaceContainerHighest,
                           backgroundImage: _pickedAvatar != null
                               ? FileImage(_pickedAvatar!)
                               : null,
@@ -246,8 +246,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             textInputAction: TextInputAction.next,
                             validator: (v) {
                               final t = v?.trim() ?? '';
-                              if (t.isEmpty)
+                              if (t.isEmpty) {
                                 return context.l10n.validationEmail;
+                              }
                               if (!t.contains('@') || !t.contains('.')) {
                                 return context.l10n.validationEmail;
                               }
@@ -272,8 +273,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             validator: (v) {
                               final t = v?.trim() ?? '';
                               if (t.isEmpty) return null; // optional
-                              if (t.length < 6)
+                              if (t.length < 6) {
                                 return context.l10n.validationMinChars(6);
+                              }
                               return null;
                             },
                           ),

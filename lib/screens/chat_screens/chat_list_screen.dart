@@ -211,8 +211,9 @@ class _ChatListScreenState extends State<ChatListScreen> {
         if (v is int) {
           // epoch seconds/ms heuristic
           if (v > 1000000000000) return DateTime.fromMillisecondsSinceEpoch(v);
-          if (v > 1000000000)
+          if (v > 1000000000) {
             return DateTime.fromMillisecondsSinceEpoch(v * 1000);
+          }
         }
       }
       return null;
@@ -327,7 +328,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
           radius: 16,
           child: ListTile(
             leading: CircleAvatar(
-              backgroundColor: cs.surfaceVariant,
+              backgroundColor: cs.surfaceContainerHighest,
               child: AIcon(AppGlyph.chat, color: cs.onSurfaceVariant),
             ),
             title: Text(

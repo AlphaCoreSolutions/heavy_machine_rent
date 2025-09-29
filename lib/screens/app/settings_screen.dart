@@ -68,7 +68,7 @@ class SettingsScreen extends StatelessWidget {
                           const SizedBox(height: 4),
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: cs.surfaceVariant,
+                            backgroundColor: cs.surfaceContainerHighest,
                             child: AIcon(AppGlyph.info, color: cs.primary),
                           ),
                           const SizedBox(height: 12),

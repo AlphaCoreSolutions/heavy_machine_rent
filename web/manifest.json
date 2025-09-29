@@ -1,6 +1,6 @@
 {
-    "name": "heavy_machinery",
-    "short_name": "heavy_machinery",
+    "name": "ServicesRQ",
+    "short_name": "ServicesRQ",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",

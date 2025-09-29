@@ -149,12 +149,15 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
     if (_fuelRespId == null) errs.add('Select fuel responsibility.');
     if (_transferTypeId == null) errs.add('Select transfer type.');
     if (_transferRespId == null) errs.add('Select transfer responsibility.');
-    if (_driverTransRespId == null)
+    if (_driverTransRespId == null) {
       errs.add('Select driver transport responsibility.');
-    if (_driverFoodRespId == null)
+    }
+    if (_driverFoodRespId == null) {
       errs.add('Select driver food responsibility.');
-    if (_driverHousingRespId == null)
+    }
+    if (_driverHousingRespId == null) {
       errs.add('Select driver housing responsibility.');
+    }
 
     // Pricing & quantity
     final perDay = _safeD(_priceDay);
@@ -162,8 +165,9 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
     final qty = _safeQty();
 
     if (perDay == null || perDay <= 0) errs.add('Enter price per day (> 0).');
-    if (perHour == null || perHour <= 0)
+    if (perHour == null || perHour <= 0) {
       errs.add('Enter price per hour (> 0).');
+    }
     if (qty <= 0) errs.add('Enter quantity (≥ 1).');
 
     if (errs.isEmpty) return true;
@@ -557,7 +561,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
 
-    EdgeInsets _sectionPad() => const EdgeInsets.fromLTRB(0, 12, 0, 12);
+    EdgeInsets sectionPad() => const EdgeInsets.fromLTRB(0, 12, 0, 12);
 
     return Scaffold(
       appBar: AppBar(title: Text(context.l10n.equipEditorTitleNew)),
@@ -616,7 +620,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -628,7 +632,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
 
                       // 1) Equipment Type (Domain 9)
                       DropdownButtonFormField<DomainDetail>(
-                        value: _selType,
+                        initialValue: _selType,
                         decoration: InputDecoration(
                           border: const OutlineInputBorder(),
                           labelText:
@@ -652,7 +656,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
 
                       // 2) Equipment List (final pick sent to API)
                       DropdownButtonFormField<elist.EquipmentListModel>(
-                        value: _selList,
+                        initialValue: _selList,
                         decoration: InputDecoration(
                           border: OutlineInputBorder(),
                           labelText: context.l10n.equipmentTitle,
@@ -690,7 +694,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -739,7 +743,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -753,7 +757,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                           children: [
                             Expanded(
                               child: DropdownButtonFormField<int>(
-                                value: _factoryId,
+                                initialValue: _factoryId,
                                 isExpanded: true,
                                 menuMaxHeight: 360,
                                 decoration: InputDecoration(
@@ -818,7 +822,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -830,7 +834,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       _TwoCol(
                         left: SizedBox(),
                         right: DropdownButtonFormField<DomainDetail>(
-                          value: data.fuelD7.firstWhere(
+                          initialValue: data.fuelD7.firstWhere(
                             (d) => d.domainDetailId == _fuelRespId,
                             orElse: () =>
                                 (null as DomainDetail?) ?? data.fuelD7.first,
@@ -852,7 +856,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       const SizedBox(height: 10),
                       _TwoCol(
                         left: DropdownButtonFormField<DomainDetail>(
-                          value: data.transferTypeD8.firstWhere(
+                          initialValue: data.transferTypeD8.firstWhere(
                             (d) => d.domainDetailId == _transferTypeId,
                             orElse: () =>
                                 (null as DomainDetail?) ??
@@ -872,7 +876,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                           }),
                         ),
                         right: DropdownButtonFormField<DomainDetail>(
-                          value: data.transferRespD7.firstWhere(
+                          initialValue: data.transferRespD7.firstWhere(
                             (d) => d.domainDetailId == _transferRespId,
                             orElse: () =>
                                 (null as DomainDetail?) ??
@@ -902,7 +906,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -913,7 +917,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       const SizedBox(height: 8),
                       _TwoCol(
                         left: DropdownButtonFormField<DomainDetail>(
-                          value: data.driverRespD7.firstWhere(
+                          initialValue: data.driverRespD7.firstWhere(
                             (d) => d.domainDetailId == _driverTransRespId,
                             orElse: () =>
                                 (null as DomainDetail?) ??
@@ -933,7 +937,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                           }),
                         ),
                         right: DropdownButtonFormField<DomainDetail>(
-                          value: data.driverRespD7.firstWhere(
+                          initialValue: data.driverRespD7.firstWhere(
                             (d) => d.domainDetailId == _driverFoodRespId,
                             orElse: () =>
                                 (null as DomainDetail?) ??
@@ -955,7 +959,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
                       ),
                       const SizedBox(height: 10),
                       DropdownButtonFormField<DomainDetail>(
-                        value: data.driverRespD7.firstWhere(
+                        initialValue: data.driverRespD7.firstWhere(
                           (d) => d.domainDetailId == _driverHousingRespId,
                           orElse: () =>
                               (null as DomainDetail?) ??
@@ -984,7 +988,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1123,7 +1127,7 @@ class _EquipmentEditorScreenState extends State<EquipmentEditorScreen> {
               Glass(
                 radius: 20,
                 child: Padding(
-                  padding: _sectionPad(),
+                  padding: sectionPad(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -1193,7 +1197,7 @@ class _CalculatedHint extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: cs.surfaceVariant.withOpacity(0.6),
+        color: cs.surfaceContainerHighest.withOpacity(0.6),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(

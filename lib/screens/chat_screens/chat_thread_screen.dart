@@ -141,7 +141,7 @@ class _ChatThreadScreenState extends State<ChatThreadScreen> {
                 final align = m.me
                     ? Alignment.centerRight
                     : Alignment.centerLeft;
-                final bubbleColor = m.me ? cs.primary : cs.surfaceVariant;
+                final bubbleColor = m.me ? cs.primary : cs.surfaceContainerHighest;
                 final textColor = m.me ? Colors.white : cs.onSurface;
                 return Align(
                   alignment: align,
