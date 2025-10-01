@@ -1357,6 +1357,7 @@ class _LocCard extends StatelessWidget {
             lonCtrl: form.dLon,
             addrCtrl: form.dAddr,
             googleApiKey: 'AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw',
+            inlineInteractive: true,
             height: 240,
             onChanged: () {},
           ),

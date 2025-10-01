@@ -74,9 +74,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   bool _writingBack =
       false; // prevent feedback loops when writing to controllers
 
-  bool get _usesInlineMap =>
-      !(defaultTargetPlatform == TargetPlatform.iOS &&
-          widget.inlineInteractive == true);
+  bool get _usesInlineMap => widget.inlineInteractive;
 
   void _attachControllerListeners() {
     widget.latCtrl.addListener(_onExternalCoordsChanged);
@@ -105,7 +103,12 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     });
     if (_usesInlineMap) {
       final c = await _mapCtrl.future;
-      await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+      LatLng center = widget.initialCenter;
+      await c.moveCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(target: center, zoom: 15),
+        ),
+      );
     }
   }
 

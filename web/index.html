@@ -1,4 +1,7 @@
-<!DOCTYPE html><html><head>
+<!DOCTYPE html>
+<html>
+
+<head>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
@@ -17,7 +20,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
-  
+
   <!-- Google Maps JavaScript API key for web (required by google_maps_flutter_web).
     Replace the placeholder with your actual Web API key that has Maps JavaScript API enabled.
     The plugin will auto-load the Maps JS script using this meta tag. -->
@@ -25,7 +28,9 @@
 
   <!-- google_maps_flutter_web will auto-load the Maps JavaScript API using the meta key above. -->
   <!-- Ensure google.maps is available early to avoid 'undefined maps' errors on web -->
-  <script id="gmaps-js" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw&libraries=places" defer></script>
+  <script id="gmaps-js"
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw&libraries=places"
+    defer></script>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -39,7 +44,7 @@
   <title>ServicesRQ</title>
   <link rel="manifest" href="manifest.json">
 
-  
+
   <style id="splash-screen-style">
     html {
       height: 100%
@@ -66,19 +71,22 @@
     }
 
     .contain {
-      display:block;
-      width:100%; height:100%;
+      display: block;
+      width: 100%;
+      height: 100%;
       object-fit: contain;
     }
 
     .stretch {
-      display:block;
-      width:100%; height:100%;
+      display: block;
+      width: 100%;
+      height: 100%;
     }
 
     .cover {
-      display:block;
-      width:100%; height:100%;
+      display: block;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
     }
 
@@ -110,18 +118,21 @@
 
     #system-name {
       position: absolute;
-      top: 50%; left: 50%;
+      top: 50%;
+      left: 50%;
       transform: translate(-50%, -50%);
       text-align: center;
       font-weight: 700;
       letter-spacing: 0.5px;
       line-height: 1.2;
-      text-shadow: 0 2px 16px rgba(0,0,0,0.35);
+      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
       padding: 0 24px;
     }
+
     #system-name .title {
       font-size: 36px;
     }
+
     #system-name .subtitle {
       margin-top: 8px;
       font-size: 14px;
@@ -137,49 +148,52 @@
   </script>
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
+
 <body>
   <div id="splash">
     <div id="system-name" aria-hidden="true">
-  <div class="title">ServicesRQ</div>
+      <div class="title">ServicesRQ</div>
       <div class="subtitle">Rental Platform</div>
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.min.mjs" type="module"></script>
   <script type="module">
-  var { pdfjsLib } = globalThis;
-  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
+    var { pdfjsLib } = globalThis;
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
 
-  var pdfRenderOptions = {
-    cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/cmaps/',
-    cMapPacked: true,
-  }
+    var pdfRenderOptions = {
+      cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/cmaps/',
+      cMapPacked: true,
+    }
   </script>
   <script>
-    (function startFlutterWhenReady() {
-      function startFlutter() {
-        if (window.__flutter_bootstrap_started__) return;
-        window.__flutter_bootstrap_started__ = true;
-        var s = document.createElement('script');
-        s.src = 'flutter_bootstrap.js';
-        s.async = true;
-        document.body.appendChild(s);
-      }
-      // If google.maps is already present, start immediately.
-      if (window.google && window.google.maps) {
-        startFlutter();
-        return;
-      }
-      // Otherwise, wait for the gmaps script to load, then start.
-      var g = document.getElementById('gmaps-js');
-      if (g) {
-        g.addEventListener('load', startFlutter, { once: true });
-        g.addEventListener('error', startFlutter, { once: true }); // don’t block app if maps fails
-      } else {
-        // Fallback: start anyway
-        startFlutter();
-      }
-    })();
+      (function startFlutterWhenReady() {
+        function startFlutter() {
+          if (window.__flutter_bootstrap_started__) return;
+          window.__flutter_bootstrap_started__ = true;
+          var s = document.createElement('script');
+          s.src = 'flutter_bootstrap.js';
+          s.async = true;
+          document.body.appendChild(s);
+        }
+        // If google.maps is already present, start immediately.
+        if (window.google && window.google.maps) {
+          startFlutter();
+          return;
+        }
+        // Otherwise, wait for the gmaps script to load, then start.
+        var g = document.getElementById('gmaps-js');
+        if (g) {
+          g.addEventListener('load', startFlutter, { once: true });
+          g.addEventListener('error', startFlutter, { once: true }); // don’t block app if maps fails
+        } else {
+          // Fallback: start anyway
+          startFlutter();
+        }
+      })();
   </script>
 
 
-</body></html>
+</body>
+
+</html>

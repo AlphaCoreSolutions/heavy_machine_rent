@@ -135,12 +135,12 @@ void main() async {
   }
 
   const androidEmuBase = 'https://sr.visioncit.com/api/';
-  const prodBase = 'https://sr.visioncit.com/api/';
-  // Allow overriding the API base via --dart-define=API_BASE_URL=...
-  const envBase = String.fromEnvironment('API_BASE_URL');
+  const prodBase = 'https://sr.visioncit.com';
+  const envBase = String.fromEnvironment('API_BASE_URL'); // optional override
 
   final baseUrl = kIsWeb
-      ? (envBase.isNotEmpty ? envBase : prodBase)
+      // On web, default to same-origin to avoid CORS: https://<host>/api/...
+      ? (envBase.isNotEmpty ? envBase : '/api/')
       : ((defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
             ? androidEmuBase
             : (envBase.isNotEmpty ? envBase : prodBase));
