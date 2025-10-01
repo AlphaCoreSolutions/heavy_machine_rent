@@ -75,9 +75,8 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       false; // prevent feedback loops when writing to controllers
 
   bool get _usesInlineMap =>
-      // We only build the inline GoogleMap when not in the iOS placeholder mode
       !(defaultTargetPlatform == TargetPlatform.iOS &&
-          widget.inlineInteractive == false);
+          widget.inlineInteractive == true);
 
   void _attachControllerListeners() {
     widget.latCtrl.addListener(_onExternalCoordsChanged);
@@ -127,7 +126,9 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
   @override
   void initState() {
     super.initState();
-    _bootstrap();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _bootstrap(); // run after first frame so the map paints immediately
+    });
     _attachControllerListeners();
   }
 
@@ -204,7 +205,10 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       LatLng center = widget.initialCenter;
       if (perm != LocationPermission.denied &&
           perm != LocationPermission.deniedForever) {
-        final pos = await Geolocator.getCurrentPosition();
+        final pos = await Geolocator.getCurrentPosition().timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => throw 'timeout',
+        );
         center = LatLng(pos.latitude, pos.longitude);
       }
       if (_usesInlineMap) {
