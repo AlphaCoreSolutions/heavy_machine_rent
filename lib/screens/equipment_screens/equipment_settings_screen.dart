@@ -1638,7 +1638,7 @@ class _DriversTabState extends State<_DriversTab> {
     }
   }
 
-  /// Always return "driverdocFiles/<basename>" for storage.
+  /// Always return "driverdocFiles/&lt;basename&gt;" for storage.
   String _driverDocStorableFromName(String filename) {
     final base = filename.replaceAll('\\', '/').split('/').last.trim();
     return base.isEmpty ? '' : '${api.Api.driverDocsFolder}/$base';
@@ -1755,7 +1755,9 @@ class _DriversTabState extends State<_DriversTab> {
                 height: 150,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: Theme.of(dialogCtx).colorScheme.surfaceContainerHighest,
+                  color: Theme.of(
+                    dialogCtx,
+                  ).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
