@@ -1967,4 +1967,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get all => 'all';
+
+  @override
+  String get sessionExpired => 'Session Expired, please Sign In Again';
 }

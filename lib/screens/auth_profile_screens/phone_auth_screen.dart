@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
 import 'package:heavy_new/core/auth/auth_store.dart';
+import 'package:heavy_new/foundation/session_manager.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
@@ -73,7 +74,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     setState(() => _busy = true);
     try {
       await AuthStore.instance.verifyOtp(otp: code);
-      AppSnack.success(context, context.l10n.signedIn); // you already have this
+
+      await sessionManager.startFreshSession(reset: true);
+      AppSnack.success(context, context.l10n.signedIn);
 
       if (!mounted) return;
       // Persist FCM token for this user, then optionally send welcome.

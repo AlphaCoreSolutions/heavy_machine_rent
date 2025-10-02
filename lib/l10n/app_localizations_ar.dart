@@ -1971,4 +1971,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get all => 'الجميع';
+
+  @override
+  String get sessionExpired => 'الرجاء اعادة تسجيل الدخول';
 }

@@ -5,6 +5,9 @@ import 'dart:developer' show log;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:heavy_new/core/auth/auth_store.dart';
+import 'package:heavy_new/core/models/user/auth.dart';
+import 'package:heavy_new/foundation/session_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -146,6 +149,34 @@ void main() async {
             : (envBase.isNotEmpty ? envBase : prodBase));
 
   Api.init(baseUrl: baseUrl);
+  await AuthStore.instance.init(); // or .restore() if that’s your method
+
+  await AuthStore.instance.init();
+
+  // If already logged in at boot, enforce existing window OR create one if missing.
+  await sessionManager.enforceNow();
+  await sessionManager
+      .startFreshSession(); // safe: won't overwrite if key exists
+
+  // Seed lastUser BEFORE attaching the listener
+  AuthUser? _lastUser = AuthStore.instance.user.value;
+
+  AuthStore.instance.user.addListener(() async {
+    final currentUser = AuthStore.instance.user.value;
+
+    // null -> non-null: user just logged in (runtime flow)
+    if (_lastUser == null && currentUser != null) {
+      await sessionManager
+          .startFreshSession(); // safe: won't refresh existing key
+    }
+
+    // non-null -> null: user just logged out
+    if (_lastUser != null && currentUser == null) {
+      await sessionManager.enforceNow(); // cancels timer if key was removed
+    }
+
+    _lastUser = currentUser;
+  });
 
   runApp(const HeavyApp());
 }

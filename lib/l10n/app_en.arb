@@ -912,5 +912,6 @@
     "pickAFileFirst": "Please pick and upload a file first",
     "savingDots": "Saving…",
     "tryAgain": "Try Again",
-    "all": "all"
+    "all": "all",
+    "sessionExpired": "Session Expired, please Sign In Again"
 }

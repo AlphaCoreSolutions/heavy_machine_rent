@@ -996,34 +996,44 @@ class _AuthButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final t = Theme.of(context).textTheme;
-    final isIn = AuthStore.instance.isLoggedIn;
 
-    return TextButton.icon(
-      style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        visualDensity: VisualDensity.compact,
-        foregroundColor: cs.primary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-      ),
-      icon: AIcon(isIn ? AppGlyph.logout : AppGlyph.login),
-      label: Text(
-        isIn ? context.l10n.actionLogout : context.l10n.actionLogin,
-        style: t.labelLarge, // smaller, app-standard size
-        overflow: TextOverflow.ellipsis,
-      ),
-      onPressed: () async {
-        if (isIn) {
-          await AuthStore.instance.logout();
-          if (!context.mounted) return;
-          AppSnack.info(context, context.l10n.signedOut);
-        } else {
-          final ok = await Navigator.of(context).push<bool>(
-            MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
-          );
-          if (ok == true && context.mounted) {
-            AppSnack.success(context, context.l10n.signedIn);
-          }
-        }
+    return ValueListenableBuilder<AuthUser?>(
+      valueListenable: AuthStore.instance.user, // 👈 react to changes
+      builder: (context, user, _) {
+        final isIn = user != null;
+
+        return TextButton.icon(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            visualDensity: VisualDensity.compact,
+            foregroundColor: cs.primary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          icon: AIcon(isIn ? AppGlyph.logout : AppGlyph.login),
+          label: Text(
+            isIn ? context.l10n.actionLogout : context.l10n.actionLogin,
+            style: t.labelLarge,
+            overflow: TextOverflow.ellipsis,
+          ),
+          onPressed: () async {
+            if (isIn) {
+              await AuthStore.instance.logout();
+              if (!context.mounted) return;
+              AppSnack.info(context, context.l10n.signedOut);
+              // (optional) route somewhere after logout:
+              // context.go('/auth');
+            } else {
+              final ok = await Navigator.of(context).push<bool>(
+                MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
+              );
+              if (ok == true && context.mounted) {
+                AppSnack.success(context, context.l10n.signedIn);
+              }
+            }
+          },
+        );
       },
     );
   }

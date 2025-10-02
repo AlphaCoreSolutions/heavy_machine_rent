@@ -3724,6 +3724,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'all'**
   String get all;
+
+  /// No description provided for @sessionExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Session Expired, please Sign In Again'**
+  String get sessionExpired;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {
