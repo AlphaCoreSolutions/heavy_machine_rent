@@ -135,12 +135,12 @@ void main() async {
   }
 
   const androidEmuBase = 'https://sr.visioncit.com/api/';
-  const prodBase = 'https://sr.visioncit.com';
+  const prodBase = 'https://sr.visioncit.com/api/';
   const envBase = String.fromEnvironment('API_BASE_URL'); // optional override
 
   final baseUrl = kIsWeb
       // On web, default to same-origin to avoid CORS: https://<host>/api/...
-      ? (envBase.isNotEmpty ? envBase : '/api/')
+      ? (envBase.isNotEmpty ? envBase : prodBase)
       : ((defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
             ? androidEmuBase
             : (envBase.isNotEmpty ? envBase : prodBase));
