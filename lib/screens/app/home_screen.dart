@@ -1,5 +1,6 @@
 // lib/screens/home_screen.dart
 import 'dart:async';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 // === API ===
@@ -53,27 +54,30 @@ class _HomeScreenState extends State<HomeScreen> {
     double aspect, // width / height for the row card
   })
   _layoutForWidth(double w) {
-    final hPad = w >= 1280 ? 32.0 : (w >= 1024 ? 24.0 : 16.0);
-    final vTop = 16.0;
-    final vBottom = 24.0;
+    final hPad = w >= 1600
+        ? 40.0
+        : (w >= 1280 ? 34.0 : (w >= 1024 ? 24.0 : 16.0));
+    final vTop = w >= 1280 ? 18.0 : 16.0;
+    final vBottom = w >= 1280 ? 28.0 : 24.0;
+
     final maxW = 1440.0;
     final gap = 12.0;
 
     late int cols;
     late double aspect;
 
-    if (w >= 1440) {
+    if (w >= 1600) {
       // Desktop XL → 4 across
       cols = 4;
-      aspect = 1.80;
-    } else if (w >= 1150) {
+      aspect = 2.20;
+    } else if (w >= 1280) {
       // Desktop L → 3 across
       cols = 3;
-      aspect = 1.70;
+      aspect = 2.05;
     } else if (w >= 760) {
       // Tablet / Laptop S → 2 across
       cols = 2;
-      aspect = 1.60;
+      aspect = 1.80;
     } else {
       // Phones → 1 across
       cols = 1;
@@ -102,29 +106,42 @@ class _HomeScreenState extends State<HomeScreen> {
     return OfflineBanner(
       child: Scaffold(
         appBar: AppBar(
+          elevation: 0,
+          centerTitle: true,
+          backgroundColor: Theme.of(
+            context,
+          ).colorScheme.surface.withOpacity(0.65),
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          flexibleSpace: ClipRect(
+            // frosted glass
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+              child: Container(color: Colors.transparent),
+            ),
+          ),
           title: Text(
-            context.l10n.appName, // 'HeavyRent'
+            context.l10n.appName,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.2,
+            ),
           ),
-          centerTitle: true,
-          leadingWidth: 110,
-          backgroundColor: Theme.of(context).colorScheme.surface,
+          leadingWidth: 120,
           leading: Padding(
             padding: const EdgeInsets.only(left: 8),
             child: _AuthButton(),
           ),
-
           actions: [
-            // Admin button (conditionally visible)
             ValueListenableBuilder<AuthUser?>(
-              // unchanged
               valueListenable: AuthStore.instance.user,
               builder: (context, u, _) {
                 final isSuperAdmin = u?.userTypeId == 17;
                 if (!isSuperAdmin) return const SizedBox.shrink();
                 return IconButton(
-                  tooltip: context.l10n.admin, // 'Admin'
+                  tooltip: context.l10n.admin,
                   icon: const Icon(Icons.admin_panel_settings),
                   onPressed: () {
                     Navigator.of(context).push(
@@ -164,34 +181,65 @@ class _HomeScreenState extends State<HomeScreen> {
                       LayoutBuilder(
                         builder: (context, bc) {
                           final bw = bc.maxWidth;
-                          final heroH = bw >= 1100
-                              ? 320.0
-                              : (bw >= 720 ? 260.0 : 210.0);
-                          return SizedBox(
-                            height: heroH,
-                            child: TiltHeroCard(
-                              title: context
-                                  .l10n
-                                  .heroTitle, // 'Heavy gear, light work'
-                              subtitle: context
-                                  .l10n
-                                  .heroSubtitle, // 'Rent certified machines...'
-                              image: Image.asset(
-                                'lib/assets/hero.jpg',
-                                fit: BoxFit.cover,
-                              ),
-                              onPrimaryAction: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => const EquipmentListScreen(),
+                          final isWide = bw >= 1100;
+                          final heroH = isWide
+                              ? 380.0
+                              : (bw >= 720 ? 280.0 : 220.0);
+
+                          return Stack(
+                            children: [
+                              // glow blob behind hero (subtle)
+                              if (isWide)
+                                Positioned.fill(
+                                  child: IgnorePointer(
+                                    child: Align(
+                                      alignment: Alignment.topCenter,
+                                      child: Container(
+                                        width: bw * 0.7,
+                                        height: heroH * 0.9,
+                                        decoration: BoxDecoration(
+                                          borderRadius: BorderRadius.circular(
+                                            28,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: Theme.of(context)
+                                                  .colorScheme
+                                                  .primary
+                                                  .withOpacity(0.14),
+                                              blurRadius: 120,
+                                              spreadRadius: 10,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              SizedBox(
+                                height: heroH,
+                                child: TiltHeroCard(
+                                  title: context.l10n.heroTitle,
+                                  subtitle: context.l10n.heroSubtitle,
+                                  image: Image.asset(
+                                    'lib/assets/hero.jpg',
+                                    fit: BoxFit.cover,
+                                  ),
+                                  onPrimaryAction: () =>
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute(
+                                          builder: (_) =>
+                                              const EquipmentListScreen(),
+                                        ),
+                                      ),
+                                  primaryLabel: context.l10n.findEquipment,
                                 ),
                               ),
-                              primaryLabel: context
-                                  .l10n
-                                  .findEquipment, // 'Find equipment'
-                            ),
+                            ],
                           );
                         },
                       ),
+
                       const SizedBox(height: 15),
                       SectionHeader(
                         title: context
@@ -279,21 +327,19 @@ class _HomeScreenState extends State<HomeScreen> {
                               final int cols;
                               final double aspect; // width / height
                               // in grid layout calculations:
-                              if (gridW >= 1400) {
+                              if (gridW >= 1500) {
                                 cols = 4;
-                                aspect = 2.10;
-                              } // was 1.90
-                              else if (gridW >= 1080) {
+                                aspect = 2.25;
+                              } else if (gridW >= 1180) {
                                 cols = 3;
-                                aspect = 1.95;
-                              } // was 1.80
-                              else if (gridW >= 720) {
+                                aspect = 2.05;
+                              } else if (gridW >= 760) {
                                 cols = 2;
-                                aspect = 1.75;
+                                aspect = 1.85;
                               } else {
                                 cols = 1;
-                                aspect = 2.295;
-                              } // was 1.85
+                                aspect = 2.20;
+                              }
 
                               return GridView.builder(
                                 shrinkWrap: true,
@@ -391,9 +437,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                               ),
                                               child: FallbackNetworkImage(
                                                 candidates: thumbCandidates,
-                                                placeholderColor: Theme.of(
-                                                  context,
-                                                ).colorScheme.surfaceContainerHighest,
+                                                placeholderColor:
+                                                    Theme.of(context)
+                                                        .colorScheme
+                                                        .surfaceContainerHighest,
                                                 fit: BoxFit
                                                     .cover, // ← back to cover
                                               ),
@@ -560,13 +607,13 @@ class SectionHeader extends StatelessWidget {
         );
 
         final underline = Container(
-          height: 3,
-          width: 38, // a bit smaller
-          margin: const EdgeInsets.only(top: 4),
+          height: 2.5,
+          width: 42,
+          margin: const EdgeInsets.only(top: 6),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(2),
             gradient: LinearGradient(
-              colors: [cs.primary, cs.primary.withAlpha((0.3 * 255).toInt())],
+              colors: [cs.primary, cs.primary.withOpacity(0.25)],
             ),
           ),
         );
@@ -786,18 +833,24 @@ class RowEquipmentCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: cs.surface,
-          border: Border.all(
-            color: cs.outlineVariant.withAlpha((0.45 * 255).toInt()),
-          ),
+          color: cs.surface.withOpacity(0.92), // slight translucency
+          border: Border.all(color: cs.outlineVariant.withOpacity(0.35)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha((0.05 * 255).toInt()),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 18,
+              offset: const Offset(0, 10),
+            ),
+            // soft highlight (top edge) for glassiness
+            BoxShadow(
+              color: Colors.white.withOpacity(0.15),
+              blurRadius: 0,
+              spreadRadius: -1,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
+
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -974,4 +1027,59 @@ class _AuthButton extends StatelessWidget {
       },
     );
   }
+}
+
+class SiteBackdrop extends StatelessWidget {
+  const SiteBackdrop({super.key, required this.child});
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        // Gradient wash
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  cs.surfaceContainerHighest.withOpacity(0.85),
+                  cs.surface,
+                  cs.surface,
+                  cs.surfaceContainerHighest.withOpacity(0.9),
+                ],
+                stops: const [0.0, 0.45, 0.75, 1.0],
+              ),
+            ),
+          ),
+        ),
+        // Subtle grid/lines (very faint)
+        Positioned.fill(child: CustomPaint(painter: _FaintGridPainter())),
+        // content
+        child,
+      ],
+    );
+  }
+}
+
+class _FaintGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF000000).withOpacity(0.035)
+      ..strokeWidth = 1;
+    const step = 48.0;
+    for (double x = 0; x < size.width; x += step) {
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+    }
+    for (double y = 0; y < size.height; y += step) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
