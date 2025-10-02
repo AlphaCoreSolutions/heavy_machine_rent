@@ -539,6 +539,11 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
                                 setDlgState(() {
                                   tempPicked = p;
                                 });
+
+                                final c = await dlgCtrl.future;
+                                await c.animateCamera(
+                                  CameraUpdate.newLatLngZoom(p, 16),
+                                );
                               },
                             ),
                         },
@@ -547,6 +552,11 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
                           setDlgState(() {
                             tempPicked = p;
                           });
+
+                          final c = await dlgCtrl.future;
+                          await c.animateCamera(
+                            CameraUpdate.newLatLngZoom(p, 16),
+                          );
                         },
                       ),
                     ),
@@ -616,6 +626,16 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
                                               ? (name ?? tempAddress)
                                               : null,
                                         );
+
+                                        if (_usesInlineMap) {
+                                          final c = await _mapCtrl.future;
+                                          await c.animateCamera(
+                                            CameraUpdate.newLatLngZoom(
+                                              _picked!,
+                                              16,
+                                            ),
+                                          );
+                                        }
                                         if (mounted) {
                                           Navigator.pop(ctx);
                                         }
@@ -689,6 +709,11 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
 
                   final name = await _reverseGeocode(p);
                   _writeBack(p, addressOverride: name);
+
+                  if (_usesInlineMap) {
+                    final c = await _mapCtrl.future;
+                    await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
+                  }
                 },
                 compassEnabled: true,
                 mapToolbarEnabled: false,
