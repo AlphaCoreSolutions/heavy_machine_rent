@@ -103,12 +103,7 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
     });
     if (_usesInlineMap) {
       final c = await _mapCtrl.future;
-      LatLng center = widget.initialCenter;
-      await c.moveCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: center, zoom: 15),
-        ),
-      );
+      await c.animateCamera(CameraUpdate.newLatLngZoom(p, 16));
     }
   }
 
