@@ -913,5 +913,8 @@
     "savingDots": "Saving…",
     "tryAgain": "Try Again",
     "all": "all",
-    "sessionExpired": "Session Expired, please Sign In Again"
+    "sessionExpired": "Session Expired, please Sign In Again",
+    "home": "Home",
+    "browse": "Browse",
+    "settings": "Settings"
 }

@@ -149,7 +149,6 @@ void main() async {
             : (envBase.isNotEmpty ? envBase : prodBase));
 
   Api.init(baseUrl: baseUrl);
-  await AuthStore.instance.init(); // or .restore() if that’s your method
 
   await AuthStore.instance.init();
 
@@ -223,20 +222,21 @@ class HeavyApp extends StatelessWidget {
   }
 }
 
-final _rootNavigatorKey = navigatorKey;
-final _shellNavigatorKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
+final _rootNavigatorKey = navigatorKey; // root
+final _shellNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shell',
+); // one shell
 
 final GoRouter _router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
   routes: <RouteBase>[
-    // App shell keeps bottom bar and theme wrapper
+    // ===== Single shell for the 3-tab area =====
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) =>
           AppShell(path: state.uri.path, child: child),
       routes: [
-        // ===== Home & catalog =====
         GoRoute(
           path: '/',
           name: AppRoutes.home,
@@ -250,130 +250,98 @@ final GoRouter _router = GoRouter(
               sharedAxisX(child: const EquipmentListScreen()),
         ),
         GoRoute(
-          path: '/equipment/:id',
-          name: AppRoutes.equipmentDetails,
-          pageBuilder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '');
-            return sharedAxisX(
-              child: EquipmentDetailsScreen(equipmentId: id ?? 0),
-            );
-          },
-        ),
-
-        // ===== Requests (user’s) =====
-        GoRoute(
-          path: '/requests',
-          name: AppRoutes.requests,
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const MyRequestsScreen()),
-        ),
-
-        // ===== Settings hub + subpages =====
-        GoRoute(
           path: '/settings',
-          name: AppRoutes.settings,
+          name: AppRoutes.settings, // only defined once
           pageBuilder: (context, state) =>
               sharedAxisX(child: const SettingsScreen()),
         ),
-        GoRoute(
-          path: '/settings/app',
-          name: AppRoutes.settingsApp,
-          pageBuilder: (context, state) =>
-              fadeThroughPage(child: const AppSettingsScreen()),
-        ),
-        GoRoute(
-          path: '/profile',
-          name: AppRoutes.profile,
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const ProfileScreen()),
-        ),
-        GoRoute(
-          path: '/employees',
-          name: AppRoutes.employees,
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const EmployeesScreen()),
-        ),
-
-        // ===== Vendor area (visible once account is completed) =====
-        GoRoute(
-          path: '/organization',
-          name: AppRoutes.organization,
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const OrganizationScreen()),
-        ),
-        GoRoute(
-          path: '/my-equipment',
-          name: AppRoutes.myEquipment,
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const EquipmentManagementScreen()),
-        ),
-
-        // ===== Auth =====
-        GoRoute(
-          path: '/auth',
-          name: AppRoutes.auth,
-          pageBuilder: (context, state) =>
-              fadeThroughPage(child: const PhoneAuthScreen()),
-        ),
-
-        // ===== FIXED: give these leading slashes for consistency =====
-        GoRoute(
-          path: '/orders',
-          name: 'orders',
-          pageBuilder: (context, state) =>
-              fadeThroughPage(child: const OrdersHistoryScreen()),
-        ),
-        GoRoute(
-          path: '/contracts',
-          name: 'contracts',
-          pageBuilder: (context, state) =>
-              fadeThroughPage(child: const ContractsScreen()),
-        ),
-        GoRoute(
-          path: '/chats',
-          name: 'chats',
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const ChatListScreen()),
-        ),
-        GoRoute(
-          path: '/chats/:id',
-          name: 'chatThread',
-          pageBuilder: (context, state) {
-            final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
-            return sharedAxisX(child: ChatThreadScreen(threadId: id));
-          },
-        ),
-        GoRoute(
-          path: '/notifications',
-          name: 'notifications',
-          pageBuilder: (context, state) =>
-              sharedAxisX(child: const NotificationsScreen()),
-        ),
       ],
     ),
-  ],
-  errorPageBuilder: (context, state) => fadeThroughPage(
-    child: Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Something went wrong'),
-              const SizedBox(height: 8),
-              Text(state.error?.toString() ?? 'Unknown error'),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => context.go('/'),
-                child: const Text('Go Home'),
-              ),
-            ],
-          ),
-        ),
-      ),
+
+    // ===== Non-tab routes (no bottom bar) =====
+    GoRoute(
+      path: '/equipment/:id',
+      name: AppRoutes.equipmentDetails,
+      pageBuilder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '');
+        return sharedAxisX(child: EquipmentDetailsScreen(equipmentId: id ?? 0));
+      },
     ),
-  ),
+    GoRoute(
+      path: '/requests',
+      name: AppRoutes.requests,
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const MyRequestsScreen()),
+    ),
+    GoRoute(
+      path: '/settings/app',
+      name: AppRoutes.settingsApp,
+      pageBuilder: (context, state) =>
+          fadeThroughPage(child: const AppSettingsScreen()),
+    ),
+    GoRoute(
+      path: '/profile',
+      name: AppRoutes.profile,
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const ProfileScreen()),
+    ),
+    GoRoute(
+      path: '/employees',
+      name: AppRoutes.employees,
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const EmployeesScreen()),
+    ),
+    GoRoute(
+      path: '/organization',
+      name: AppRoutes.organization,
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const OrganizationScreen()),
+    ),
+    GoRoute(
+      path: '/my-equipment',
+      name: AppRoutes.myEquipment,
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const EquipmentManagementScreen()),
+    ),
+    GoRoute(
+      path: '/auth',
+      name: AppRoutes.auth,
+      pageBuilder: (context, state) =>
+          fadeThroughPage(child: const PhoneAuthScreen()),
+    ),
+    GoRoute(
+      path: '/orders',
+      name: 'orders',
+      pageBuilder: (context, state) =>
+          fadeThroughPage(child: const OrdersHistoryScreen()),
+    ),
+    GoRoute(
+      path: '/contracts',
+      name: 'contracts',
+      pageBuilder: (context, state) =>
+          fadeThroughPage(child: const ContractsScreen()),
+    ),
+    GoRoute(
+      path: '/chats',
+      name: 'chats',
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const ChatListScreen()),
+    ),
+    GoRoute(
+      path: '/chats/:id',
+      name: 'chatThread',
+      pageBuilder: (context, state) {
+        final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+        return sharedAxisX(child: ChatThreadScreen(threadId: id));
+      },
+    ),
+    GoRoute(
+      path: '/notifications',
+      name: 'notifications',
+      pageBuilder: (context, state) =>
+          sharedAxisX(child: const NotificationsScreen()),
+    ),
+  ],
 );
 
 class AppRoutes {

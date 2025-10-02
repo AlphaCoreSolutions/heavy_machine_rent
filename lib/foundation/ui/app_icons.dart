@@ -36,7 +36,7 @@ enum AppGlyph {
   logout,
   moon,
   globe,
-  Settings,
+  settings,
   send,
   login,
   back,
@@ -202,7 +202,7 @@ class AIcon extends StatelessWidget {
         return LucideIcons.moon;
       case AppGlyph.globe:
         return LucideIcons.globe;
-      case AppGlyph.Settings:
+      case AppGlyph.settings:
         return LucideIcons.settings;
       case AppGlyph.send:
         return LucideIcons.send;

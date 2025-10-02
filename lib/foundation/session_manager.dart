@@ -79,7 +79,7 @@ class SessionManager with WidgetsBindingObserver {
         l10n?.sessionExpired ?? 'Session expired. Please sign in again.',
       );
       // Send the user to the auth screen or home; choose one:
-      ctx.go('/auth'); // or ctx.go('/');
+      ctx.push('/auth'); // or ctx.go('/');
     }
   }
 

@@ -1974,4 +1974,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get sessionExpired => 'الرجاء اعادة تسجيل الدخول';
+
+  @override
+  String get home => 'الرئيسية';
+
+  @override
+  String get browse => 'تصفح';
+
+  @override
+  String get settings => 'الإعدادات';
 }

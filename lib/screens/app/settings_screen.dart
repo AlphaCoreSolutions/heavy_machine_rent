@@ -288,7 +288,7 @@ class SettingsScreen extends StatelessWidget {
             ).push(MaterialPageRoute(builder: (_) => const ProfileScreen())),
           ),
           _ActionTile(
-            icon: AppGlyph.Settings,
+            icon: AppGlyph.settings,
             title: L10nX(context).l10n.appSettings,
             subtitle: L10nX(context).l10n.appSettingsSubtitle,
             onTap: () => Navigator.of(context).push(

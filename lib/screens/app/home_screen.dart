@@ -998,7 +998,7 @@ class _AuthButton extends StatelessWidget {
     final t = Theme.of(context).textTheme;
 
     return ValueListenableBuilder<AuthUser?>(
-      valueListenable: AuthStore.instance.user, // 👈 react to changes
+      valueListenable: AuthStore.instance.user,
       builder: (context, user, _) {
         final isIn = user != null;
 
@@ -1022,8 +1022,6 @@ class _AuthButton extends StatelessWidget {
               await AuthStore.instance.logout();
               if (!context.mounted) return;
               AppSnack.info(context, context.l10n.signedOut);
-              // (optional) route somewhere after logout:
-              // context.go('/auth');
             } else {
               final ok = await Navigator.of(context).push<bool>(
                 MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),

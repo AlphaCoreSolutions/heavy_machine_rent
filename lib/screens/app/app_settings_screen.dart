@@ -66,7 +66,7 @@ class _AppSettingsScreenState extends State<AppSettingsScreen> {
                     children: [
                       Row(
                         children: [
-                          AIcon(AppGlyph.Settings, color: cs.primary),
+                          AIcon(AppGlyph.settings, color: cs.primary),
                           const SizedBox(width: 8),
                           Text(
                             context.l10n.settingsTheme, // ← localized
