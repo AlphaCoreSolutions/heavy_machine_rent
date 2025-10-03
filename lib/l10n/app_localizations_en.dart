@@ -1203,7 +1203,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sectionResponsibilities => 'Responsibilities';
 
   @override
-  String get sectionTerms => 'Terms';
+  String get sectionTerms => 'Terms & Conditions';
 
   @override
   String get sectionDriverAssignments => 'Driver Assignments (per requested unit)';
@@ -1649,7 +1649,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get msgNoNats => 'No driver nationalities available for this equipment.';
 
   @override
-  String get labelDriverNationality => 'Driver nationality *';
+  String get labelDriverNationality => 'Driver nationality';
 
   @override
   String get labelDropoffAddress => 'Drop-off address';
@@ -1979,4 +1979,107 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings => 'Settings';
+
+  @override
+  String get errorLoadStatusDomain => 'Could not load status names.';
+
+  @override
+  String get errorInvalidRequestId => 'Invalid request id.';
+
+  @override
+  String get errorUnitHasNoDriverForNationality => 'At least one unit has no available drivers for its requested nationality.';
+
+  @override
+  String get errorUpdateFailedFlagFalse => 'Update failed (flag=false).';
+
+  @override
+  String get errorContractCreationFailed => 'Contract creation failed.';
+
+  @override
+  String get snackContractCreated => 'Contract created';
+
+  @override
+  String get labelVendor => 'Vendor';
+
+  @override
+  String get labelCustomer => 'Customer';
+
+  @override
+  String get labelIAmVendorQ => 'I am vendor?';
+
+  @override
+  String get yes => 'Yes';
+
+  @override
+  String get no => 'No';
+
+  @override
+  String get labelItem => 'Item';
+
+  @override
+  String get labelEquipmentId => 'Equipment ID';
+
+  @override
+  String get labelWeight => 'Weight';
+
+  @override
+  String get respFuel => 'Fuel';
+
+  @override
+  String get respDriverFood => 'Driver food';
+
+  @override
+  String get respDriverHousing => 'Driver housing';
+
+  @override
+  String get sectionStatusAcceptance => 'Status & Acceptance';
+
+  @override
+  String get flagVendorAccepted => 'Vendor accepted';
+
+  @override
+  String get flagCustomerAccepted => 'Customer accepted';
+
+  @override
+  String get sectionNotes => 'Notes';
+
+  @override
+  String get labelVendorNotes => 'Vendor notes';
+
+  @override
+  String get labelCustomerNotes => 'Customer notes';
+
+  @override
+  String get sectionAttachments => 'Attachments';
+
+  @override
+  String get sectionMeta => 'Meta';
+
+  @override
+  String get labelRequestId => 'Request ID';
+
+  @override
+  String get labelRequestNo => 'Request No.';
+
+  @override
+  String get labelCreatedAt => 'Created';
+
+  @override
+  String get labelUpdatedAt => 'Updated At';
+
+  @override
+  String fileType1(Object type) {
+    return 'Type $type';
+  }
+
+  @override
+  String get showMore => 'Show more';
+
+  @override
+  String get showLess => 'Show less';
+
+  @override
+  String driverWithId(Object id) {
+    return 'Driver #$id';
+  }
 }

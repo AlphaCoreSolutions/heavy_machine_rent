@@ -11,6 +11,7 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/admin/request_driver_location.dart';
 import 'package:heavy_new/core/models/organization/organization_user.dart';
+import 'package:heavy_new/core/models/organization/organization_summary.dart';
 import 'package:heavy_new/core/models/user/nationality.dart';
 import 'package:heavy_new/core/utils/model_utils.dart';
 
@@ -40,6 +41,12 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
   Future<List<EquipmentDriver>>? _driversFuture;
   late Future<List<Nationality>> _natsFuture;
 
+  // Parties / Equipment / Nationality by ID
+  Future<OrganizationSummary>? _vendorByIdFuture;
+  Future<OrganizationSummary>? _customerByIdFuture;
+  Future<Equipment>? _equipmentByIdFuture;
+  Future<Nationality>? _driverNationalityByIdFuture;
+
   // Domains / misc
   final _dateFmt = DateFormat('yyyy-MM-dd');
   static const _ccy = 'SAR';
@@ -49,7 +56,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
   // ignore: unused_field
   String? _statusError;
 
-  // Org (am I vendor?)
+  // Org (am I vendor?) — still used for permissions, not shown to users
   int? _myOrgId;
   // ignore: unused_field
   bool _orgLoading = false;
@@ -93,7 +100,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       setState(() => _statusById = map);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _statusError = 'Could not load status names.');
+      setState(() => _statusError = context.l10n.errorLoadStatusDomain);
     } finally {
       if (mounted) setState(() => _statusLoading = false);
     }
@@ -115,6 +122,30 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       dev.log('resolve org failed: $e', name: 'RequestDetails');
     } finally {
       if (mounted) setState(() => _orgLoading = false);
+    }
+  }
+
+  // party/equipment/nationality futures
+  void _ensurePartyFutures(int? vendorId, int? customerId) {
+    if (vendorId != null && vendorId > 0) {
+      _vendorByIdFuture ??= api.Api.getOrganizationById(vendorId);
+    }
+    if (customerId != null && customerId > 0) {
+      _customerByIdFuture ??= api.Api.getOrganizationById(customerId);
+    }
+  }
+
+  void _ensureEquipmentByIdFuture(int? equipmentId) {
+    if (equipmentId != null && equipmentId > 0) {
+      _equipmentByIdFuture ??= api.Api.getEquipmentById(equipmentId);
+    }
+  }
+
+  void _ensureNationalityByIdFuture(int? natId) {
+    if (natId != null && natId > 0) {
+      if (_driverNationalityByIdFuture == null) {
+        _driverNationalityByIdFuture = api.Api.getNationalityById(natId);
+      }
     }
   }
 
@@ -223,20 +254,17 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     List<EquipmentDriver> allDrivers,
   ) async {
     if (r.requestId == null || r.requestId == 0) {
-      AppSnack.error(context, 'Invalid request id.');
+      AppSnack.error(context, context.l10n.errorInvalidRequestId);
       return;
     }
 
     // Strict guards
     if (!_everyRdlHasAtLeastOneChoice(rdls, allDrivers)) {
-      AppSnack.error(
-        context,
-        'At least one unit has no available drivers for its requested nationality.',
-      );
+      AppSnack.error(context, context.l10n.errorUnitHasNoDriverForNationality);
       return;
     }
     if (!_allAssignedValid(rdls, allDrivers)) {
-      AppSnack.error(context, 'Please assign a driver for every unit.');
+      AppSnack.error(context, context.l10n.errorAssignDriverEachUnit);
       return;
     }
 
@@ -257,7 +285,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
         rdlsAssigned: rdlsAssigned,
       );
       if (!updatedOk) {
-        AppSnack.error(context, 'Update failed (flag=false)');
+        AppSnack.error(context, context.l10n.errorUpdateFailedFlagFalse);
         return;
       }
 
@@ -272,13 +300,13 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
       if (!ok) {
         final msg = (env.message?.trim().isNotEmpty ?? false)
             ? env.message!
-            : 'Contract creation failed.';
+            : context.l10n.errorContractCreationFailed;
         AppSnack.error(context, msg);
         return;
       }
 
       if (!mounted) return;
-      AppSnack.success(context, 'Contract created');
+      AppSnack.success(context, context.l10n.snackContractCreated);
 
       // 3) Navigate to contracts screen
       Navigator.of(context).pushReplacement(
@@ -331,9 +359,10 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
           final r = snap.data!;
           _ensureRdlFuture(r.requestId);
           _ensureDriversFuture(r.equipmentId);
+          _ensurePartyFutures(r.vendorId, r.customerId);
+          _ensureEquipmentByIdFuture(r.equipmentId);
+          _ensureNationalityByIdFuture(r.driverNationalityId);
 
-          final reqNo =
-              r.requestNo?.toString() ?? r.requestId?.toString() ?? '—';
           final fromDt = dtLoose(r.fromDate);
           final toDt = dtLoose(r.toDate);
           final from = fromDt != null ? _dateFmt.format(fromDt) : '—';
@@ -357,7 +386,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
             children: [
-              // ---------- Header (wraps nicely on small screens) ----------
+              // ---------- Header (no request number) ----------
               Glass(
                 radius: 18,
                 child: Padding(
@@ -378,9 +407,9 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // Title gets all horizontal space, chips wrap beneath if needed
+                            // Just the title (localized), no number
                             Text(
-                              '${context.l10n.requestNumber} $reqNo',
+                              context.l10n.requestDetailsTitle,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).textTheme.titleLarge
@@ -421,7 +450,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
               ),
               const SizedBox(height: 12),
 
-              // ---------- Duration (uses Wrap so it never overflows) ----------
+              // ---------- Duration ----------
               Glass(
                 radius: 18,
                 child: Padding(
@@ -458,6 +487,354 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
+
+              // ---------- Parties (names via ID lookups) ----------
+              Glass(
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sectionParties,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+
+                      // Vendor
+                      FutureBuilder<OrganizationSummary>(
+                        future: _vendorByIdFuture,
+                        builder: (context, vs) {
+                          final name = vs.data != null
+                              ? _orgNameOnly(vs.data)
+                              : _orgNameOnly(r.vendor);
+                          return _kvLine(
+                            context,
+                            context.l10n.labelVendor,
+                            name,
+                          );
+                        },
+                      ),
+
+                      // Customer
+                      FutureBuilder<OrganizationSummary>(
+                        future: _customerByIdFuture,
+                        builder: (context, csnap) {
+                          final name = csnap.data != null
+                              ? _orgNameOnly(csnap.data)
+                              : _orgNameOnly(r.customer);
+                          return _kvLine(
+                            context,
+                            context.l10n.labelCustomer,
+                            name,
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---------- Equipment (name only) ----------
+              Glass(
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sectionEquipment,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      FutureBuilder<Equipment>(
+                        future: _equipmentByIdFuture,
+                        builder: (context, esnap) {
+                          final label = esnap.data != null
+                              ? _equipDisplay(esnap.data)
+                              : _equipDisplay(r.equipment);
+                          return _kvLine(
+                            context,
+                            context.l10n.labelItem,
+                            label,
+                          );
+                        },
+                      ),
+                      _kvLine(
+                        context,
+                        context.l10n.labelRequestedQty,
+                        _safe(r.requestedQuantity?.toString()),
+                      ),
+                      // Driver nationality resolved by ID
+                      // Driver nationalities (may be multiple when qty > 1)
+                      FutureBuilder<List<RequestDriverLocation>>(
+                        future: _rdlsFuture,
+                        builder: (context, rdlSnap) {
+                          // If we don't have RDLs yet, fall back to the old single id → name path
+                          final fallbackNatId = r.driverNationalityId;
+                          if (rdlSnap.connectionState ==
+                              ConnectionState.waiting) {
+                            return _kvLine(
+                              context,
+                              context.l10n.labelDriverNationality,
+                              '—',
+                            );
+                          }
+
+                          final rdls =
+                              rdlSnap.data ?? const <RequestDriverLocation>[];
+                          final natIds = rdls
+                              .map((u) => u.driverNationalityId)
+                              .whereType<int>()
+                              .toSet();
+
+                          // If no per-unit nationality IDs, use the single root-level one
+                          if (natIds.isEmpty &&
+                              (fallbackNatId == null || fallbackNatId == 0)) {
+                            return _kvLine(
+                              context,
+                              context.l10n.labelDriverNationality,
+                              '—',
+                            );
+                          }
+
+                          return FutureBuilder<List<Nationality>>(
+                            future: _natsFuture,
+                            builder: (context, natSnap) {
+                              if (natSnap.connectionState ==
+                                  ConnectionState.waiting) {
+                                return _kvLine(
+                                  context,
+                                  context.l10n.labelDriverNationality,
+                                  '—',
+                                );
+                              }
+                              final nats =
+                                  natSnap.data ?? const <Nationality>[];
+
+                              // Build a lookup map for fast id → name
+                              final nameById = <int, String>{
+                                for (final n in nats)
+                                  if (n.nationalityId != null)
+                                    n.nationalityId!:
+                                        (n.nationalityNameEnglish
+                                                ?.trim()
+                                                .isNotEmpty ??
+                                            false)
+                                        ? n.nationalityNameEnglish!.trim()
+                                        : _safe(n.nationalityNameArabic),
+                              };
+
+                              // If we have multiple from RDLs, use those; else fallback single id
+                              final idsToShow = natIds.isNotEmpty
+                                  ? natIds
+                                  : {
+                                      if (fallbackNatId != null &&
+                                          fallbackNatId > 0)
+                                        fallbackNatId,
+                                    };
+
+                              final labels = idsToShow
+                                  .map(
+                                    (id) =>
+                                        _safe(nameById[id] ?? id.toString()),
+                                  )
+                                  .toList();
+
+                              // You can switch this to chips if you prefer:
+                              // return _kvLineChips(context, context.l10n.labelDriverNationality,
+                              //   labels.map((t) => _chip(t)).toList());
+
+                              return _kvLineChips(
+                                context,
+                                context.l10n.labelDriverNationality,
+                                labels.map((t) => _chip(t)).toList(),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---------- Responsibilities & Acceptance ----------
+              Glass(
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sectionResponsibilities,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      _kvLine(
+                        context,
+                        context.l10n.respFuel,
+                        _domainLabel(
+                          r.fuelResponsibilityDomain,
+                          fallback: _safe(r.fuelResponsibility?.toString()),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _chipLine(context, [
+                        _boolChip(
+                          context,
+                          label: context.l10n.respDriverFood,
+                          v: r.isDriverFood,
+                        ),
+                        _boolChip(
+                          context,
+                          label: context.l10n.respDriverHousing,
+                          v: r.isDriverHousing,
+                        ),
+                      ]),
+                      const SizedBox(height: 10),
+                      Text(
+                        context.l10n.sectionStatusAcceptance,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 6),
+                      _chipLine(context, [
+                        _boolChip(
+                          context,
+                          label: context.l10n.flagVendorAccepted,
+                          v: r.isVendorAccept,
+                        ),
+                        _boolChip(
+                          context,
+                          label: context.l10n.flagCustomerAccepted,
+                          v: r.isCustomerAccept,
+                        ),
+                      ]),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // ---------- Terms ----------
+              if ((r.requestTerms?.isNotEmpty ?? false)) ...[
+                Glass(
+                  radius: 18,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.sectionTerms,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 10),
+                        ...(() {
+                          final terms =
+                              (r.requestTerms ?? const <RequestTermModel>[])
+                                  .toList()
+                                ..sort(
+                                  (a, b) => (a.orderBy ?? 0).compareTo(
+                                    b.orderBy ?? 0,
+                                  ),
+                                );
+                          return terms.map(
+                            (t) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('• '),
+                                  Expanded(
+                                    child: Text(
+                                      _safe(t.descEnglish ?? t.descArabic),
+                                      softWrap: true,
+                                      overflow: TextOverflow.fade,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        })(),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // ---------- Files / Attachments ----------
+              if ((r.requestFiles?.isNotEmpty ?? false)) ...[
+                Glass(
+                  radius: 18,
+                  child: Padding(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.l10n.sectionAttachments,
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 10),
+                        Wrap(
+                          spacing: 10,
+                          runSpacing: 10,
+                          children: r.requestFiles!
+                              .map(
+                                (f) => SizedBox(
+                                  width: 360,
+                                  child: _fileTile(context, f),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+
+              // ---------- Meta / Timestamps (no IDs) ----------
+              Glass(
+                radius: 18,
+                child: Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        context.l10n.sectionMeta,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: 8),
+                      _kvLine(
+                        context,
+                        context.l10n.labelCreatedAt,
+                        r.createDateTime != null
+                            ? _dateFmt.format(r.createDateTime!)
+                            : '—',
+                      ),
+                      _kvLine(
+                        context,
+                        context.l10n.labelUpdatedAt, // <- updated wording
+                        r.modifyDateTime != null
+                            ? _dateFmt.format(r.modifyDateTime!)
+                            : '—',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // ---------- Price breakdown ----------
               Glass(
@@ -796,7 +1173,9 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
                     ? d.driverNameEnglish!.trim()
                     : (d.driverNameArabic?.trim().isNotEmpty ?? false)
                     ? d.driverNameArabic!.trim()
-                    : 'Driver #${d.equipmentDriverId ?? 0}';
+                    : context.l10n.driverWithId(
+                        (d.equipmentDriverId ?? 0).toString(),
+                      );
                 return DropdownMenuItem<int>(
                   value: d.equipmentDriverId,
                   child: Text(label, overflow: TextOverflow.ellipsis),
@@ -815,6 +1194,76 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     );
   }
 
+  // ---------- File tile (localized) ----------
+  Widget _fileTile(BuildContext ctx, RequestFileModel f) {
+    final cs = Theme.of(ctx).colorScheme;
+    final id = f.requestFileId ?? 0;
+    final tp = f.typeId?.toString() ?? '—';
+    final desc = _safe(f.fileDescription?.toString());
+    final path = _safe(f.filePath?.toString());
+    final approved =
+        (f.isApprove == true) ||
+        (f.isApprove?.toString() == 'true' || f.isApprove?.toString() == '1');
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withOpacity(.35),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outlineVariant.withOpacity(.5)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: cs.primaryContainer,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  context.l10n.fileType1(tp),
+                  style: Theme.of(ctx).textTheme.labelSmall?.copyWith(
+                    color: cs.onPrimaryContainer,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                approved ? Icons.verified : Icons.help_outline,
+                size: 18,
+                color: approved ? cs.primary : cs.outline,
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          if (desc != '—')
+            Text(desc, maxLines: 2, overflow: TextOverflow.ellipsis),
+          if (path != '—') ...[
+            const SizedBox(height: 6),
+            InkWell(
+              onTap: () {
+                // TODO: open/download if available
+                dev.log('Open file: $path (id=$id)');
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.attach_file, size: 16),
+                  const SizedBox(width: 6),
+                  Flexible(child: Text(path, overflow: TextOverflow.ellipsis)),
+                ],
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ---------- Small UI helpers ----------
   Widget _iconText(IconData icon, String text) {
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -886,3 +1335,139 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
     ),
   );
 }
+
+// --- label helpers (names only, no IDs) ---
+String _orgNameOnly(OrganizationSummary? o) {
+  if (o == null) return '—';
+  // Try multiple likely keys safely
+  return _safe(o.nameEnglish ?? o.nameEnglish ?? o.nameArabic ?? o.nameArabic);
+}
+
+String _equipDisplay(Equipment? e) {
+  if (e == null) return '—';
+  // Prefer user-facing names over IDs
+  final name = _safe(e.title);
+  final number = _safe(e.equipmentId.toString());
+  // Show number only if we have a name and a distinct number
+  return (name != '—' && number != '—') ? '$name • $number' : name;
+}
+
+String _safe(String? s, [String dash = '—']) {
+  s = (s ?? '').trim();
+  return s.isEmpty ? dash : s;
+}
+
+String _domainLabel(DomainDetailRef? d, {String fallback = '—'}) {
+  if (d == null) return fallback;
+  final en = (d.detailNameEnglish ?? '').trim();
+  final ar = (d.detailNameArabic ?? '').trim();
+  if (en.isNotEmpty) return en;
+  if (ar.isNotEmpty) return ar;
+  return fallback;
+}
+
+// chips / lines
+Widget _boolChip(BuildContext ctx, {required String label, required bool? v}) {
+  final cs = Theme.of(ctx).colorScheme;
+  final on = v == true;
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+    decoration: BoxDecoration(
+      color: (on ? cs.primaryContainer : cs.surfaceVariant).withOpacity(.7),
+      borderRadius: BorderRadius.circular(999),
+      border: Border.all(color: cs.outlineVariant.withOpacity(.5)),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          on ? Icons.check_circle : Icons.cancel,
+          size: 14,
+          color: on ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          label,
+          style: Theme.of(ctx).textTheme.labelMedium?.copyWith(
+            color: on ? cs.onPrimaryContainer : cs.onSurfaceVariant,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+Widget _kvLine(BuildContext ctx, String k, String v) => Padding(
+  padding: const EdgeInsets.symmetric(vertical: 4),
+  child: Row(
+    children: [
+      Expanded(child: Text(k, style: Theme.of(ctx).textTheme.bodyMedium)),
+      const SizedBox(width: 12),
+      Flexible(child: Text(v, overflow: TextOverflow.ellipsis)),
+    ],
+  ),
+);
+
+Widget _chipLine(BuildContext ctx, List<Widget> chips) =>
+    Wrap(spacing: 8, runSpacing: 6, children: chips);
+
+// long text with “expand”
+class _ExpandableText extends StatefulWidget {
+  // ignore: unused_element_parameter
+  const _ExpandableText(this.text, {this.maxChars = 140});
+  final String text;
+  final int maxChars;
+  @override
+  State<_ExpandableText> createState() => _ExpandableTextState();
+}
+
+class _ExpandableTextState extends State<_ExpandableText> {
+  bool _more = false;
+  @override
+  Widget build(BuildContext context) {
+    final t = widget.text.trim();
+    if (t.isEmpty) return const SizedBox.shrink();
+    final over = t.length > widget.maxChars;
+    final shown = (!over || _more)
+        ? t
+        : (t.substring(0, widget.maxChars) + '…');
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(shown),
+        if (over)
+          TextButton(
+            onPressed: () => setState(() => _more = !_more),
+            child: Text(_more ? context.l10n.showLess : context.l10n.showMore),
+          ),
+      ],
+    );
+  }
+}
+
+Widget _kvLineChips(BuildContext ctx, String k, List<Widget> chips) => Padding(
+  padding: const EdgeInsets.symmetric(vertical: 4),
+  child: Row(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Expanded(
+        flex: 3,
+        child: Text(k, style: Theme.of(ctx).textTheme.bodyMedium),
+      ),
+      const SizedBox(width: 12),
+      Expanded(
+        flex: 5,
+        child: Wrap(spacing: 6, runSpacing: 6, children: chips),
+      ),
+    ],
+  ),
+);
+
+Widget _chip(String text) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+  decoration: BoxDecoration(
+    color: Colors.black12.withOpacity(.06),
+    borderRadius: BorderRadius.circular(999),
+  ),
+  child: Text(text, style: TextStyle(fontSize: 12)),
+);

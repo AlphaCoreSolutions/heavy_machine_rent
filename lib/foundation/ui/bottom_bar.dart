@@ -21,7 +21,7 @@ class ModernBottomBar extends StatelessWidget {
     required this.items,
     required this.currentIndex,
     required this.onChanged,
-    this.height = 84, // ⬅️ smaller default
+    this.height = 84,
     this.elevation = 16,
   }) : assert(items.length >= 2 && items.length <= 5, 'Use 2–5 items');
 
@@ -31,7 +31,7 @@ class ModernBottomBar extends StatelessWidget {
   final double height;
   final double elevation;
 
-  static const _outerPad = EdgeInsets.fromLTRB(12, 4, 12, 8); // tighter
+  static const _outerPad = EdgeInsets.fromLTRB(12, 4, 12, 4.1); // tighter
 
   @override
   Widget build(BuildContext context) {

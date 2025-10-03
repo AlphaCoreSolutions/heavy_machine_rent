@@ -101,6 +101,39 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  double _computeLeadingWidth(BuildContext context) {
+    final u = AuthStore.instance.user.value;
+    // Pick the label the _AuthButton will show
+    final label = (u == null)
+        ? context.l10n.actionLogin
+        : context.l10n.actionLogout;
+
+    // Measure the text width using the same-ish style your button uses
+    final style =
+        Theme.of(context).textTheme.labelLarge ?? const TextStyle(fontSize: 12);
+
+    final tp = TextPainter(
+      text: TextSpan(text: label, style: style),
+      textDirection: Directionality.of(context),
+      maxLines: 1,
+    )..layout();
+
+    final textW = tp.size.width;
+
+    // Button contents = icon + gap + text + internal paddings
+    const iconW = 24.0;
+    const iconGap = 8.0;
+    const horizPad = 14.0; // Button's horizontal padding
+    const outerPad = 1.0; // Your leading's left padding
+    const slack = 5.0; // a little breathing room
+
+    final buttonW = iconW + iconGap + textW + (horizPad * 2);
+    final total = buttonW + outerPad + slack;
+
+    // Clamp so "Login" doesn't make it too small and long Arabic doesn't explode
+    return total.clamp(120.0, 260.0);
+  }
+
   @override
   Widget build(BuildContext context) {
     return OfflineBanner(
@@ -114,24 +147,15 @@ class _HomeScreenState extends State<HomeScreen> {
           surfaceTintColor: Colors.transparent,
           scrolledUnderElevation: 0,
           flexibleSpace: ClipRect(
-            // frosted glass
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
               child: Container(color: Colors.transparent),
             ),
           ),
-          title: Text(
-            context.l10n.appName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.2,
-            ),
-          ),
-          leadingWidth: 120,
+
+          leadingWidth: _computeLeadingWidth(context),
           leading: Padding(
-            padding: const EdgeInsets.only(left: 8),
+            padding: EdgeInsets.only(left: 8),
             child: _AuthButton(),
           ),
           actions: [
@@ -154,7 +178,6 @@ class _HomeScreenState extends State<HomeScreen> {
               },
             ),
             const NotificationsBell(),
-            const SizedBox(width: 4),
             const ChatActionButton(),
           ],
         ),

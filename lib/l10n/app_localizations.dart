@@ -2384,7 +2384,7 @@ abstract class AppLocalizations {
   /// No description provided for @sectionTerms.
   ///
   /// In en, this message translates to:
-  /// **'Terms'**
+  /// **'Terms & Conditions'**
   String get sectionTerms;
 
   /// No description provided for @sectionDriverAssignments.
@@ -3140,7 +3140,7 @@ abstract class AppLocalizations {
   /// No description provided for @labelDriverNationality.
   ///
   /// In en, this message translates to:
-  /// **'Driver nationality *'**
+  /// **'Driver nationality'**
   String get labelDriverNationality;
 
   /// No description provided for @labelDropoffAddress.
@@ -3748,6 +3748,204 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings;
+
+  /// No description provided for @errorLoadStatusDomain.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not load status names.'**
+  String get errorLoadStatusDomain;
+
+  /// No description provided for @errorInvalidRequestId.
+  ///
+  /// In en, this message translates to:
+  /// **'Invalid request id.'**
+  String get errorInvalidRequestId;
+
+  /// No description provided for @errorUnitHasNoDriverForNationality.
+  ///
+  /// In en, this message translates to:
+  /// **'At least one unit has no available drivers for its requested nationality.'**
+  String get errorUnitHasNoDriverForNationality;
+
+  /// No description provided for @errorUpdateFailedFlagFalse.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed (flag=false).'**
+  String get errorUpdateFailedFlagFalse;
+
+  /// No description provided for @errorContractCreationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract creation failed.'**
+  String get errorContractCreationFailed;
+
+  /// No description provided for @snackContractCreated.
+  ///
+  /// In en, this message translates to:
+  /// **'Contract created'**
+  String get snackContractCreated;
+
+  /// No description provided for @labelVendor.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor'**
+  String get labelVendor;
+
+  /// No description provided for @labelCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer'**
+  String get labelCustomer;
+
+  /// No description provided for @labelIAmVendorQ.
+  ///
+  /// In en, this message translates to:
+  /// **'I am vendor?'**
+  String get labelIAmVendorQ;
+
+  /// No description provided for @yes.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes'**
+  String get yes;
+
+  /// No description provided for @no.
+  ///
+  /// In en, this message translates to:
+  /// **'No'**
+  String get no;
+
+  /// No description provided for @labelItem.
+  ///
+  /// In en, this message translates to:
+  /// **'Item'**
+  String get labelItem;
+
+  /// No description provided for @labelEquipmentId.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment ID'**
+  String get labelEquipmentId;
+
+  /// No description provided for @labelWeight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get labelWeight;
+
+  /// No description provided for @respFuel.
+  ///
+  /// In en, this message translates to:
+  /// **'Fuel'**
+  String get respFuel;
+
+  /// No description provided for @respDriverFood.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver food'**
+  String get respDriverFood;
+
+  /// No description provided for @respDriverHousing.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver housing'**
+  String get respDriverHousing;
+
+  /// No description provided for @sectionStatusAcceptance.
+  ///
+  /// In en, this message translates to:
+  /// **'Status & Acceptance'**
+  String get sectionStatusAcceptance;
+
+  /// No description provided for @flagVendorAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor accepted'**
+  String get flagVendorAccepted;
+
+  /// No description provided for @flagCustomerAccepted.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer accepted'**
+  String get flagCustomerAccepted;
+
+  /// No description provided for @sectionNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes'**
+  String get sectionNotes;
+
+  /// No description provided for @labelVendorNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Vendor notes'**
+  String get labelVendorNotes;
+
+  /// No description provided for @labelCustomerNotes.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer notes'**
+  String get labelCustomerNotes;
+
+  /// No description provided for @sectionAttachments.
+  ///
+  /// In en, this message translates to:
+  /// **'Attachments'**
+  String get sectionAttachments;
+
+  /// No description provided for @sectionMeta.
+  ///
+  /// In en, this message translates to:
+  /// **'Meta'**
+  String get sectionMeta;
+
+  /// No description provided for @labelRequestId.
+  ///
+  /// In en, this message translates to:
+  /// **'Request ID'**
+  String get labelRequestId;
+
+  /// No description provided for @labelRequestNo.
+  ///
+  /// In en, this message translates to:
+  /// **'Request No.'**
+  String get labelRequestNo;
+
+  /// No description provided for @labelCreatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get labelCreatedAt;
+
+  /// No description provided for @labelUpdatedAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated At'**
+  String get labelUpdatedAt;
+
+  /// No description provided for @fileType1.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {type}'**
+  String fileType1(Object type);
+
+  /// No description provided for @showMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Show more'**
+  String get showMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show less'**
+  String get showLess;
+
+  /// No description provided for @driverWithId.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver #{id}'**
+  String driverWithId(Object id);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

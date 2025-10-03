@@ -1204,10 +1204,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sectionEquipment => 'المعدة';
 
   @override
-  String get sectionResponsibilities => 'المسؤوليات (النطاق 7)';
+  String get sectionResponsibilities => 'المسؤوليات';
 
   @override
-  String get sectionTerms => 'الشروط';
+  String get sectionTerms => 'الشروط والأحكام';
 
   @override
   String get sectionDriverAssignments => 'تعيينات السائقين (لكل وحدة مطلوبة)';
@@ -1653,7 +1653,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get msgNoNats => 'لا توجد جنسيات سائقين متاحة لهذه المعدّة.';
 
   @override
-  String get labelDriverNationality => 'جنسية السائق *';
+  String get labelDriverNationality => 'جنسية السائق';
 
   @override
   String get labelDropoffAddress => 'عنوان التسليم';
@@ -1983,4 +1983,107 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get settings => 'الإعدادات';
+
+  @override
+  String get errorLoadStatusDomain => 'تعذّر تحميل أسماء الحالات.';
+
+  @override
+  String get errorInvalidRequestId => 'رمز الطلب غير صالح.';
+
+  @override
+  String get errorUnitHasNoDriverForNationality => 'يوجد وحدة بدون سائق متاح للجنسية المطلوبة.';
+
+  @override
+  String get errorUpdateFailedFlagFalse => 'فشل التحديث (القيمة Flag=false).';
+
+  @override
+  String get errorContractCreationFailed => 'فشل إنشاء العقد.';
+
+  @override
+  String get snackContractCreated => 'تم إنشاء العقد';
+
+  @override
+  String get labelVendor => 'المورّد';
+
+  @override
+  String get labelCustomer => 'العميل';
+
+  @override
+  String get labelIAmVendorQ => 'هل أنا المورّد؟';
+
+  @override
+  String get yes => 'نعم';
+
+  @override
+  String get no => 'لا';
+
+  @override
+  String get labelItem => 'العنصر';
+
+  @override
+  String get labelEquipmentId => 'معرّف المعدة';
+
+  @override
+  String get labelWeight => 'الوزن';
+
+  @override
+  String get respFuel => 'الوقود';
+
+  @override
+  String get respDriverFood => 'طعام السائق';
+
+  @override
+  String get respDriverHousing => 'سكن السائق';
+
+  @override
+  String get sectionStatusAcceptance => 'الحالة والموافقات';
+
+  @override
+  String get flagVendorAccepted => 'موافقة المورّد';
+
+  @override
+  String get flagCustomerAccepted => 'موافقة العميل';
+
+  @override
+  String get sectionNotes => 'ملاحظات';
+
+  @override
+  String get labelVendorNotes => 'ملاحظات المورّد';
+
+  @override
+  String get labelCustomerNotes => 'ملاحظات العميل';
+
+  @override
+  String get sectionAttachments => 'المرفقات';
+
+  @override
+  String get sectionMeta => 'بيانات إضافية';
+
+  @override
+  String get labelRequestId => 'رقم الطلب';
+
+  @override
+  String get labelRequestNo => 'رقم المرجع';
+
+  @override
+  String get labelCreatedAt => 'تاريخ الإنشاء';
+
+  @override
+  String get labelUpdatedAt => 'تاريخ التعديل';
+
+  @override
+  String fileType1(Object type) {
+    return 'النوع $type';
+  }
+
+  @override
+  String get showMore => 'عرض المزيد';
+
+  @override
+  String get showLess => 'عرض أقل';
+
+  @override
+  String driverWithId(Object id) {
+    return 'سائق رقم $id';
+  }
 }

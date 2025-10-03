@@ -308,7 +308,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ).colorScheme.primary,
                                     size: 22,
                                   ),
-                                  child: Text(context.l10n.actionReset),
+                                  child: Text(
+                                    context.l10n.actionReset,
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
                                 ),
                               ),
                             ],

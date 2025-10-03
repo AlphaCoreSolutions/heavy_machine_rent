@@ -1060,8 +1060,12 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       icon: AIcon(
                                         AppGlyph.refresh,
                                         color: cs.primary,
+                                        size: 20,
                                       ),
-                                      child: Text(context.l10n.actionReset),
+                                      child: Text(
+                                        context.l10n.actionReset,
+                                        style: const TextStyle(fontSize: 13),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
@@ -1072,6 +1076,7 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                         AppGlyph.save,
                                         color: Colors.white,
                                         selected: true,
+                                        size: 22,
                                       ),
                                       child: Text(
                                         _orgId == null
@@ -1139,8 +1144,9 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                     final isImg = _isImageByName(
                                       f.fileName ?? '',
                                     );
+
                                     return Container(
-                                      padding: const EdgeInsets.all(9),
+                                      padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
                                         color: Theme.of(
                                           context,
@@ -1149,18 +1155,23 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                       ),
                                       child: Row(
                                         crossAxisAlignment:
-                                            CrossAxisAlignment.center,
+                                            CrossAxisAlignment.start,
                                         children: [
+                                          // Index (fixed width; no overflow)
                                           SizedBox(
-                                            width: 1,
-                                            child: Text(
-                                              '${i + 1}',
-                                              style: Theme.of(
-                                                context,
-                                              ).textTheme.labelLarge,
+                                            width: 28,
+                                            child: Center(
+                                              child: Text(
+                                                '${i + 1}',
+                                                style: Theme.of(
+                                                  context,
+                                                ).textTheme.labelLarge,
+                                              ),
                                             ),
                                           ),
                                           const SizedBox(width: 8),
+
+                                          // Thumb
                                           ClipRRect(
                                             borderRadius: BorderRadius.circular(
                                               8,
@@ -1175,12 +1186,15 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                                     ),
                                             ),
                                           ),
-                                          const SizedBox(width: 5),
+                                          const SizedBox(width: 10),
+
+                                          // Texts area (expands)
                                           Expanded(
                                             child: Column(
                                               crossAxisAlignment:
                                                   CrossAxisAlignment.start,
                                               children: [
+                                                // Title always on a single line with ellipsis
                                                 Text(
                                                   f
                                                           .fileType
@@ -1198,43 +1212,87 @@ class _OrganizationScreenState extends State<OrganizationScreen> {
                                                             FontWeight.w700,
                                                       ),
                                                 ),
-                                                const SizedBox(height: 2),
+                                                const SizedBox(height: 4),
+
+                                                // Issue / Expire split into two columns to prevent overflow
                                                 Row(
                                                   children: [
-                                                    Text(
-                                                      'Issue: ${f.issueDate ?? '—'}',
-                                                      style: Theme.of(
+                                                    Expanded(
+                                                      child: _metaText(
                                                         context,
-                                                      ).textTheme.labelMedium,
+                                                        '${context.l10n.issueDate}: ',
+                                                      ),
                                                     ),
-                                                    const SizedBox(width: 10),
+                                                    const SizedBox(width: 5),
                                                   ],
                                                 ),
                                                 Row(
                                                   children: [
                                                     Text(
-                                                      'Expire: ${f.enDate ?? '—'}',
-                                                      style: Theme.of(
-                                                        context,
-                                                      ).textTheme.labelMedium,
+                                                      f.issueDate.toString(),
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                      ),
                                                     ),
                                                   ],
                                                 ),
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: _metaText(
+                                                        context,
+                                                        '${context.l10n.expireDate}:',
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                                Row(
+                                                  children: [
+                                                    Text(
+                                                      f.enDate.toString(),
+                                                      style: TextStyle(
+                                                        fontSize: 13,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+
+                                                // Optional: file name (if you want a second line that may overflow)
                                               ],
                                             ),
                                           ),
-                                          IconButton(
-                                            tooltip: context.l10n.edit,
-                                            icon: const Icon(Icons.edit),
-                                            onPressed: () =>
-                                                _addOrEditFile(existing: f),
-                                          ),
-                                          IconButton(
-                                            tooltip: context.l10n.delete,
-                                            icon: const Icon(
-                                              Icons.delete_outline,
-                                            ),
-                                            onPressed: () => _deleteFile(f),
+
+                                          const SizedBox(width: 8),
+
+                                          // Actions (kept compact, aligned top-right)
+                                          Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              IconButton(
+                                                tooltip: context.l10n.edit,
+                                                icon: const Icon(
+                                                  Icons.edit,
+                                                  size: 20,
+                                                ),
+                                                onPressed: () =>
+                                                    _addOrEditFile(existing: f),
+                                                constraints:
+                                                    const BoxConstraints(),
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                              const SizedBox(height: 4),
+                                              IconButton(
+                                                tooltip: context.l10n.delete,
+                                                icon: const Icon(
+                                                  Icons.delete_outline,
+                                                  size: 20,
+                                                ),
+                                                onPressed: () => _deleteFile(f),
+                                                constraints:
+                                                    const BoxConstraints(),
+                                                padding: EdgeInsets.zero,
+                                              ),
+                                            ],
                                           ),
                                         ],
                                       ),
@@ -1381,3 +1439,10 @@ String? _extFrom(String name) {
   if (i <= 0 || i == n.length - 1) return null;
   return n.substring(i + 1); // e.g. "pdf", "jpg"
 }
+
+Widget _metaText(BuildContext context, String text) => Text(
+  text,
+  maxLines: 1,
+  overflow: TextOverflow.ellipsis,
+  style: Theme.of(context).textTheme.labelMedium,
+);
