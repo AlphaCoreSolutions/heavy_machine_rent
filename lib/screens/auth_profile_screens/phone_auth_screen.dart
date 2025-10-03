@@ -75,7 +75,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     try {
       await AuthStore.instance.verifyOtp(otp: code);
 
-      await sessionManager.startFreshSession(reset: true);
+      await sessionManager.startFreshSession();
       AppSnack.success(context, context.l10n.signedIn);
 
       if (!mounted) return;
