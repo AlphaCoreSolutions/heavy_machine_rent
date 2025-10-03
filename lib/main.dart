@@ -177,6 +177,8 @@ void main() async {
     _lastUser = currentUser;
   });
 
+  await AppPrefs.instance.init();
+
   runApp(const HeavyApp());
 }
 
@@ -196,24 +198,33 @@ class HeavyApp extends StatelessWidget {
           builder: (_, locale, __) {
             return MaterialApp.router(
               debugShowCheckedModeBanner: false,
-              // Use onGenerateTitle so it localizes with current context
               onGenerateTitle: (ctx) =>
                   AppLocalizations.of(ctx)?.appName ?? 'HeavyRent',
               theme: AppTheme.light(),
               darkTheme: AppTheme.dark(),
-              themeMode: themeMode, // ← driven by settings
-              locale: locale, // ← driven by settings
-              localizationsDelegates: const [
-                AppLocalizations.delegate,
-                ...GlobalMaterialLocalizations.delegates,
-              ],
-              supportedLocales: const [Locale('en'), Locale('ar')],
-
-              // Directionality (RTL/LTR) is handled automatically by locale
               scrollBehavior: const AppScrollBehavior(),
               routerConfig: _router,
               builder: (context, child) =>
                   OfflineBanner(child: child ?? const SizedBox.shrink()),
+              themeMode: prefs.themeMode.value,
+              locale: prefs.locale.value, // null => follow system
+              supportedLocales: const [Locale('en'), Locale('ar')],
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                ...GlobalMaterialLocalizations.delegates,
+              ],
+              // optional, but recommended
+              localeResolutionCallback: (device, supported) {
+                // If user set explicit locale, Flutter uses it automatically.
+                // If following system, pick device if supported, else fallback to Arabic.
+                if (prefs.locale.value == null && device != null) {
+                  for (final s in supported) {
+                    if (s.languageCode == device.languageCode) return device;
+                  }
+                  return const Locale('ar');
+                }
+                return null; // let Flutter use explicit locale if present
+              },
             );
           },
         );
