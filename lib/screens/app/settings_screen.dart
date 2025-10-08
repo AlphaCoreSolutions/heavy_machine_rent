@@ -13,6 +13,7 @@ import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
+import 'package:heavy_new/screens/super_admin_screen.dart';
 //import 'package:heavy_new/screens/super_admin_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -305,6 +306,18 @@ class SettingsScreen extends StatelessWidget {
                 spacing: 12,
                 runSpacing: 12,
                 children: [
+                  if (isCompleted)
+                    _ActionCard(
+                      icon: AppGlyph.dashboard,
+                      title: L10nX(context).l10n.superAdminTitle,
+                      subtitle: L10nX(context).l10n.superAdminSubtitle,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const SuperAdminHubScreen(),
+                        ),
+                      ),
+                      width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,
+                    ),
                   if (isCompleted)
                     _ActionCard(
                       icon: AppGlyph.organization,

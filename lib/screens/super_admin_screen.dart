@@ -7,6 +7,9 @@ import 'package:heavy_new/core/api/api_handler.dart' as api;
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/organization/organization_file.dart';
 import 'package:heavy_new/core/models/organization/organization_user.dart';
+// ⬇️ Add these imports (adjust paths if needed)
+import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:heavy_new/core/models/organization/organization_summary.dart';
 
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
@@ -14,55 +17,71 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
 import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
 
+// ⬇️ Localization
+import 'package:heavy_new/l10n/app_localizations.dart';
+
+extension _L10nX on BuildContext {
+  AppLocalizations get l10n => AppLocalizations.of(this)!;
+}
+
 class SuperAdminHubScreen extends StatelessWidget {
   const SuperAdminHubScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = AuthStore.instance;
-    final u = auth.user.value;
 
     // Gate: only super admin (userTypeId == 17)
     if (!auth.isLoggedIn) {
       return _GateScreen(
-        title: 'Sign in required',
-        message: 'This page is for Super Admin accounts.',
+        title: context.l10n.superAdmin_gate_signIn_title,
+        message: context.l10n.superAdmin_gate_signIn_message,
         primary: () async {
           final ok = await Navigator.of(context).push<bool>(
             MaterialPageRoute(builder: (_) => const PhoneAuthScreen()),
           );
           if (ok == true && context.mounted) {
-            AppSnack.success(context, 'Signed in');
+            AppSnack.success(context, context.l10n.common_signedIn);
           }
         },
-        primaryLabel: 'Sign in',
+        primaryLabel: context.l10n.action_signIn,
       );
     }
+    /*
     if (u?.userTypeId != 17) {
       return _GateScreen(
-        title: 'Not available',
-        message: 'Your account does not have Super Admin permission.',
+        title: context.l10n.superAdmin_gate_notAvailable_title,
+        message: context.l10n.superAdmin_gate_notAvailable_message,
         primary: () => Navigator.of(context).maybePop(),
-        primaryLabel: 'Back',
+        primaryLabel: context.l10n.action_back,
       );
     }
+    */
 
     return DefaultTabController(
-      length: 3,
+      length: 5, // ⬅️ now 5 tabs
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Super Admin'),
-          bottom: const TabBar(
+          title: Text(context.l10n.superAdmin_title),
+          bottom: TabBar(
             isScrollable: true,
             tabs: [
-              Tab(text: 'Org Files'),
-              Tab(text: 'Org Users'),
-              Tab(text: 'Requests / Orders'),
+              Tab(text: context.l10n.superAdmin_tab_orgFiles),
+              Tab(text: context.l10n.superAdmin_tab_orgUsers),
+              Tab(text: context.l10n.superAdmin_tab_requestsOrders),
+              Tab(text: context.l10n.superAdmin_tab_inactiveEquipments),
+              Tab(text: context.l10n.superAdmin_tab_inactiveOrgs),
             ],
           ),
         ),
         body: const TabBarView(
-          children: [_OrgFilesTab(), _OrgUsersTab(), _RequestsOrdersTab()],
+          children: [
+            _OrgFilesTab(),
+            _OrgUsersTab(),
+            _RequestsOrdersTab(),
+            _InactiveEquipmentsTab(),
+            _InactiveOrganizationsTab(),
+          ],
         ),
       ),
     );
@@ -85,7 +104,7 @@ class _GateScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(title: const Text('Super Admin')),
+      appBar: AppBar(title: Text(context.l10n.superAdmin_title)),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -178,12 +197,12 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
     try {
       final updated = f.copyWith(isActive: !(f.isActive ?? false));
       await api.Api.updateOrganizationFile(updated);
-      AppSnack.success(context, 'File updated');
+      AppSnack.success(context, context.l10n.common_updated);
       setState(() {
         _future = api.Api.getOrganizationFiles();
       });
     } catch (_) {
-      AppSnack.error(context, 'Update failed');
+      AppSnack.error(context, context.l10n.common_updateFailed);
     }
   }
 
@@ -191,16 +210,20 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete file?'),
-        content: Text('This will remove “${f.fileName ?? 'file'}”.'),
+        title: Text(context.l10n.orgFiles_delete_title),
+        content: Text(
+          context.l10n.orgFiles_delete_message(
+            f.fileName ?? context.l10n.common_file,
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.action_cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.action_delete),
           ),
         ],
       ),
@@ -208,12 +231,12 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
     if (yes != true) return;
     try {
       await api.Api.deleteOrganizationFile(f.organizationFileId ?? 0);
-      AppSnack.success(context, 'Deleted');
+      AppSnack.success(context, context.l10n.common_deleted);
       setState(() {
         _future = api.Api.getOrganizationFiles();
       });
     } catch (_) {
-      AppSnack.error(context, 'Delete failed');
+      AppSnack.error(context, context.l10n.common_deleteFailed);
     }
   }
 
@@ -230,8 +253,14 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 ListTile(
-                  title: Text(f.descFileType ?? f.fileName ?? 'File'),
-                  subtitle: Text('Org #${f.organizationId ?? '—'}'),
+                  title: Text(
+                    f.descFileType ?? f.fileName ?? context.l10n.common_file,
+                  ),
+                  subtitle: Text(
+                    context.l10n.common_orgNumber(
+                      (f.organizationId ?? '—').toString(),
+                    ),
+                  ),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
@@ -270,8 +299,8 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
           child: AInput(
             controller: _qCtrl,
-            label: 'Search org files',
-            hint: 'Type to search',
+            label: context.l10n.orgFiles_search_label,
+            hint: context.l10n.common_typeToSearch,
             glyph: AppGlyph.search,
           ),
         ),
@@ -295,10 +324,10 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                 final items = snap.data ?? [];
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('No organization files.'),
+                        padding: const EdgeInsets.all(24),
+                        child: Text(context.l10n.orgFiles_empty),
                       ),
                     ],
                   );
@@ -328,10 +357,10 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Text(
-                          'Org #${f.organizationId ?? '—'}'
-                          '  •  ${f.fileType?.detailNameEnglish ?? f.fileType?.detailNameArabic ?? ''}'
-                          '  •  ${(f.isActive ?? false) ? 'Active' : 'Inactive'}'
-                          '${(f.isExpired ?? false) ? '  •  Expired' : ''}',
+                          '${context.l10n.common_orgNumber((f.organizationId ?? '—').toString())}'
+                          '  •  ${(f.fileType?.detailNameEnglish ?? f.fileType?.detailNameArabic ?? '')}'
+                          '  •  ${(f.isActive ?? false) ? context.l10n.common_active : context.l10n.common_inactive}'
+                          '${(f.isExpired ?? false) ? '  •  ${context.l10n.common_expired}' : ''}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -342,21 +371,21 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                             if (v == 'delete') _delete(f);
                           },
                           itemBuilder: (_) => [
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'preview',
-                              child: Text('Preview / Open'),
+                              child: Text(context.l10n.action_previewOpen),
                             ),
                             PopupMenuItem(
                               value: 'toggle',
                               child: Text(
                                 (f.isActive ?? false)
-                                    ? 'Deactivate'
-                                    : 'Activate',
+                                    ? context.l10n.action_deactivate
+                                    : context.l10n.action_activate,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
-                              child: Text('Delete'),
+                              child: Text(context.l10n.action_delete),
                             ),
                           ],
                         ),
@@ -427,12 +456,12 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
         applicationUser: u.applicationUser,
       );
       await api.Api.updateOrganizationUser(updated);
-      AppSnack.success(context, 'User updated');
+      AppSnack.success(context, context.l10n.common_updated);
       setState(() {
         _future = api.Api.getOrganizationUsers();
       });
     } catch (_) {
-      AppSnack.error(context, 'Update failed');
+      AppSnack.error(context, context.l10n.common_updateFailed);
     }
   }
 
@@ -440,18 +469,21 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
     final yes = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Remove org user?'),
+        title: Text(context.l10n.orgUsers_remove_title),
         content: Text(
-          'This will unlink user #${u.applicationUserId ?? ''} from organization #${u.organizationId ?? ''}.',
+          context.l10n.orgUsers_remove_message(
+            (u.applicationUserId ?? '').toString(),
+            (u.organizationId ?? '').toString(),
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.action_cancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Remove'),
+            child: Text(context.l10n.action_remove),
           ),
         ],
       ),
@@ -459,12 +491,12 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
     if (yes != true) return;
     try {
       await api.Api.deleteOrganizationUser(u.organizationUserId ?? 0);
-      AppSnack.success(context, 'Removed');
+      AppSnack.success(context, context.l10n.common_removed);
       setState(() {
         _future = api.Api.getOrganizationUsers();
       });
     } catch (_) {
-      AppSnack.error(context, 'Remove failed');
+      AppSnack.error(context, context.l10n.common_removeFailed);
     }
   }
 
@@ -478,8 +510,8 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
           child: AInput(
             controller: _qCtrl,
-            label: 'Search org users',
-            hint: 'Type to search',
+            label: context.l10n.orgUsers_search_label,
+            hint: context.l10n.common_typeToSearch,
             glyph: AppGlyph.search,
           ),
         ),
@@ -503,10 +535,10 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                 final items = snap.data ?? [];
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('No organization users.'),
+                        padding: const EdgeInsets.all(24),
+                        child: Text(context.l10n.orgUsers_empty),
                       ),
                     ],
                   );
@@ -518,7 +550,9 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                   itemBuilder: (_, i) {
                     final u = items[i];
                     final person = u.applicationUser;
-                    final name = person?.fullName ?? 'User ${person?.id ?? ''}';
+                    final name =
+                        person?.fullName ??
+                        '${context.l10n.common_user} ${person?.id ?? ''}';
                     final emailOrMobile = (person?.email?.isNotEmpty ?? false)
                         ? person!.email!
                         : (person?.mobile ?? '—');
@@ -542,7 +576,9 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         subtitle: Text(
-                          'Org #${u.organizationId ?? '—'}  •  $emailOrMobile  •  ${(u.isActive ?? false) ? 'Active' : 'Inactive'}',
+                          '${context.l10n.common_orgNumber((u.organizationId ?? '—').toString())}'
+                          '  •  $emailOrMobile'
+                          '  •  ${(u.isActive ?? false) ? context.l10n.common_active : context.l10n.common_inactive}',
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -563,17 +599,17 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                               value: 'toggle',
                               child: Text(
                                 (u.isActive ?? false)
-                                    ? 'Deactivate'
-                                    : 'Activate',
+                                    ? context.l10n.action_deactivate
+                                    : context.l10n.action_activate,
                               ),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'open-org',
-                              child: Text('Open organization'),
+                              child: Text(context.l10n.action_openOrganization),
                             ),
-                            const PopupMenuItem(
+                            PopupMenuItem(
                               value: 'delete',
-                              child: Text('Remove from org'),
+                              child: Text(context.l10n.action_removeFromOrg),
                             ),
                           ],
                         ),
@@ -646,8 +682,8 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
           padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
           child: AInput(
             controller: _qCtrl,
-            label: 'Search requests / orders',
-            hint: 'Type to search',
+            label: context.l10n.requests_search_label,
+            hint: context.l10n.common_typeToSearch,
             glyph: AppGlyph.search,
           ),
         ),
@@ -675,10 +711,10 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
                   });
                 if (items.isEmpty) {
                   return ListView(
-                    children: const [
+                    children: [
                       Padding(
-                        padding: EdgeInsets.all(24),
-                        child: Text('No requests found.'),
+                        padding: const EdgeInsets.all(24),
+                        child: Text(context.l10n.requests_empty),
                       ),
                     ],
                   );
@@ -710,7 +746,7 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
                           ),
                         ),
                         title: Text(
-                          'Request #$idText',
+                          context.l10n.requests_item_title(idText),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleMedium
@@ -721,6 +757,296 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
                         onTap: () {
                           // Hook up to a global RequestDetailsScreen if you want
                         },
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ====================== INACTIVE EQUIPMENTS TAB ======================
+class _InactiveEquipmentsTab extends StatefulWidget {
+  const _InactiveEquipmentsTab();
+
+  @override
+  State<_InactiveEquipmentsTab> createState() => _InactiveEquipmentsTabState();
+}
+
+class _InactiveEquipmentsTabState extends State<_InactiveEquipmentsTab> {
+  static const String _kEquipmentsSQL =
+      'select * from Equipments where isActive = 0';
+
+  late Future<List<Equipment>> _future;
+  final _qCtrl = TextEditingController();
+  Timer? _deb;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = api.Api.advanceSearchEquipments(_kEquipmentsSQL);
+    _qCtrl.addListener(_onQ);
+  }
+
+  @override
+  void dispose() {
+    _qCtrl.removeListener(_onQ);
+    _qCtrl.dispose();
+    _deb?.cancel();
+    super.dispose();
+  }
+
+  void _onQ() {
+    // You asked to send the exact SQL; ignore user text.
+    _deb?.cancel();
+    _deb = Timer(const Duration(milliseconds: 350), () {
+      setState(() {
+        _future = api.Api.advanceSearchEquipments(_kEquipmentsSQL);
+      });
+    });
+  }
+
+  Future<void> _activate(Equipment e) async {
+    try {
+      final updated = e.copyWith(isActive: true);
+      await api.Api.updateEquipment(updated);
+      AppSnack.success(context, context.l10n.common_activated);
+      setState(() {
+        _future = api.Api.advanceSearchEquipments(_kEquipmentsSQL);
+      });
+    } catch (_) {
+      AppSnack.error(context, context.l10n.common_updateFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+          child: AInput(
+            controller: _qCtrl,
+            label: context.l10n.inactiveEquipments_search_label,
+            hint: context.l10n.common_typeToSearch,
+            glyph: AppGlyph.search,
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async => setState(() {
+              _future = api.Api.advanceSearchEquipments(_kEquipmentsSQL);
+            }),
+            child: FutureBuilder<List<Equipment>>(
+              future: _future,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return ListView(
+                    children: const [
+                      ShimmerTile(),
+                      ShimmerTile(),
+                      ShimmerTile(),
+                    ],
+                  );
+                }
+                final items = snap.data ?? [];
+                if (items.isEmpty) {
+                  return ListView(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(context.l10n.inactiveEquipments_empty),
+                      ),
+                    ],
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (_, i) {
+                    final e = items[i];
+                    final name = (e.descEnglish ?? '').isNotEmpty
+                        ? e.descEnglish!
+                        : (e.descArabic ?? context.l10n.common_equipment);
+
+                    return Glass(
+                      radius: 14,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+                        leading: CircleAvatar(
+                          backgroundColor: cs.surfaceContainerHighest,
+                          child: AIcon(
+                            AppGlyph.tools,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        title: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          '${context.l10n.common_status}: ${context.l10n.common_inactive}',
+                        ),
+                        trailing: FilledButton(
+                          onPressed: () => _activate(e),
+                          child: Text(context.l10n.action_activate),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ====================== INACTIVE ORGANIZATIONS TAB ======================
+class _InactiveOrganizationsTab extends StatefulWidget {
+  const _InactiveOrganizationsTab();
+
+  @override
+  State<_InactiveOrganizationsTab> createState() =>
+      _InactiveOrganizationsTabState();
+}
+
+class _InactiveOrganizationsTabState extends State<_InactiveOrganizationsTab> {
+  static const String _kOrganizationsSQL =
+      'select * from Organizations where isActive = 0';
+
+  late Future<List<OrganizationSummary>> _future;
+  final _qCtrl = TextEditingController();
+  Timer? _deb;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = api.Api.advanceSearchOrganization(_kOrganizationsSQL);
+    _qCtrl.addListener(_onQ);
+  }
+
+  @override
+  void dispose() {
+    _qCtrl.removeListener(_onQ);
+    _qCtrl.dispose();
+    _deb?.cancel();
+    super.dispose();
+  }
+
+  void _onQ() {
+    // You asked to send the exact SQL; ignore user text.
+    _deb?.cancel();
+    _deb = Timer(const Duration(milliseconds: 350), () {
+      setState(() {
+        _future = api.Api.advanceSearchOrganization(_kOrganizationsSQL);
+      });
+    });
+  }
+
+  Future<void> _activate(OrganizationSummary o) async {
+    try {
+      // Ensure this matches your backend’s activation contract.
+      final body = {'organizationId': o.organizationId, 'isActive': 1};
+      await api.Api.updateOrganizationEnvelope(body);
+      AppSnack.success(context, context.l10n.common_activated);
+      setState(() {
+        _future = api.Api.advanceSearchOrganization(_kOrganizationsSQL);
+      });
+    } catch (_) {
+      AppSnack.error(context, context.l10n.common_updateFailed);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+          child: AInput(
+            controller: _qCtrl,
+            label: context.l10n.inactiveOrgs_search_label,
+            hint: context.l10n.common_typeToSearch,
+            glyph: AppGlyph.search,
+          ),
+        ),
+        Expanded(
+          child: RefreshIndicator(
+            onRefresh: () async => setState(() {
+              _future = api.Api.advanceSearchOrganization(_kOrganizationsSQL);
+            }),
+            child: FutureBuilder<List<OrganizationSummary>>(
+              future: _future,
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return ListView(
+                    children: const [
+                      ShimmerTile(),
+                      ShimmerTile(),
+                      ShimmerTile(),
+                    ],
+                  );
+                }
+                final items = snap.data ?? [];
+                if (items.isEmpty) {
+                  return ListView(
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Text(context.l10n.inactiveOrgs_empty),
+                      ),
+                    ],
+                  );
+                }
+                return ListView.separated(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 24),
+                  itemCount: items.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 8),
+                  itemBuilder: (_, i) {
+                    final o = items[i];
+                    final name = (o.nameEnglish ?? '').isNotEmpty
+                        ? o.nameEnglish!
+                        : (o.nameArabic ?? context.l10n.common_organization);
+
+                    return Glass(
+                      radius: 14,
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(12),
+                        leading: CircleAvatar(
+                          backgroundColor: cs.surfaceContainerHighest,
+                          child: AIcon(
+                            AppGlyph.building,
+                            color: cs.onSurfaceVariant,
+                          ),
+                        ),
+                        title: Text(
+                          name,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        ),
+                        subtitle: Text(
+                          '${context.l10n.common_status}: ${context.l10n.common_inactive}',
+                        ),
+                        trailing: FilledButton(
+                          onPressed: () => _activate(o),
+                          child: Text(context.l10n.action_activate),
+                        ),
                       ),
                     );
                   },

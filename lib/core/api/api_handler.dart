@@ -138,6 +138,8 @@ class Api {
   static const String equipCertsFolder = 'equipcertFiles';
   static const String _kPublicBase =
       'https://sr.visioncit.com/StaticFiles/equipimageFiles/';
+  static const _orgFilesBase =
+      'https://sr.visioncit.com/StaticFiles/orgfileFiles/';
 
   static Future<CertUploadResult> uploadEquipmentCertificateFromPath({
     required int equipmentId,
@@ -335,9 +337,6 @@ class Api {
 
   // ---- Low-level helpers ----
 
-  static const _orgFilesBase =
-      'https://sr.visioncit.com/StaticFiles/orgfileFiles/';
-
   static Future<bool> orgStaticFileExists(String fileName) async {
     if (fileName.trim().isEmpty) return false;
     final url = Uri.parse('$_orgFilesBase${Uri.encodeComponent(fileName)}');
@@ -421,9 +420,14 @@ class Api {
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         return text.isEmpty ? null : _decodeBody(text);
       }
-      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}', statusCode: resp.statusCode);
+      throw ApiException(
+        'HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}',
+        statusCode: resp.statusCode,
+      );
     } on TimeoutException {
-      throw ApiException('The request timed out. Please check your connection.');
+      throw ApiException(
+        'The request timed out. Please check your connection.',
+      );
     } on SocketException {
       throw ApiException('No internet connection. Please try again.');
     } on http.ClientException catch (e) {
@@ -437,7 +441,10 @@ class Api {
       }
       throw ApiException('Network error: ${e.message}', statusCode: 0);
     } on FormatException catch (e) {
-      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
+      throw ApiException(
+        'Unexpected response format from server.',
+        details: {'error': e.message},
+      );
     }
   }
 
@@ -467,9 +474,14 @@ class Api {
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         return text.isEmpty ? null : _decodeBody(text);
       }
-      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}', statusCode: resp.statusCode);
+      throw ApiException(
+        'HTTP ${resp.statusCode}: ${text.isEmpty ? 'POST failed' : text}',
+        statusCode: resp.statusCode,
+      );
     } on TimeoutException {
-      throw ApiException('The request timed out. Please check your connection.');
+      throw ApiException(
+        'The request timed out. Please check your connection.',
+      );
     } on SocketException {
       throw ApiException('No internet connection. Please try again.');
     } on http.ClientException catch (e) {
@@ -483,7 +495,10 @@ class Api {
       }
       throw ApiException('Network error: ${e.message}', statusCode: 0);
     } on FormatException catch (e) {
-      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
+      throw ApiException(
+        'Unexpected response format from server.',
+        details: {'error': e.message},
+      );
     }
   }
 
@@ -504,7 +519,9 @@ class Api {
           ? decoded
           : <String, dynamic>{'data': decoded};
     } on TimeoutException {
-      throw ApiException('The request timed out. Please check your connection.');
+      throw ApiException(
+        'The request timed out. Please check your connection.',
+      );
     } on SocketException {
       throw ApiException('No internet connection. Please try again.');
     } on http.ClientException catch (e) {
@@ -518,7 +535,10 @@ class Api {
       }
       throw ApiException('Network error: ${e.message}', statusCode: 0);
     } on FormatException catch (e) {
-      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
+      throw ApiException(
+        'Unexpected response format from server.',
+        details: {'error': e.message},
+      );
     }
   }
 
@@ -545,9 +565,14 @@ class Api {
       if (resp.statusCode >= 200 && resp.statusCode < 300) {
         return text.isEmpty ? null : _decodeBody(text);
       }
-      throw ApiException('HTTP ${resp.statusCode}: ${text.isEmpty ? 'PUT failed' : text}', statusCode: resp.statusCode);
+      throw ApiException(
+        'HTTP ${resp.statusCode}: ${text.isEmpty ? 'PUT failed' : text}',
+        statusCode: resp.statusCode,
+      );
     } on TimeoutException {
-      throw ApiException('The request timed out. Please check your connection.');
+      throw ApiException(
+        'The request timed out. Please check your connection.',
+      );
     } on SocketException {
       throw ApiException('No internet connection. Please try again.');
     } on http.ClientException catch (e) {
@@ -561,7 +586,10 @@ class Api {
       }
       throw ApiException('Network error: ${e.message}', statusCode: 0);
     } on FormatException catch (e) {
-      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
+      throw ApiException(
+        'Unexpected response format from server.',
+        details: {'error': e.message},
+      );
     }
   }
 
@@ -609,7 +637,10 @@ class Api {
       }
       throw ApiException('Network error: ${e.message}', statusCode: 0);
     } on FormatException catch (e) {
-      throw ApiException('Unexpected response format from server.', details: {'error': e.message});
+      throw ApiException(
+        'Unexpected response format from server.',
+        details: {'error': e.message},
+      );
     } catch (e) {
       // _handleResponse throws ApiException for HTTP errors; keep that behavior
       if (e is ApiException) rethrow;
@@ -1865,6 +1896,7 @@ class Api {
 
   static Future<List<Equipment>> advanceSearchEquipments(String query) async {
     final raw = await _post('Equipment/AdvanceSearch', body: {'query': query});
+    print('Body: ${jsonEncode(raw)}');
     return _unwrapList(raw)
         .whereType<Map>()
         .map((e) => Equipment.fromJson(Map<String, dynamic>.from(e)))
@@ -1881,7 +1913,6 @@ class Api {
     return Equipment.fromJson(_unwrapMap(raw, envelope: ApiEnvelope()));
   }
 
-  // in api_handler.dart
   static Future<Map<String, dynamic>> addEquipmentRaw(
     Map<String, dynamic> body,
   ) async {
@@ -2574,6 +2605,19 @@ class Api {
     }
     // last resort: treat as envelope root
     return OrganizationSummary.fromJson({'data': raw});
+  }
+
+  static Future<List<OrganizationSummary>> advanceSearchOrganization(
+    String query,
+  ) async {
+    final raw = await _post(
+      'Organization/AdvanceSearch',
+      body: {'query': query},
+    );
+    return _unwrapList(raw)
+        .whereType<Map>()
+        .map((e) => OrganizationSummary.fromJson(Map<String, dynamic>.from(e)))
+        .toList();
   }
 
   static Future<OrganizationSummary> addOrganization(

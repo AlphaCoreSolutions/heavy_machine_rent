@@ -1204,10 +1204,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sectionEquipment => 'المعدة';
 
   @override
-  String get sectionResponsibilities => 'المسؤوليات';
+  String get sectionResponsibilities => 'المسؤوليات (النطاق 7)';
 
   @override
-  String get sectionTerms => 'الشروط والأحكام';
+  String get sectionTerms => 'الشروط';
 
   @override
   String get sectionDriverAssignments => 'تعيينات السائقين (لكل وحدة مطلوبة)';
@@ -1653,7 +1653,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get msgNoNats => 'لا توجد جنسيات سائقين متاحة لهذه المعدّة.';
 
   @override
-  String get labelDriverNationality => 'جنسية السائق';
+  String get labelDriverNationality => 'جنسية السائق *';
 
   @override
   String get labelDropoffAddress => 'عنوان التسليم';
@@ -2086,4 +2086,171 @@ class AppLocalizationsAr extends AppLocalizations {
   String driverWithId(Object id) {
     return 'سائق رقم $id';
   }
+
+  @override
+  String get superAdmin_title => 'المشرف العام';
+
+  @override
+  String get superAdmin_tab_orgFiles => 'ملفات المؤسسات';
+
+  @override
+  String get superAdmin_tab_orgUsers => 'مستخدمو المؤسسات';
+
+  @override
+  String get superAdmin_tab_requestsOrders => 'الطلبات / الأوامر';
+
+  @override
+  String get superAdmin_tab_inactiveEquipments => 'معدات غير مفعّلة';
+
+  @override
+  String get superAdmin_tab_inactiveOrgs => 'مؤسسات غير مفعّلة';
+
+  @override
+  String get superAdmin_gate_signIn_title => 'يلزم تسجيل الدخول';
+
+  @override
+  String get superAdmin_gate_signIn_message => 'هذه الصفحة مخصصة لحسابات المشرف العام.';
+
+  @override
+  String get superAdmin_gate_notAvailable_title => 'غير متاح';
+
+  @override
+  String get superAdmin_gate_notAvailable_message => 'حسابك لا يملك صلاحية المشرف العام.';
+
+  @override
+  String get orgFiles_search_label => 'ابحث في ملفات المؤسسات';
+
+  @override
+  String get orgFiles_delete_title => 'حذف الملف؟';
+
+  @override
+  String orgFiles_delete_message(Object fileName) {
+    return 'سيتم حذف \"$fileName\".';
+  }
+
+  @override
+  String get orgFiles_empty => 'لا توجد ملفات للمؤسسات.';
+
+  @override
+  String get orgUsers_search_label => 'ابحث في مستخدمي المؤسسات';
+
+  @override
+  String get orgUsers_remove_title => 'إزالة مستخدم المؤسسة؟';
+
+  @override
+  String orgUsers_remove_message(Object orgId, Object userId) {
+    return 'سيتم فك ارتباط المستخدم رقم #$userId بالمؤسسة رقم #$orgId.';
+  }
+
+  @override
+  String get orgUsers_empty => 'لا يوجد مستخدمون للمؤسسات.';
+
+  @override
+  String get requests_search_label => 'ابحث في الطلبات / الأوامر';
+
+  @override
+  String requests_item_title(Object id) {
+    return 'طلب رقم #$id';
+  }
+
+  @override
+  String get requests_empty => 'لا توجد طلبات.';
+
+  @override
+  String get inactiveEquipments_search_label => 'ابحث في المعدات غير المفعّلة';
+
+  @override
+  String get inactiveEquipments_empty => 'لا توجد معدات غير مفعّلة.';
+
+  @override
+  String get inactiveOrgs_search_label => 'ابحث في المؤسسات غير المفعّلة';
+
+  @override
+  String get inactiveOrgs_empty => 'لا توجد مؤسسات غير مفعّلة.';
+
+  @override
+  String get action_signIn => 'تسجيل الدخول';
+
+  @override
+  String get action_back => 'رجوع';
+
+  @override
+  String get action_cancel => 'إلغاء';
+
+  @override
+  String get action_delete => 'حذف';
+
+  @override
+  String get action_remove => 'إزالة';
+
+  @override
+  String get action_previewOpen => 'عرض / فتح';
+
+  @override
+  String get action_activate => 'تفعيل';
+
+  @override
+  String get action_deactivate => 'إلغاء التفعيل';
+
+  @override
+  String get action_openOrganization => 'فتح المؤسسة';
+
+  @override
+  String get action_removeFromOrg => 'إزالة من المؤسسة';
+
+  @override
+  String get common_signedIn => 'تم تسجيل الدخول';
+
+  @override
+  String get common_updated => 'تم التحديث';
+
+  @override
+  String get common_updateFailed => 'فشل التحديث';
+
+  @override
+  String get common_deleted => 'تم الحذف';
+
+  @override
+  String get common_deleteFailed => 'فشل الحذف';
+
+  @override
+  String get common_removed => 'تمت الإزالة';
+
+  @override
+  String get common_removeFailed => 'فشلت الإزالة';
+
+  @override
+  String get common_typeToSearch => 'اكتب للبحث';
+
+  @override
+  String common_orgNumber(Object id) {
+    return 'مؤسسة رقم #$id';
+  }
+
+  @override
+  String get common_user => 'مستخدم';
+
+  @override
+  String get common_equipment => 'معدات';
+
+  @override
+  String get common_organization => 'مؤسسة';
+
+  @override
+  String get common_file => 'ملف';
+
+  @override
+  String get common_status => 'الحالة';
+
+  @override
+  String get common_active => 'مفعّل';
+
+  @override
+  String get common_inactive => 'غير مفعّل';
+
+  @override
+  String get common_expired => 'منتهي';
+
+  @override
+  String get common_activated => 'تم التفعيل';
 }

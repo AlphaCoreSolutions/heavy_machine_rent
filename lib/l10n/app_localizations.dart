@@ -3946,6 +3946,324 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Driver #{id}'**
   String driverWithId(Object id);
+
+  /// No description provided for @superAdmin_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Super Admin'**
+  String get superAdmin_title;
+
+  /// No description provided for @superAdmin_tab_orgFiles.
+  ///
+  /// In en, this message translates to:
+  /// **'Org Files'**
+  String get superAdmin_tab_orgFiles;
+
+  /// No description provided for @superAdmin_tab_orgUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Org Users'**
+  String get superAdmin_tab_orgUsers;
+
+  /// No description provided for @superAdmin_tab_requestsOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests / Orders'**
+  String get superAdmin_tab_requestsOrders;
+
+  /// No description provided for @superAdmin_tab_inactiveEquipments.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive Equipments'**
+  String get superAdmin_tab_inactiveEquipments;
+
+  /// No description provided for @superAdmin_tab_inactiveOrgs.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive Organizations'**
+  String get superAdmin_tab_inactiveOrgs;
+
+  /// No description provided for @superAdmin_gate_signIn_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in required'**
+  String get superAdmin_gate_signIn_title;
+
+  /// No description provided for @superAdmin_gate_signIn_message.
+  ///
+  /// In en, this message translates to:
+  /// **'This page is for Super Admin accounts.'**
+  String get superAdmin_gate_signIn_message;
+
+  /// No description provided for @superAdmin_gate_notAvailable_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available'**
+  String get superAdmin_gate_notAvailable_title;
+
+  /// No description provided for @superAdmin_gate_notAvailable_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account does not have Super Admin permission.'**
+  String get superAdmin_gate_notAvailable_message;
+
+  /// No description provided for @orgFiles_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search org files'**
+  String get orgFiles_search_label;
+
+  /// No description provided for @orgFiles_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete file?'**
+  String get orgFiles_delete_title;
+
+  /// No description provided for @orgFiles_delete_message.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove “{fileName}”.'**
+  String orgFiles_delete_message(Object fileName);
+
+  /// No description provided for @orgFiles_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No organization files.'**
+  String get orgFiles_empty;
+
+  /// No description provided for @orgUsers_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search org users'**
+  String get orgUsers_search_label;
+
+  /// No description provided for @orgUsers_remove_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove org user?'**
+  String get orgUsers_remove_title;
+
+  /// No description provided for @orgUsers_remove_message.
+  ///
+  /// In en, this message translates to:
+  /// **'This will unlink user #{userId} from organization #{orgId}.'**
+  String orgUsers_remove_message(Object orgId, Object userId);
+
+  /// No description provided for @orgUsers_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No organization users.'**
+  String get orgUsers_empty;
+
+  /// No description provided for @requests_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search requests / orders'**
+  String get requests_search_label;
+
+  /// No description provided for @requests_item_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Request #{id}'**
+  String requests_item_title(Object id);
+
+  /// No description provided for @requests_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No requests found.'**
+  String get requests_empty;
+
+  /// No description provided for @inactiveEquipments_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search inactive equipments'**
+  String get inactiveEquipments_search_label;
+
+  /// No description provided for @inactiveEquipments_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No inactive equipments.'**
+  String get inactiveEquipments_empty;
+
+  /// No description provided for @inactiveOrgs_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search inactive organizations'**
+  String get inactiveOrgs_search_label;
+
+  /// No description provided for @inactiveOrgs_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No inactive organizations.'**
+  String get inactiveOrgs_empty;
+
+  /// No description provided for @action_signIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get action_signIn;
+
+  /// No description provided for @action_back.
+  ///
+  /// In en, this message translates to:
+  /// **'Back'**
+  String get action_back;
+
+  /// No description provided for @action_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get action_cancel;
+
+  /// No description provided for @action_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get action_delete;
+
+  /// No description provided for @action_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove'**
+  String get action_remove;
+
+  /// No description provided for @action_previewOpen.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview / Open'**
+  String get action_previewOpen;
+
+  /// No description provided for @action_activate.
+  ///
+  /// In en, this message translates to:
+  /// **'Activate'**
+  String get action_activate;
+
+  /// No description provided for @action_deactivate.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivate'**
+  String get action_deactivate;
+
+  /// No description provided for @action_openOrganization.
+  ///
+  /// In en, this message translates to:
+  /// **'Open organization'**
+  String get action_openOrganization;
+
+  /// No description provided for @action_removeFromOrg.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from org'**
+  String get action_removeFromOrg;
+
+  /// No description provided for @common_signedIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Signed in'**
+  String get common_signedIn;
+
+  /// No description provided for @common_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated'**
+  String get common_updated;
+
+  /// No description provided for @common_updateFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Update failed'**
+  String get common_updateFailed;
+
+  /// No description provided for @common_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Deleted'**
+  String get common_deleted;
+
+  /// No description provided for @common_deleteFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete failed'**
+  String get common_deleteFailed;
+
+  /// No description provided for @common_removed.
+  ///
+  /// In en, this message translates to:
+  /// **'Removed'**
+  String get common_removed;
+
+  /// No description provided for @common_removeFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove failed'**
+  String get common_removeFailed;
+
+  /// No description provided for @common_typeToSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Type to search'**
+  String get common_typeToSearch;
+
+  /// No description provided for @common_orgNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Org #{id}'**
+  String common_orgNumber(Object id);
+
+  /// No description provided for @common_user.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get common_user;
+
+  /// No description provided for @common_equipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment'**
+  String get common_equipment;
+
+  /// No description provided for @common_organization.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization'**
+  String get common_organization;
+
+  /// No description provided for @common_file.
+  ///
+  /// In en, this message translates to:
+  /// **'File'**
+  String get common_file;
+
+  /// No description provided for @common_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get common_status;
+
+  /// No description provided for @common_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get common_active;
+
+  /// No description provided for @common_inactive.
+  ///
+  /// In en, this message translates to:
+  /// **'Inactive'**
+  String get common_inactive;
+
+  /// No description provided for @common_expired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get common_expired;
+
+  /// No description provided for @common_activated.
+  ///
+  /// In en, this message translates to:
+  /// **'Activated'**
+  String get common_activated;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

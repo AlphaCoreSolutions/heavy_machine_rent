@@ -2082,4 +2082,171 @@ class AppLocalizationsEn extends AppLocalizations {
   String driverWithId(Object id) {
     return 'Driver #$id';
   }
+
+  @override
+  String get superAdmin_title => 'Super Admin';
+
+  @override
+  String get superAdmin_tab_orgFiles => 'Org Files';
+
+  @override
+  String get superAdmin_tab_orgUsers => 'Org Users';
+
+  @override
+  String get superAdmin_tab_requestsOrders => 'Requests / Orders';
+
+  @override
+  String get superAdmin_tab_inactiveEquipments => 'Inactive Equipments';
+
+  @override
+  String get superAdmin_tab_inactiveOrgs => 'Inactive Organizations';
+
+  @override
+  String get superAdmin_gate_signIn_title => 'Sign in required';
+
+  @override
+  String get superAdmin_gate_signIn_message => 'This page is for Super Admin accounts.';
+
+  @override
+  String get superAdmin_gate_notAvailable_title => 'Not available';
+
+  @override
+  String get superAdmin_gate_notAvailable_message => 'Your account does not have Super Admin permission.';
+
+  @override
+  String get orgFiles_search_label => 'Search org files';
+
+  @override
+  String get orgFiles_delete_title => 'Delete file?';
+
+  @override
+  String orgFiles_delete_message(Object fileName) {
+    return 'This will remove “$fileName”.';
+  }
+
+  @override
+  String get orgFiles_empty => 'No organization files.';
+
+  @override
+  String get orgUsers_search_label => 'Search org users';
+
+  @override
+  String get orgUsers_remove_title => 'Remove org user?';
+
+  @override
+  String orgUsers_remove_message(Object orgId, Object userId) {
+    return 'This will unlink user #$userId from organization #$orgId.';
+  }
+
+  @override
+  String get orgUsers_empty => 'No organization users.';
+
+  @override
+  String get requests_search_label => 'Search requests / orders';
+
+  @override
+  String requests_item_title(Object id) {
+    return 'Request #$id';
+  }
+
+  @override
+  String get requests_empty => 'No requests found.';
+
+  @override
+  String get inactiveEquipments_search_label => 'Search inactive equipments';
+
+  @override
+  String get inactiveEquipments_empty => 'No inactive equipments.';
+
+  @override
+  String get inactiveOrgs_search_label => 'Search inactive organizations';
+
+  @override
+  String get inactiveOrgs_empty => 'No inactive organizations.';
+
+  @override
+  String get action_signIn => 'Sign in';
+
+  @override
+  String get action_back => 'Back';
+
+  @override
+  String get action_cancel => 'Cancel';
+
+  @override
+  String get action_delete => 'Delete';
+
+  @override
+  String get action_remove => 'Remove';
+
+  @override
+  String get action_previewOpen => 'Preview / Open';
+
+  @override
+  String get action_activate => 'Activate';
+
+  @override
+  String get action_deactivate => 'Deactivate';
+
+  @override
+  String get action_openOrganization => 'Open organization';
+
+  @override
+  String get action_removeFromOrg => 'Remove from org';
+
+  @override
+  String get common_signedIn => 'Signed in';
+
+  @override
+  String get common_updated => 'Updated';
+
+  @override
+  String get common_updateFailed => 'Update failed';
+
+  @override
+  String get common_deleted => 'Deleted';
+
+  @override
+  String get common_deleteFailed => 'Delete failed';
+
+  @override
+  String get common_removed => 'Removed';
+
+  @override
+  String get common_removeFailed => 'Remove failed';
+
+  @override
+  String get common_typeToSearch => 'Type to search';
+
+  @override
+  String common_orgNumber(Object id) {
+    return 'Org #$id';
+  }
+
+  @override
+  String get common_user => 'User';
+
+  @override
+  String get common_equipment => 'Equipment';
+
+  @override
+  String get common_organization => 'Organization';
+
+  @override
+  String get common_file => 'File';
+
+  @override
+  String get common_status => 'Status';
+
+  @override
+  String get common_active => 'Active';
+
+  @override
+  String get common_inactive => 'Inactive';
+
+  @override
+  String get common_expired => 'Expired';
+
+  @override
+  String get common_activated => 'Activated';
 }

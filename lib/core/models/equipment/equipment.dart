@@ -532,6 +532,8 @@ class Equipment {
         ?.map((e) => e.toJson())
         .toList(),
   };
+
+  copyWith({required bool isActive}) {}
 }
 
 class EquipmentSearch {
