@@ -1008,5 +1008,51 @@
     "common_active": "Active",
     "common_inactive": "Inactive",
     "common_expired": "Expired",
-    "common_activated": "Activated"
+    "common_activated": "Activated",
+    "common_deactivated": "Deactivated",
+    "superAdmin_tab_overview": "Overview",
+    "superAdmin_tab_settings": "Settings",
+    "superAdmin_tab_auditLogs": "Audit Logs",
+    "common_search": "Search",
+    "overview_totalOrgs": "Total organizations",
+    "overview_totalEquipments": "Total equipments",
+    "overview_totalUsers": "Total users",
+    "overview_openRequests": "Open requests",
+    "overview_quick_createOrg": "Create organization",
+    "overview_quick_inviteUser": "Invite user",
+    "overview_quick_settings": "Open settings",
+    "overview_recentActivity": "Recent activity",
+    "settings_maintenanceMode": "Maintenance mode",
+    "settings_maintenanceMode_desc": "Temporarily disable the app for end users.",
+    "settings_allowSignups": "Allow signups",
+    "settings_allowSignups_desc": "Permit new users to register accounts.",
+    "settings_enableNotifications": "Enable notifications",
+    "settings_enableNotifications_desc": "Send system notifications to users.",
+    "settings_emptyOrError": "Settings could not be loaded.",
+    "audit_search_label": "Search audit logs",
+    "audit_empty": "No audit logs found.",
+    "audit_filter_all": "All",
+    "audit_filter_info": "Info",
+    "audit_filter_warn": "Warn",
+    "audit_filter_error": "Error",
+    "search_hint": "Type to search…",
+    "search_noResults": "No results found.",
+    "common_statusLabel": "Status: {status}",
+    "@common_statusLabel": {
+        "description": "Status label with a value",
+        "placeholders": {
+            "status": {
+                "type": "String",
+                "example": "Active"
+            }
+        }
+    },
+    "common_organizations": "Organizations",
+    "common_users": "Users",
+    "common_equipments": "Equipments",
+    "common_requests": "Requests",
+    "action_save": "Save",
+    "common_saved": "Saved successfully.",
+    "common_saveFailed": "Save failed.",
+    "action_close": "Close"
 }

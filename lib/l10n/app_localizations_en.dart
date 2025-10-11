@@ -2249,4 +2249,117 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get common_activated => 'Activated';
+
+  @override
+  String get common_deactivated => 'Deactivated';
+
+  @override
+  String get superAdmin_tab_overview => 'Overview';
+
+  @override
+  String get superAdmin_tab_settings => 'Settings';
+
+  @override
+  String get superAdmin_tab_auditLogs => 'Audit Logs';
+
+  @override
+  String get common_search => 'Search';
+
+  @override
+  String get overview_totalOrgs => 'Total organizations';
+
+  @override
+  String get overview_totalEquipments => 'Total equipments';
+
+  @override
+  String get overview_totalUsers => 'Total users';
+
+  @override
+  String get overview_openRequests => 'Open requests';
+
+  @override
+  String get overview_quick_createOrg => 'Create organization';
+
+  @override
+  String get overview_quick_inviteUser => 'Invite user';
+
+  @override
+  String get overview_quick_settings => 'Open settings';
+
+  @override
+  String get overview_recentActivity => 'Recent activity';
+
+  @override
+  String get settings_maintenanceMode => 'Maintenance mode';
+
+  @override
+  String get settings_maintenanceMode_desc => 'Temporarily disable the app for end users.';
+
+  @override
+  String get settings_allowSignups => 'Allow signups';
+
+  @override
+  String get settings_allowSignups_desc => 'Permit new users to register accounts.';
+
+  @override
+  String get settings_enableNotifications => 'Enable notifications';
+
+  @override
+  String get settings_enableNotifications_desc => 'Send system notifications to users.';
+
+  @override
+  String get settings_emptyOrError => 'Settings could not be loaded.';
+
+  @override
+  String get audit_search_label => 'Search audit logs';
+
+  @override
+  String get audit_empty => 'No audit logs found.';
+
+  @override
+  String get audit_filter_all => 'All';
+
+  @override
+  String get audit_filter_info => 'Info';
+
+  @override
+  String get audit_filter_warn => 'Warn';
+
+  @override
+  String get audit_filter_error => 'Error';
+
+  @override
+  String get search_hint => 'Type to search…';
+
+  @override
+  String get search_noResults => 'No results found.';
+
+  @override
+  String common_statusLabel(String status) {
+    return 'Status: $status';
+  }
+
+  @override
+  String get common_organizations => 'Organizations';
+
+  @override
+  String get common_users => 'Users';
+
+  @override
+  String get common_equipments => 'Equipments';
+
+  @override
+  String get common_requests => 'Requests';
+
+  @override
+  String get action_save => 'Save';
+
+  @override
+  String get common_saved => 'Saved successfully.';
+
+  @override
+  String get common_saveFailed => 'Save failed.';
+
+  @override
+  String get action_close => 'Close';
 }

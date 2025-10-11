@@ -534,6 +534,40 @@ class Equipment {
   };
 
   copyWith({required bool isActive}) {}
+
+  // --- Minimal (de)serialization just for the active toggle ---
+  factory Equipment.fromJsonActive(Map<String, dynamic> json) {
+    final int id = _toInt(
+      json['equipmentId'] ?? json['EquipmentId'] ?? json['id'],
+    )!;
+    final bool active =
+        _toBoolN(json['isActive'] ?? json['IsActive'] ?? json['active']) ??
+        false;
+    return Equipment(equipmentId: id, isActive: active);
+  }
+
+  Map<String, dynamic> toJsonActive() => {
+    'equipmentId': equipmentId,
+    'isActive': isActive,
+  };
+}
+
+// Helpers (put them near your models utils)
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString());
+}
+
+bool? _toBoolN(dynamic v) {
+  if (v == null) return null;
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) {
+    final s = v.toLowerCase();
+    return s == 'true' || s == '1';
+  }
+  return null;
 }
 
 class EquipmentSearch {

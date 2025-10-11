@@ -2253,4 +2253,117 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get common_activated => 'تم التفعيل';
+
+  @override
+  String get common_deactivated => 'تم الغاء التفعيل';
+
+  @override
+  String get superAdmin_tab_overview => 'نظرة عامة';
+
+  @override
+  String get superAdmin_tab_settings => 'الإعدادات';
+
+  @override
+  String get superAdmin_tab_auditLogs => 'سجل التدقيق';
+
+  @override
+  String get common_search => 'بحث';
+
+  @override
+  String get overview_totalOrgs => 'إجمالي المؤسسات';
+
+  @override
+  String get overview_totalEquipments => 'إجمالي المعدات';
+
+  @override
+  String get overview_totalUsers => 'إجمالي المستخدمين';
+
+  @override
+  String get overview_openRequests => 'الطلبات المفتوحة';
+
+  @override
+  String get overview_quick_createOrg => 'إنشاء مؤسسة';
+
+  @override
+  String get overview_quick_inviteUser => 'دعوة مستخدم';
+
+  @override
+  String get overview_quick_settings => 'فتح الإعدادات';
+
+  @override
+  String get overview_recentActivity => 'النشاط الأخير';
+
+  @override
+  String get settings_maintenanceMode => 'وضع الصيانة';
+
+  @override
+  String get settings_maintenanceMode_desc => 'إيقاف التطبيق مؤقتًا للمستخدمين.';
+
+  @override
+  String get settings_allowSignups => 'السماح بالتسجيل';
+
+  @override
+  String get settings_allowSignups_desc => 'السماح للمستخدمين الجدد بإنشاء حسابات.';
+
+  @override
+  String get settings_enableNotifications => 'تفعيل الإشعارات';
+
+  @override
+  String get settings_enableNotifications_desc => 'إرسال إشعارات النظام للمستخدمين.';
+
+  @override
+  String get settings_emptyOrError => 'تعذر تحميل الإعدادات.';
+
+  @override
+  String get audit_search_label => 'ابحث في سجل التدقيق';
+
+  @override
+  String get audit_empty => 'لا توجد سجلات تدقيق.';
+
+  @override
+  String get audit_filter_all => 'الكل';
+
+  @override
+  String get audit_filter_info => 'معلومات';
+
+  @override
+  String get audit_filter_warn => 'تحذير';
+
+  @override
+  String get audit_filter_error => 'خطأ';
+
+  @override
+  String get search_hint => 'اكتب للبحث…';
+
+  @override
+  String get search_noResults => 'لا توجد نتائج.';
+
+  @override
+  String common_statusLabel(String status) {
+    return 'الحالة: $status';
+  }
+
+  @override
+  String get common_organizations => 'المؤسسات';
+
+  @override
+  String get common_users => 'المستخدمون';
+
+  @override
+  String get common_equipments => 'المعدات';
+
+  @override
+  String get common_requests => 'الطلبات';
+
+  @override
+  String get action_save => 'حفظ';
+
+  @override
+  String get common_saved => 'تم الحفظ بنجاح.';
+
+  @override
+  String get common_saveFailed => 'فشل الحفظ.';
+
+  @override
+  String get action_close => 'إغلاق';
 }

@@ -162,4 +162,31 @@ class OrganizationSummary {
     'createDateTime': createDateTime?.toIso8601String(),
     'modifyDateTime': modifyDateTime?.toIso8601String(),
   };
+
+  factory OrganizationSummary.fromJsonActive(Map<String, dynamic> json) =>
+      OrganizationSummary(
+        organizationId: _toInt(json['organizationId'] ?? json['id']),
+        isActive: _toBool(json['isActive']),
+      );
+
+  Map<String, dynamic> toJsonActive() => {
+    'organizationId': organizationId,
+    'isActive': isActive,
+  };
+}
+
+int? _toInt(dynamic v) {
+  if (v == null) return null;
+  if (v is num) return v.toInt();
+  return int.tryParse(v.toString());
+}
+
+bool _toBool(dynamic v) {
+  if (v is bool) return v;
+  if (v is num) return v != 0;
+  if (v is String) {
+    final s = v.toLowerCase();
+    return s == 'true' || s == '1';
+  }
+  return false;
 }

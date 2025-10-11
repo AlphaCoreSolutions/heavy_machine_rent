@@ -1895,12 +1895,29 @@ class Api {
   }
 
   static Future<List<Equipment>> advanceSearchEquipments(String query) async {
-    final raw = await _post('Equipment/AdvanceSearch', body: {'query': query});
-    print('Body: ${jsonEncode(raw)}');
-    return _unwrapList(raw)
+    final body = {'query': query};
+
+    if (kDebugMode) {
+      debugPrint('[API] POST Equipment/AdvanceSearch body=$body');
+    }
+
+    final raw = await _post('Equipment/AdvanceSearch', body: body);
+
+    if (kDebugMode) {
+      debugPrint('[API] Response (type=${raw.runtimeType}) for query="$query"');
+    }
+
+    final list = _unwrapList(raw);
+    return list
         .whereType<Map>()
         .map((e) => Equipment.fromJson(Map<String, dynamic>.from(e)))
         .toList();
+  }
+
+  static Future<void> updateEquipmentActive(int id, bool isActive) async {
+    final activeStr = isActive ? 'true' : 'false';
+    final path = 'Equipment/UpdateIsActive?id=$id&isActive=$activeStr';
+    await _put(path);
   }
 
   static Future<Equipment> getEquipmentById(int id) async {
@@ -2167,7 +2184,6 @@ class Api {
     );
   }
 
-  // Api.addEquipmentDriverFile
   static Future<EquipmentDriverFile> addEquipmentDriverFile(
     EquipmentDriverFile file,
   ) async {
@@ -2594,6 +2610,13 @@ class Api {
     return ApiEnvelope.fromAny(raw);
   }
 
+  static Future<void> updateOrganizationActive(int id, bool isActive) async {
+    final activeStr = isActive ? 'true' : 'false';
+    // Adjust the segment if your API uses another name (e.g., Organization/…)
+    final path = 'Organization/UpdateIsActive?id=$id&isActive=$activeStr';
+    await _put(path);
+  }
+
   static Future<OrganizationSummary> getOrganizationById(int id) async {
     final raw = await _get('Organization/$id');
     debugPrint('[Api.getOrganizationById/$id] raw -> $raw');
@@ -2610,11 +2633,20 @@ class Api {
   static Future<List<OrganizationSummary>> advanceSearchOrganization(
     String query,
   ) async {
-    final raw = await _post(
-      'Organization/AdvanceSearch',
-      body: {'query': query},
-    );
-    return _unwrapList(raw)
+    final body = {'query': query};
+
+    if (kDebugMode) {
+      debugPrint('[API] POST Organization/AdvanceSearch  body=$body');
+    }
+
+    final raw = await _post('Organization/AdvanceSearch', body: body);
+
+    if (kDebugMode) {
+      debugPrint('[API] Response (type=${raw.runtimeType}) for query="$query"');
+    }
+
+    final list = _unwrapList(raw);
+    return list
         .whereType<Map>()
         .map((e) => OrganizationSummary.fromJson(Map<String, dynamic>.from(e)))
         .toList();
@@ -3273,7 +3305,6 @@ class Api {
   //--------------------------------------------------------------------------------------------------------------------------
 }
 
-// core/api/api_handler.dart
 class AddRequestResult {
   final bool success;
   final String message;

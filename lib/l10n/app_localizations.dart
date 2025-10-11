@@ -4264,6 +4264,228 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Activated'**
   String get common_activated;
+
+  /// No description provided for @common_deactivated.
+  ///
+  /// In en, this message translates to:
+  /// **'Deactivated'**
+  String get common_deactivated;
+
+  /// No description provided for @superAdmin_tab_overview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get superAdmin_tab_overview;
+
+  /// No description provided for @superAdmin_tab_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get superAdmin_tab_settings;
+
+  /// No description provided for @superAdmin_tab_auditLogs.
+  ///
+  /// In en, this message translates to:
+  /// **'Audit Logs'**
+  String get superAdmin_tab_auditLogs;
+
+  /// No description provided for @common_search.
+  ///
+  /// In en, this message translates to:
+  /// **'Search'**
+  String get common_search;
+
+  /// No description provided for @overview_totalOrgs.
+  ///
+  /// In en, this message translates to:
+  /// **'Total organizations'**
+  String get overview_totalOrgs;
+
+  /// No description provided for @overview_totalEquipments.
+  ///
+  /// In en, this message translates to:
+  /// **'Total equipments'**
+  String get overview_totalEquipments;
+
+  /// No description provided for @overview_totalUsers.
+  ///
+  /// In en, this message translates to:
+  /// **'Total users'**
+  String get overview_totalUsers;
+
+  /// No description provided for @overview_openRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'Open requests'**
+  String get overview_openRequests;
+
+  /// No description provided for @overview_quick_createOrg.
+  ///
+  /// In en, this message translates to:
+  /// **'Create organization'**
+  String get overview_quick_createOrg;
+
+  /// No description provided for @overview_quick_inviteUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite user'**
+  String get overview_quick_inviteUser;
+
+  /// No description provided for @overview_quick_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Open settings'**
+  String get overview_quick_settings;
+
+  /// No description provided for @overview_recentActivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent activity'**
+  String get overview_recentActivity;
+
+  /// No description provided for @settings_maintenanceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Maintenance mode'**
+  String get settings_maintenanceMode;
+
+  /// No description provided for @settings_maintenanceMode_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Temporarily disable the app for end users.'**
+  String get settings_maintenanceMode_desc;
+
+  /// No description provided for @settings_allowSignups.
+  ///
+  /// In en, this message translates to:
+  /// **'Allow signups'**
+  String get settings_allowSignups;
+
+  /// No description provided for @settings_allowSignups_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Permit new users to register accounts.'**
+  String get settings_allowSignups_desc;
+
+  /// No description provided for @settings_enableNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable notifications'**
+  String get settings_enableNotifications;
+
+  /// No description provided for @settings_enableNotifications_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Send system notifications to users.'**
+  String get settings_enableNotifications_desc;
+
+  /// No description provided for @settings_emptyOrError.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings could not be loaded.'**
+  String get settings_emptyOrError;
+
+  /// No description provided for @audit_search_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Search audit logs'**
+  String get audit_search_label;
+
+  /// No description provided for @audit_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No audit logs found.'**
+  String get audit_empty;
+
+  /// No description provided for @audit_filter_all.
+  ///
+  /// In en, this message translates to:
+  /// **'All'**
+  String get audit_filter_all;
+
+  /// No description provided for @audit_filter_info.
+  ///
+  /// In en, this message translates to:
+  /// **'Info'**
+  String get audit_filter_info;
+
+  /// No description provided for @audit_filter_warn.
+  ///
+  /// In en, this message translates to:
+  /// **'Warn'**
+  String get audit_filter_warn;
+
+  /// No description provided for @audit_filter_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get audit_filter_error;
+
+  /// No description provided for @search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Type to search…'**
+  String get search_hint;
+
+  /// No description provided for @search_noResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No results found.'**
+  String get search_noResults;
+
+  /// Status label with a value
+  ///
+  /// In en, this message translates to:
+  /// **'Status: {status}'**
+  String common_statusLabel(String status);
+
+  /// No description provided for @common_organizations.
+  ///
+  /// In en, this message translates to:
+  /// **'Organizations'**
+  String get common_organizations;
+
+  /// No description provided for @common_users.
+  ///
+  /// In en, this message translates to:
+  /// **'Users'**
+  String get common_users;
+
+  /// No description provided for @common_equipments.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipments'**
+  String get common_equipments;
+
+  /// No description provided for @common_requests.
+  ///
+  /// In en, this message translates to:
+  /// **'Requests'**
+  String get common_requests;
+
+  /// No description provided for @action_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get action_save;
+
+  /// No description provided for @common_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved successfully.'**
+  String get common_saved;
+
+  /// No description provided for @common_saveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Save failed.'**
+  String get common_saveFailed;
+
+  /// No description provided for @action_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get action_close;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

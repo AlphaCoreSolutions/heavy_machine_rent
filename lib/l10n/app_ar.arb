@@ -975,5 +975,51 @@
     "common_active": "مفعّل",
     "common_inactive": "غير مفعّل",
     "common_expired": "منتهي",
-    "common_activated": "تم التفعيل"
+    "common_activated": "تم التفعيل",
+    "common_deactivated": "تم الغاء التفعيل",
+    "superAdmin_tab_overview": "نظرة عامة",
+    "superAdmin_tab_settings": "الإعدادات",
+    "superAdmin_tab_auditLogs": "سجل التدقيق",
+    "common_search": "بحث",
+    "overview_totalOrgs": "إجمالي المؤسسات",
+    "overview_totalEquipments": "إجمالي المعدات",
+    "overview_totalUsers": "إجمالي المستخدمين",
+    "overview_openRequests": "الطلبات المفتوحة",
+    "overview_quick_createOrg": "إنشاء مؤسسة",
+    "overview_quick_inviteUser": "دعوة مستخدم",
+    "overview_quick_settings": "فتح الإعدادات",
+    "overview_recentActivity": "النشاط الأخير",
+    "settings_maintenanceMode": "وضع الصيانة",
+    "settings_maintenanceMode_desc": "إيقاف التطبيق مؤقتًا للمستخدمين.",
+    "settings_allowSignups": "السماح بالتسجيل",
+    "settings_allowSignups_desc": "السماح للمستخدمين الجدد بإنشاء حسابات.",
+    "settings_enableNotifications": "تفعيل الإشعارات",
+    "settings_enableNotifications_desc": "إرسال إشعارات النظام للمستخدمين.",
+    "settings_emptyOrError": "تعذر تحميل الإعدادات.",
+    "audit_search_label": "ابحث في سجل التدقيق",
+    "audit_empty": "لا توجد سجلات تدقيق.",
+    "audit_filter_all": "الكل",
+    "audit_filter_info": "معلومات",
+    "audit_filter_warn": "تحذير",
+    "audit_filter_error": "خطأ",
+    "search_hint": "اكتب للبحث…",
+    "search_noResults": "لا توجد نتائج.",
+    "common_statusLabel": "الحالة: {status}",
+    "@common_statusLabel": {
+        "description": "تسمية الحالة مع قيمة",
+        "placeholders": {
+            "status": {
+                "type": "String",
+                "example": "مفعّل"
+            }
+        }
+    },
+    "common_organizations": "المؤسسات",
+    "common_users": "المستخدمون",
+    "common_equipments": "المعدات",
+    "common_requests": "الطلبات",
+    "action_save": "حفظ",
+    "common_saved": "تم الحفظ بنجاح.",
+    "common_saveFailed": "فشل الحفظ.",
+    "action_close": "إغلاق"
 }
