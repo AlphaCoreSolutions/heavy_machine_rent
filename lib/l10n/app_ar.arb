@@ -1021,5 +1021,15 @@
     "action_save": "حفظ",
     "common_saved": "تم الحفظ بنجاح.",
     "common_saveFailed": "فشل الحفظ.",
-    "action_close": "إغلاق"
+    "action_close": "إغلاق",
+    "details_org_title": "تفاصيل المؤسسة",
+    "details_equipment_title": "تفاصيل المعدّة",
+    "common_details": "التفاصيل",
+    "common_id": "المعرّف",
+    "common_english": "الإنجليزية",
+    "common_arabic": "العربية",
+    "details_notFound_org": "تعذر تحميل تفاصيل المؤسسة.",
+    "details_notFound_equipment": "تعذر تحميل تفاصيل المعدّة.",
+    "common_image": "صورة",
+    "common_images": "صور"
 }

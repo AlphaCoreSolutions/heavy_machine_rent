@@ -1,8 +1,12 @@
 // lib/screens/super_admin_hub_screen.dart
+// ignore_for_file: unused_local_variable
+
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:heavy_new/core/auth/auth_store.dart';
 import 'package:heavy_new/core/api/api_handler.dart' as api;
+import 'package:heavy_new/core/models/admin/domain.dart';
+import 'package:heavy_new/core/models/admin/factory.dart';
 
 import 'package:heavy_new/core/models/admin/request.dart';
 import 'package:heavy_new/core/models/organization/organization_file.dart';
@@ -12,6 +16,7 @@ import 'package:heavy_new/core/models/equipment/equipment.dart';
 import 'package:heavy_new/core/models/organization/organization_summary.dart';
 
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/screens/app/app_settings_screen.dart'
@@ -172,7 +177,6 @@ class _GateScreen extends StatelessWidget {
 }
 
 // ========================== OVERVIEW TAB ==========================
-// ========================== OVERVIEW TAB (client-computed) ==========================
 class _OverviewTab extends StatefulWidget {
   const _OverviewTab();
   @override
@@ -1324,6 +1328,27 @@ class _InactiveEquipmentsTabState extends State<_InactiveEquipmentsTab> {
                           onPressed: () => _activate(e),
                           child: Text(context.l10n.action_activate),
                         ),
+                        // ⬇️ Add this onTap
+                        onTap: () async {
+                          if (e.equipmentId == null) return;
+                          final changed = await Navigator.of(context)
+                              .push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      EquipmentDetailsActivationScreen(
+                                        equipmentId: e.equipmentId!,
+                                        initial: e,
+                                      ),
+                                ),
+                              );
+                          if (changed == true && mounted) {
+                            setState(() {
+                              _future = api.Api.advanceSearchEquipments(
+                                _kEquipmentsFILTER,
+                              );
+                            });
+                          }
+                        },
                       ),
                     );
                   },
@@ -1531,6 +1556,27 @@ class _InactiveOrganizationsTabState extends State<_InactiveOrganizationsTab> {
                           onPressed: () => _activate(o),
                           child: Text(context.l10n.action_activate),
                         ),
+                        // ⬇️ Add this onTap
+                        onTap: () async {
+                          if (o.organizationId == null) return;
+                          final changed = await Navigator.of(context)
+                              .push<bool>(
+                                MaterialPageRoute(
+                                  builder: (_) =>
+                                      OrganizationDetailsActivationScreen(
+                                        organizationId: o.organizationId!,
+                                        initial: o,
+                                      ),
+                                ),
+                              );
+                          if (changed == true && mounted) {
+                            setState(() {
+                              _future = api.Api.advanceSearchOrganization(
+                                _kOrganizationsFILTER,
+                              );
+                            });
+                          }
+                        },
                       ),
                     );
                   },
@@ -1544,6 +1590,1149 @@ class _InactiveOrganizationsTabState extends State<_InactiveOrganizationsTab> {
   }
 }
 
+// ====================== ORGANIZATION DETAILS SCREEN ======================
+class OrganizationDetailsActivationScreen extends StatefulWidget {
+  const OrganizationDetailsActivationScreen({
+    required this.organizationId,
+    this.initial,
+    super.key,
+  });
+
+  final int organizationId;
+  final OrganizationSummary? initial;
+
+  @override
+  State<OrganizationDetailsActivationScreen> createState() =>
+      _OrganizationDetailsActivationScreenState();
+}
+
+class _OrgResolvedRefs {
+  final Map<int, String> typeNameById; // Domain 13
+  final Map<int, String> statusNameById; // Domain 10
+  const _OrgResolvedRefs({
+    this.typeNameById = const {},
+    this.statusNameById = const {},
+  });
+
+  String typeName(int? id) =>
+      (id == null) ? '—' : (typeNameById[id] ?? id.toString());
+  String statusName(int? id) =>
+      (id == null) ? '—' : (statusNameById[id] ?? id.toString());
+}
+
+class _OrgBundle {
+  final OrganizationSummary? org;
+  final _OrgResolvedRefs refs;
+  const _OrgBundle({required this.org, required this.refs});
+}
+
+class _OrganizationDetailsActivationScreenState
+    extends State<OrganizationDetailsActivationScreen> {
+  late Future<_OrgBundle> _future;
+
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<_OrgBundle> _load() async {
+    final sql =
+        'select * from Organizations where organizationId = ${widget.organizationId}';
+    final list = await api.Api.advanceSearchOrganization(sql);
+
+    // Start with SQL result or initial
+    OrganizationSummary? org = list.isNotEmpty ? list.first : widget.initial;
+
+    // 🔹 Hydrate with full endpoint so nested city/country/status are present
+    if (org?.organizationId != null) {
+      try {
+        final full = await api.Api.getOrganizationById(org!.organizationId!);
+        org = full;
+        if (org.city == null && org.cityId != null) {
+          try {
+            final c = await api.Api.getCityById(org.cityId!);
+            org = OrganizationSummary(
+              // carry forward existing fields; or if you have a copyWith, use that
+              organizationId: org.organizationId,
+              organizationCode: org.organizationCode,
+              nameArabic: org.nameArabic,
+              nameEnglish: org.nameEnglish,
+              briefArabic: org.briefArabic,
+              briefEnglish: org.briefEnglish,
+              crNumber: org.crNumber,
+              vatNumber: org.vatNumber,
+              mainMobile: org.mainMobile,
+              secondMobile: org.secondMobile,
+              mainEmail: org.mainEmail,
+              secondEmail: org.secondEmail,
+              iban: org.iban,
+              bankName: org.bankName,
+              statusId: org.statusId,
+              countryId: org.countryId,
+              cityId: org.cityId,
+              fullAddress: org.fullAddress,
+              tradeNameArabic: org.tradeNameArabic,
+              tradeNameEnglish: org.tradeNameEnglish,
+              logoPath: org.logoPath,
+              isActive: org.isActive,
+              typeId: org.typeId,
+              createDateTime: org.createDateTime,
+              modifyDateTime: org.modifyDateTime,
+              status: org.status,
+              country: org.country, // keep whatever was there
+              city: c, // <-- hydrated city
+              organizationUsers: org.organizationUsers,
+              organizationFiles: org.organizationFiles,
+            );
+
+            // If country still null, prefer the one attached to City
+            if (org.country == null && c.country?.nationalityId != null) {
+              final cref = await api.Api.getNationalityById(
+                c.country!.nationalityId!,
+              );
+              org = OrganizationSummary(
+                organizationId: org.organizationId,
+                organizationCode: org.organizationCode,
+                nameArabic: org.nameArabic,
+                nameEnglish: org.nameEnglish,
+                briefArabic: org.briefArabic,
+                briefEnglish: org.briefEnglish,
+                crNumber: org.crNumber,
+                vatNumber: org.vatNumber,
+                mainMobile: org.mainMobile,
+                secondMobile: org.secondMobile,
+                mainEmail: org.mainEmail,
+                secondEmail: org.secondEmail,
+                iban: org.iban,
+                bankName: org.bankName,
+                statusId: org.statusId,
+                countryId: org.countryId,
+                cityId: org.cityId,
+                fullAddress: org.fullAddress,
+                tradeNameArabic: org.tradeNameArabic,
+                tradeNameEnglish: org.tradeNameEnglish,
+                logoPath: org.logoPath,
+                isActive: org.isActive,
+                typeId: org.typeId,
+                createDateTime: org.createDateTime,
+                modifyDateTime: org.modifyDateTime,
+                status: org.status,
+                country: cref, // <-- hydrated country
+                city: org.city,
+                organizationUsers: org.organizationUsers,
+                organizationFiles: org.organizationFiles,
+              );
+            }
+          } catch (_) {
+            // ignore; fallbacks will show ids
+          }
+        }
+      } catch (_) {
+        // keep the partial 'org' if full fetch fails
+      }
+    }
+
+    Map<int, String> typeNames = const {};
+    Map<int, String> statusNames = const {};
+
+    // Fetch Domain 13 (Type) and Domain 10 (Status) details in parallel
+    List<DomainDetail>? d13, d10;
+    await Future.wait([
+      api.Api.getDomainDetailsByDomainId(13).then((v) => d13 = v),
+      api.Api.getDomainDetailsByDomainId(10).then((v) => d10 = v),
+    ]);
+
+    if (d13 != null) {
+      typeNames = {
+        for (final dd in d13!)
+          if (dd.domainDetailId != null)
+            dd.domainDetailId!:
+                (dd.detailNameEnglish ??
+                dd.detailNameArabic ??
+                dd.domainDetailId!.toString()),
+      };
+    }
+    if (d10 != null) {
+      statusNames = {
+        for (final dd in d10!)
+          if (dd.domainDetailId != null)
+            dd.domainDetailId!:
+                (dd.detailNameEnglish ??
+                dd.detailNameArabic ??
+                dd.domainDetailId!.toString()),
+      };
+    }
+
+    return _OrgBundle(
+      org: org,
+      refs: _OrgResolvedRefs(
+        typeNameById: typeNames,
+        statusNameById: statusNames,
+      ),
+    );
+  }
+
+  Future<void> _activate(OrganizationSummary o) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await api.Api.updateOrganizationActive(o.organizationId!, true);
+      if (!mounted) return;
+      AppSnack.success(context, context.l10n.common_activated);
+      Navigator.of(context).pop(true); // signal parent to refresh
+    } catch (_) {
+      if (!mounted) return;
+      AppSnack.error(context, context.l10n.common_updateFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.common_organization)),
+      body: RefreshIndicator(
+        onRefresh: () async => setState(() => _future = _load()),
+        child: FutureBuilder<_OrgBundle>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return ListView(
+                children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
+              );
+            }
+            final bundle = snap.data;
+            final o = bundle?.org;
+            final refs = bundle?.refs ?? const _OrgResolvedRefs();
+            if (o == null) {
+              return ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      context.l10n.inactiveOrgs_empty,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            final isActive = o.isActive == true;
+            final name = (o.nameEnglish ?? '').isNotEmpty
+                ? o.nameEnglish!
+                : (o.nameArabic ?? context.l10n.common_organization);
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                // Header
+                Glass(
+                  radius: 18,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: CircleAvatar(
+                      radius: 26,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      child: AIcon(AppGlyph.building, color: cs.primary),
+                    ),
+                    title: Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${context.l10n.common_status}: ${isActive ? context.l10n.common_active : context.l10n.common_inactive}',
+                    ),
+                    trailing: (o.logoPath ?? '').isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: SizedBox(
+                              width: 48,
+                              height: 48,
+                              child: FallbackNetworkImage(
+                                candidates: [o.logoPath!],
+                                fit: BoxFit.cover,
+                                placeholderColor: cs.surfaceContainerHighest,
+                              ),
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Identity
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: context.l10n.common_details,
+                      rows: [
+                        _kv(
+                          context.l10n.common_id,
+                          (o.organizationId ?? '—').toString(),
+                        ),
+                        _kv(context.l10n.common_english, o.nameEnglish ?? '—'),
+                        _kv(context.l10n.common_arabic, o.nameArabic ?? '—'),
+
+                        _kv('Brief (EN)', o.briefEnglish ?? '—'),
+                        _kv('Brief (AR)', o.briefArabic ?? '—'),
+                        _kv(
+                          'Created',
+                          o.createDateTime?.toIso8601String() ?? '—',
+                        ),
+                        _kv(
+                          'Modified',
+                          o.modifyDateTime?.toIso8601String() ?? '—',
+                        ),
+                        _kv('Type', refs.typeName(o.typeId)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Contact & Address
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: 'Contact & Address',
+                      rows: [
+                        _kv('Main mobile', o.mainMobile ?? '—'),
+                        _kv('Second mobile', o.secondMobile ?? '—'),
+                        _kv('Main email', o.mainEmail ?? '—'),
+                        _kv('Second email', o.secondEmail ?? '—'),
+
+                        _kv(
+                          'City',
+                          o.city?.nameEnglish ??
+                              o.city?.nameArabic ??
+                              _fmtInt(o.cityId),
+                        ),
+                        _kv('Address', o.fullAddress ?? '—'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Legal & Banking
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: 'Legal & Banking',
+                      rows: [
+                        _kv('CR Number', o.crNumber ?? '—'),
+                        _kv('VAT Number', o.vatNumber ?? '—'),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Users
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionTitle(context.l10n.common_users),
+                        const SizedBox(height: 8),
+                        if (o.organizationUsers.isEmpty)
+                          Text(
+                            context.l10n.orgUsers_empty,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          )
+                        else
+                          ...o.organizationUsers.map(
+                            (u) => ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: cs.surfaceContainerHighest,
+                                child: AIcon(
+                                  AppGlyph.user,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              title: Text(
+                                u.applicationUser?.fullName ?? '—',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                '${context.l10n.common_orgNumber((u.organizationId ?? '').toString())}',
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Files
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _sectionTitle(context.l10n.superAdmin_tab_orgFiles),
+                        const SizedBox(height: 8),
+                        if (o.organizationFiles.isEmpty)
+                          Text(
+                            context.l10n.orgFiles_empty,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: cs.onSurfaceVariant),
+                          )
+                        else
+                          ...o.organizationFiles.map(
+                            (f) => ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: cs.surfaceContainerHighest,
+                                child: AIcon(
+                                  (f.isImage == true)
+                                      ? AppGlyph.image
+                                      : AppGlyph.file,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              title: Text(
+                                f.descFileType ?? f.fileName ?? '—',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text(
+                                '${context.l10n.common_orgNumber((f.organizationId ?? '—').toString())}'
+                                ' • ${(f.fileType?.detailNameEnglish ?? f.fileType?.detailNameArabic ?? '')}',
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                if (!isActive)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed: _busy ? null : () => _activate(o),
+                      icon: _busy
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_circle),
+                      label: Text(context.l10n.action_activate),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  _KV _kv(String k, String v) => _KV(k: k, v: v);
+}
+
+// ======================== EQUIPMENT DETAILS SCREEN ========================
+class _ResolvedRefs {
+  final String? vendorName; // from getOrganizationById(vendorId)
+  final String? factoryName; // from getFactoryById(factoryId)
+  // Domain Detail id -> display name (from Domain 9)
+  final Map<int, String> ddNameById;
+
+  const _ResolvedRefs({
+    this.vendorName,
+    this.factoryName,
+    this.ddNameById = const {},
+  });
+
+  String nameFor(int? id) =>
+      (id == null) ? '—' : (ddNameById[id] ?? id.toString());
+}
+
+class _EquipmentBundle {
+  final Equipment? equipment;
+  final List<EquipmentTerm> terms;
+  final List<EquipmentCertificate> certs;
+  final _ResolvedRefs refs;
+
+  _EquipmentBundle({
+    required this.equipment,
+    required this.terms,
+    required this.certs,
+    required this.refs,
+  });
+}
+
+class EquipmentDetailsActivationScreen extends StatefulWidget {
+  const EquipmentDetailsActivationScreen({
+    required this.equipmentId,
+    this.initial,
+    super.key,
+  });
+
+  final int equipmentId;
+  final Equipment? initial;
+
+  @override
+  State<EquipmentDetailsActivationScreen> createState() =>
+      _EquipmentDetailsActivationScreenState();
+}
+
+class _EquipmentDetailsActivationScreenState
+    extends State<EquipmentDetailsActivationScreen> {
+  late Future<_EquipmentBundle> _future;
+  bool _busy = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<void> _openCertDoc(BuildContext context, String? rawPath) async {
+    if (rawPath == null || rawPath.trim().isEmpty) return;
+
+    // Some APIs return leading slashes or backslashes; normalize and encode the filename.
+    final cleaned = rawPath.replaceAll('\\', '/').replaceAll(RegExp('^/+'), '');
+    // If API ever returns an absolute URL, just open it.
+    final isAbsolute =
+        cleaned.startsWith('http://') || cleaned.startsWith('https://');
+
+    final url = isAbsolute
+        ? cleaned
+        : 'https://sr.visioncit.com/staticFiles/equipcertFiles/${Uri.encodeComponent(cleaned.split('/').last)}';
+
+    final ok = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+    if (!ok) {
+      // Fallback: try in-app webview
+      await launchUrl(Uri.parse(url), mode: LaunchMode.inAppBrowserView);
+    }
+  }
+
+  Future<_EquipmentBundle> _load() async {
+    // 1) Equipment
+    final where = 'equipmentId = ${widget.equipmentId}';
+    final list = await api.Api.advanceSearchEquipments(where);
+    final equipment = list.isNotEmpty ? list.first : widget.initial;
+
+    // Defaults
+    List<EquipmentTerm> terms = const [];
+    List<EquipmentCertificate> certs = const [];
+    String? vendorName;
+    String? factoryName;
+    Map<int, String> ddNameById = const {};
+
+    if (equipment?.equipmentId != null) {
+      final id = equipment!.equipmentId!;
+
+      // 2) Related lists
+      terms = await api.Api.getEquipmentTermsByEquipmentId(id);
+
+      final embedded = equipment.equipmentCertificates ?? const [];
+      if (embedded.isNotEmpty) {
+        final needFetch = embedded.any(
+          (c) =>
+              c.nameEnglish == null &&
+              c.nameArabic == null &&
+              c.documentPath == null,
+        );
+        certs = needFetch
+            ? await Future.wait(
+                embedded
+                    .map((c) => c.equipmentCertificateId)
+                    .whereType<int>()
+                    .map(api.Api.getEquipmentCertificateById),
+              )
+            : embedded;
+      }
+
+      // 3) Resolve vendor (org) and factory, plus Domain 7 details
+      final futures = <Future>[];
+      OrganizationSummary? vendor;
+      FactoryModel? factory;
+      Domain? domain7; // (not strictly needed for names)
+      List<DomainDetail>? domain7Details; // <-- we use these for the names
+
+      if (equipment.vendorId != null) {
+        futures.add(
+          api.Api.getOrganizationById(
+            equipment.vendorId!,
+          ).then((v) => vendor = v),
+        );
+      }
+      if (equipment.factoryId != null) {
+        futures.add(
+          api.Api.getFactoryById(equipment.factoryId!).then((f) => factory = f),
+        );
+      }
+      futures.add(api.Api.getDomainById(7).then((d) => domain7 = d));
+      futures.add(
+        api.Api.getDomainDetailsByDomainId(7).then((ds) => domain7Details = ds),
+      );
+
+      await Future.wait(futures);
+
+      // Prefer EN then AR
+      vendorName = vendor?.nameEnglish ?? vendor?.nameArabic;
+
+      // Factory model field names vary; try both EN/AR possibilities
+      factoryName =
+          (factory?.nameEnglish ??
+          factory?.nameArabic ??
+          factory?.nameEnglish ??
+          factory?.nameArabic);
+
+      // Build quick lookup from Domain 7 details
+      if (domain7Details != null) {
+        ddNameById = {
+          for (final dd in domain7Details!)
+            if (dd.domainDetailId != null)
+              dd.domainDetailId!:
+                  (dd.detailNameEnglish ??
+                  dd.detailNameArabic ??
+                  dd.domainDetailId!.toString()),
+        };
+      }
+    }
+
+    // Sorts
+    terms = [...terms]
+      ..sort((a, b) => (a.orderBy ?? 0).compareTo(b.orderBy ?? 0));
+    certs = [...certs]
+      ..sort((a, b) => (b.expireDate ?? '').compareTo(a.expireDate ?? ''));
+
+    return _EquipmentBundle(
+      equipment: equipment,
+      terms: terms,
+      certs: certs,
+      refs: _ResolvedRefs(
+        vendorName: vendorName,
+        factoryName: factoryName,
+        ddNameById: ddNameById,
+      ),
+    );
+  }
+
+  Future<void> _activate(Equipment e) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      await api.Api.updateEquipmentActive(e.equipmentId!, true);
+      if (!mounted) return;
+      AppSnack.success(context, context.l10n.common_activated);
+      Navigator.of(context).pop(true); // signal parent to refresh
+    } catch (_) {
+      if (!mounted) return;
+      AppSnack.error(context, context.l10n.common_updateFailed);
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Scaffold(
+      appBar: AppBar(title: Text(context.l10n.common_equipment)),
+      body: RefreshIndicator(
+        onRefresh: () async => setState(() => _future = _load()),
+        child: FutureBuilder<_EquipmentBundle>(
+          future: _future,
+          builder: (context, snap) {
+            if (snap.connectionState == ConnectionState.waiting) {
+              return ListView(
+                children: const [ShimmerTile(), ShimmerTile(), ShimmerTile()],
+              );
+            }
+
+            final bundle = snap.data;
+            final e = bundle?.equipment;
+            final terms = bundle?.terms ?? const [];
+            final certs = bundle?.certs ?? const [];
+            final refs = bundle?.refs ?? const _ResolvedRefs();
+
+            if (e == null) {
+              return ListView(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      context.l10n.inactiveEquipments_empty,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: cs.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
+
+            final isActive = e.isActive == true;
+            final name = (e.descEnglish ?? '').isNotEmpty
+                ? e.descEnglish!
+                : (e.descArabic ?? context.l10n.common_equipment);
+
+            // ⬇️ keep your existing “Header / Media / Basics / Pricing / Inventory / Relations” sections...
+            // Then replace the old "Drivers / Terms / Certificates" blocks with the upgraded ones below.
+
+            return ListView(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 24),
+              children: [
+                // Header
+                Glass(
+                  radius: 18,
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: CircleAvatar(
+                      radius: 26,
+                      backgroundColor: cs.surfaceContainerHighest,
+                      child: AIcon(AppGlyph.tools, color: cs.primary),
+                    ),
+                    title: Text(
+                      name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    subtitle: Text(
+                      '${context.l10n.common_status}: ${isActive ? context.l10n.common_active : context.l10n.common_inactive}',
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Media (cover + images)
+                if ((e.coverPath ?? '').isNotEmpty) ...[
+                  Glass(
+                    radius: 16,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: AspectRatio(
+                        aspectRatio: 16 / 9,
+                        child: FallbackNetworkImage(
+                          candidates: [e.coverPath!],
+                          fit: BoxFit.cover,
+                          placeholderColor: cs.surfaceContainerHighest,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                if ((e.equipmentImages?.isNotEmpty ?? false))
+                  Glass(
+                    radius: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionTitle(context.l10n.common_images),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            height: 96,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: e.equipmentImages!.length,
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
+                              itemBuilder: (_, i) {
+                                final img = e.equipmentImages![i];
+                                final path = img.equipmentPath ?? '';
+                                return ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: AspectRatio(
+                                    aspectRatio: 16 / 10,
+                                    child: FallbackNetworkImage(
+                                      candidates: [path],
+                                      fit: BoxFit.cover,
+                                      placeholderColor:
+                                          cs.surfaceContainerHighest,
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if ((e.equipmentImages?.isNotEmpty ?? false))
+                  const SizedBox(height: 12),
+
+                // Basics
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: context.l10n.common_details,
+                      rows: [
+                        _kv(
+                          context.l10n.common_id,
+                          (e.equipmentId ?? '—').toString(),
+                        ),
+                        _kv(context.l10n.common_english, e.descEnglish ?? '—'),
+                        _kv(context.l10n.common_arabic, e.descArabic ?? '—'),
+                        _kv(
+                          'Created',
+                          e.createDateTime?.toIso8601String() ?? '—',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Pricing
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: 'Pricing',
+                      rows: [
+                        _kv('Per day', _fmtMoney(e.rentPricePerDay)),
+                        _kv('Per hour', _fmtMoney(e.rentPricePerHour)),
+                        _kv('Down payment %', _fmtNum(e.downPaymentPerc)),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Quantities / Status
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: 'Inventory & Status',
+                      rows: [
+                        _kv('Quantity', _fmtInt(e.quantity)),
+                        _kv('Reserved', _fmtInt(e.reservedQuantity)),
+                        _kv('Available', _fmtInt(e.availableQuantity)),
+                        _kv(
+                          'Status',
+                          e.status?.detailNameEnglish ??
+                              e.status?.detailNameArabic ??
+                              _fmtInt(e.statusId),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Relationships
+                Glass(
+                  radius: 16,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: _DetailsSection(
+                      title: 'Relations',
+                      rows: [
+                        _kv(
+                          'Equipment list',
+                          e.equipmentList?.nameEnglish ??
+                              e.equipmentList?.nameArabic ??
+                              _fmtInt(e.equipmentListId),
+                        ),
+                        _kv(
+                          'Category',
+                          e.category?.detailNameEnglish ??
+                              e.category?.detailNameArabic ??
+                              _fmtInt(e.categoryId),
+                        ),
+                        _kv(
+                          'Fuel responsibility',
+                          e.fuelResponsibility?.detailNameEnglish ??
+                              e.fuelResponsibility?.detailNameArabic ??
+                              _fmtInt(e.fuelResponsibilityId),
+                        ),
+                        // Transfer type / responsibility from Domain 9
+                        _kv(
+                          'Transfer type',
+                          e.transferType?.detailNameEnglish ??
+                              e.transferType?.detailNameArabic ??
+                              _fmtInt(e.transferTypeId),
+                        ),
+                        _kv(
+                          'Transfer responsibility',
+                          refs.nameFor(e.transferResponsibilityId),
+                        ),
+                        _kv(
+                          'Transfer resp. (driver)',
+                          refs.nameFor(e.driverTransResponsibilityId),
+                        ),
+                        _kv(
+                          'Food resp. (driver)',
+                          refs.nameFor(e.driverFoodResponsibilityId),
+                        ),
+                        _kv(
+                          'Housing resp. (driver)',
+                          refs.nameFor(e.driverHousingResponsibilityId),
+                        ),
+
+                        // Vendor (Organization) and Factory via fetched names
+                        _kv('Vendor', refs.vendorName ?? _fmtInt(e.vendorId)),
+                        _kv(
+                          'Factory',
+                          refs.factoryName ?? _fmtInt(e.factoryId),
+                        ),
+                        _kv(
+                          'Organization',
+                          e.organization?.nameEnglish ??
+                              e.organization?.nameArabic ??
+                              '—',
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                // Drivers
+                if ((e.drivers?.isNotEmpty ?? false))
+                  Glass(
+                    radius: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionTitle('Drivers'),
+                          const SizedBox(height: 8),
+                          ...e.drivers!.map(
+                            (d) => ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: cs.surfaceContainerHighest,
+                                child: AIcon(
+                                  AppGlyph.user,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              title: Text(
+                                d.driverNameEnglish ?? '—',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Text('${d.equipmentDriverId ?? '—'}'),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if ((e.drivers?.isNotEmpty ?? false))
+                  const SizedBox(height: 12),
+
+                // Terms
+                // Terms (from API; ordered by orderBy)
+                if (terms.isNotEmpty)
+                  Glass(
+                    radius: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionTitle('Terms'),
+                          const SizedBox(height: 8),
+                          ...terms.map(
+                            (t) => Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('•  '),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          (t.descEnglish?.isNotEmpty ?? false)
+                                              ? t.descEnglish!
+                                              : (t.descArabic ?? '—'),
+                                          maxLines: 4,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 2),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 4,
+                                          children: [
+                                            if (t.orderBy != null)
+                                              _chip('Order: ${t.orderBy}'),
+                                            _chip(
+                                              'Active: ${_fmtBool(t.isActive)}',
+                                            ),
+                                            _chip(
+                                              'Created: ${t.createDateTime?.toIso8601String() ?? '—'}',
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                if (terms.isNotEmpty) const SizedBox(height: 12),
+
+                const SizedBox(height: 12),
+
+                // Certificates
+                if (certs.isNotEmpty)
+                  Glass(
+                    radius: 16,
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _sectionTitle('Certificates'),
+                          const SizedBox(height: 8),
+                          ...certs.map((c) {
+                            final title = (c.nameEnglish?.isNotEmpty ?? false)
+                                ? c.nameEnglish!
+                                : (c.nameArabic ?? '—');
+                            final expired = c.isExpire == true;
+
+                            return ListTile(
+                              contentPadding: EdgeInsets.zero,
+                              leading: CircleAvatar(
+                                backgroundColor: cs.surfaceContainerHighest,
+                                child: Icon(
+                                  (c.isImage == true)
+                                      ? Icons.image
+                                      : Icons.picture_as_pdf,
+                                  color: cs.onSurfaceVariant,
+                                ),
+                              ),
+                              title: Text(
+                                title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Issue: ${c.issueDate ?? '—'}  •  Expire: ${c.expireDate ?? '—'}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Wrap(
+                                    spacing: 8,
+                                    runSpacing: 4,
+                                    children: [
+                                      _chip(
+                                        'Expired',
+                                        color: expired
+                                            ? Colors.red.withOpacity(.2)
+                                            : null,
+                                      ),
+                                      _chip('Active'),
+                                      if ((c.documentType ?? '').isNotEmpty)
+                                        _chip(c.documentType!),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              trailing: (c.documentPath ?? '').isNotEmpty
+                                  ? IconButton(
+                                      tooltip: 'Open',
+                                      icon: const Icon(Icons.open_in_new),
+                                      onPressed: () =>
+                                          _openCertDoc(context, c.documentPath),
+                                    )
+                                  : null,
+                            );
+                          }),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 12),
+
+                if (!isActive)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: FilledButton.icon(
+                      onPressed: _busy ? null : () => _activate(e),
+                      icon: _busy
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check_circle),
+                      label: Text(context.l10n.action_activate),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  _KV _kv(String k, String v) => _KV(k: k, v: v);
+}
+
+// ====================== HELPERS & SEARCH ======================
 class StatCard extends StatelessWidget {
   const StatCard({
     required this.icon,
@@ -1892,3 +3081,81 @@ class _SearchBundle {
     required this.reqs,
   });
 }
+
+class _DetailsSection extends StatelessWidget {
+  const _DetailsSection({required this.title, required this.rows});
+  final String title;
+  final List<_KV> rows;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+        ),
+        const SizedBox(height: 12),
+        ...rows.map(
+          (kv) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Row(
+              children: [
+                Expanded(
+                  flex: 4,
+                  child: Text(
+                    kv.k,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Expanded(
+                  flex: 8,
+                  child: Text(
+                    kv.v,
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _KV {
+  final String k;
+  final String v;
+  const _KV({required this.k, required this.v});
+}
+
+Widget _sectionTitle(String text) =>
+    Text(text, style: const TextStyle(fontWeight: FontWeight.w800));
+
+String _fmtMoney(num? v) => (v == null) ? '—' : v.toStringAsFixed(2);
+
+String _fmtNum(num? v) => (v == null) ? '—' : v.toString();
+
+String _fmtInt(num? v) => (v == null) ? '—' : v.toInt().toString();
+
+String _fmtBool(bool? b) => (b == true)
+    ? 'Yes'
+    : (b == false)
+    ? 'No'
+    : '—';
+
+Widget _chip(String label, {Color? color}) => Container(
+  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+  decoration: BoxDecoration(
+    color: color ?? Colors.black.withOpacity(0.04),
+    borderRadius: BorderRadius.circular(999),
+  ),
+  child: Text(label, style: const TextStyle(fontSize: 12)),
+);

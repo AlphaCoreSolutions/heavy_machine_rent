@@ -4486,6 +4486,66 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Close'**
   String get action_close;
+
+  /// No description provided for @details_org_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization details'**
+  String get details_org_title;
+
+  /// No description provided for @details_equipment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment details'**
+  String get details_equipment_title;
+
+  /// No description provided for @common_details.
+  ///
+  /// In en, this message translates to:
+  /// **'Details'**
+  String get common_details;
+
+  /// No description provided for @common_id.
+  ///
+  /// In en, this message translates to:
+  /// **'ID'**
+  String get common_id;
+
+  /// No description provided for @common_english.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get common_english;
+
+  /// No description provided for @common_arabic.
+  ///
+  /// In en, this message translates to:
+  /// **'Arabic'**
+  String get common_arabic;
+
+  /// No description provided for @details_notFound_org.
+  ///
+  /// In en, this message translates to:
+  /// **'Organization details could not be loaded.'**
+  String get details_notFound_org;
+
+  /// No description provided for @details_notFound_equipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Equipment details could not be loaded.'**
+  String get details_notFound_equipment;
+
+  /// No description provided for @common_image.
+  ///
+  /// In en, this message translates to:
+  /// **'Image'**
+  String get common_image;
+
+  /// No description provided for @common_images.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get common_images;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

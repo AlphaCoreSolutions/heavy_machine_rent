@@ -2362,4 +2362,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get action_close => 'Close';
+
+  @override
+  String get details_org_title => 'Organization details';
+
+  @override
+  String get details_equipment_title => 'Equipment details';
+
+  @override
+  String get common_details => 'Details';
+
+  @override
+  String get common_id => 'ID';
+
+  @override
+  String get common_english => 'English';
+
+  @override
+  String get common_arabic => 'Arabic';
+
+  @override
+  String get details_notFound_org => 'Organization details could not be loaded.';
+
+  @override
+  String get details_notFound_equipment => 'Equipment details could not be loaded.';
+
+  @override
+  String get common_image => 'Image';
+
+  @override
+  String get common_images => 'Images';
 }

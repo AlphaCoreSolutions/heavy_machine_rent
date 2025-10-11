@@ -1054,5 +1054,15 @@
     "action_save": "Save",
     "common_saved": "Saved successfully.",
     "common_saveFailed": "Save failed.",
-    "action_close": "Close"
+    "action_close": "Close",
+    "details_org_title": "Organization details",
+    "details_equipment_title": "Equipment details",
+    "common_details": "Details",
+    "common_id": "ID",
+    "common_english": "English",
+    "common_arabic": "Arabic",
+    "details_notFound_org": "Organization details could not be loaded.",
+    "details_notFound_equipment": "Equipment details could not be loaded.",
+    "common_image": "Image",
+    "common_images": "Images"
 }

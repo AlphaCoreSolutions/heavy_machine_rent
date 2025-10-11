@@ -2366,4 +2366,34 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get action_close => 'إغلاق';
+
+  @override
+  String get details_org_title => 'تفاصيل المؤسسة';
+
+  @override
+  String get details_equipment_title => 'تفاصيل المعدّة';
+
+  @override
+  String get common_details => 'التفاصيل';
+
+  @override
+  String get common_id => 'المعرّف';
+
+  @override
+  String get common_english => 'الإنجليزية';
+
+  @override
+  String get common_arabic => 'العربية';
+
+  @override
+  String get details_notFound_org => 'تعذر تحميل تفاصيل المؤسسة.';
+
+  @override
+  String get details_notFound_equipment => 'تعذر تحميل تفاصيل المعدّة.';
+
+  @override
+  String get common_image => 'صورة';
+
+  @override
+  String get common_images => 'صور';
 }
