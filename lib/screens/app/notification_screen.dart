@@ -25,16 +25,26 @@ class Notifications {
 
   //register notification permissions
   Future<void> init() async {
-    final settings = await _messaging.requestPermission(
-      alert: true,
-      announcement: false,
-      badge: true,
-      carPlay: false,
-      criticalAlert: true,
-      provisional: false,
-      sound: true,
-    );
-    log('message permission: ${settings.authorizationStatus}');
+    // On desktop (macOS currently) Firebase Messaging permission APIs are either
+    // unsupported or partially implemented; requesting unsupported flags can
+    // throw (e.g. criticalAlert entitlement). Guard to mobile platforms.
+    NotificationSettings? settings;
+    final isMobile = defaultTargetPlatform == TargetPlatform.iOS ||
+        defaultTargetPlatform == TargetPlatform.android;
+    if (isMobile) {
+      settings = await _messaging.requestPermission(
+        alert: true,
+        announcement: false,
+        badge: true,
+        carPlay: false,
+        criticalAlert: false, // avoid entitlement requirement
+        provisional: false,
+        sound: true,
+      );
+      log('message permission: ${settings.authorizationStatus}');
+    } else {
+      log('Skipping FCM permission request on non-mobile platform: $defaultTargetPlatform');
+    }
     // iOS: ensure foreground notifications appear
     try {
       await _messaging.setForegroundNotificationPresentationOptions(
@@ -163,8 +173,8 @@ class Notifications {
     const AndroidInitializationSettings androidinitializationSettings =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    final DarwinInitializationSettings initializationSettingsDrawIn =
-        DarwinInitializationSettings(
+    final DarwinInitializationSettings darwinSettings =
+        const DarwinInitializationSettings(
           requestAlertPermission: true,
           requestBadgePermission: true,
           requestSoundPermission: true,
@@ -173,12 +183,13 @@ class Notifications {
     const LinuxInitializationSettings linuxInitializationSettings =
         LinuxInitializationSettings(defaultActionName: 'Open notification');
 
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: androidinitializationSettings,
-          iOS: initializationSettingsDrawIn,
-          linux: linuxInitializationSettings,
-        );
+    // Provide macOS settings explicitly (uses same Darwin settings instance)
+    final InitializationSettings initializationSettings = InitializationSettings(
+      android: androidinitializationSettings,
+      iOS: darwinSettings,
+      macOS: darwinSettings,
+      linux: linuxInitializationSettings,
+    );
 
     // Request platform-specific notification permissions safely
     if (defaultTargetPlatform == TargetPlatform.android) {

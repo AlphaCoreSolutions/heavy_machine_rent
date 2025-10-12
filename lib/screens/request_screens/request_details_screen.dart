@@ -143,9 +143,7 @@ class _RequestDetailsScreenState extends State<RequestDetailsScreen> {
 
   void _ensureNationalityByIdFuture(int? natId) {
     if (natId != null && natId > 0) {
-      if (_driverNationalityByIdFuture == null) {
-        _driverNationalityByIdFuture = api.Api.getNationalityById(natId);
-      }
+      _driverNationalityByIdFuture ??= api.Api.getNationalityById(natId);
     }
   }
 
@@ -1430,7 +1428,7 @@ class _ExpandableTextState extends State<_ExpandableText> {
     final over = t.length > widget.maxChars;
     final shown = (!over || _more)
         ? t
-        : (t.substring(0, widget.maxChars) + '…');
+        : ('${t.substring(0, widget.maxChars)}…');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

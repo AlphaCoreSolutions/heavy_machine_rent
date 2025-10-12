@@ -8,5 +8,14 @@
 	<true/>
 	<key>com.apple.security.network.server</key>
 	<true/>
+	<!-- Allow outbound (client) network connections -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- Allow reading user downloads/documents if needed for file picker (optional, comment out if not required) -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	<!-- Allow access to location (needed for geolocator on macOS if implemented) -->
+	<key>com.apple.security.personal-information.location</key>
+	<true/>
 </dict>
 </plist>
