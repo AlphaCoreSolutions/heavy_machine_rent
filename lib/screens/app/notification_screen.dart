@@ -29,7 +29,8 @@ class Notifications {
     // unsupported or partially implemented; requesting unsupported flags can
     // throw (e.g. criticalAlert entitlement). Guard to mobile platforms.
     NotificationSettings? settings;
-    final isMobile = defaultTargetPlatform == TargetPlatform.iOS ||
+    final isMobile =
+        defaultTargetPlatform == TargetPlatform.iOS ||
         defaultTargetPlatform == TargetPlatform.android;
     if (isMobile) {
       settings = await _messaging.requestPermission(
@@ -43,7 +44,9 @@ class Notifications {
       );
       log('message permission: ${settings.authorizationStatus}');
     } else {
-      log('Skipping FCM permission request on non-mobile platform: $defaultTargetPlatform');
+      log(
+        'Skipping FCM permission request on non-mobile platform: $defaultTargetPlatform',
+      );
     }
     // iOS: ensure foreground notifications appear
     try {
@@ -184,12 +187,13 @@ class Notifications {
         LinuxInitializationSettings(defaultActionName: 'Open notification');
 
     // Provide macOS settings explicitly (uses same Darwin settings instance)
-    final InitializationSettings initializationSettings = InitializationSettings(
-      android: androidinitializationSettings,
-      iOS: darwinSettings,
-      macOS: darwinSettings,
-      linux: linuxInitializationSettings,
-    );
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: androidinitializationSettings,
+          iOS: darwinSettings,
+          macOS: darwinSettings,
+          linux: linuxInitializationSettings,
+        );
 
     // Request platform-specific notification permissions safely
     if (defaultTargetPlatform == TargetPlatform.android) {

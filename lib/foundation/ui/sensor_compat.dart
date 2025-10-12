@@ -30,8 +30,9 @@ Stream<AccelerometerEvent> accelerometer$({
   }
   try {
     // Attempt newer API
-    return accelerometerEventStream(samplingPeriod: samplingPeriod)
-        .handleError((_) {});
+    return accelerometerEventStream(
+      samplingPeriod: samplingPeriod,
+    ).handleError((_) {});
   } catch (_) {
     try {
       // Fallback to legacy stream
