@@ -1,5 +1,6 @@
 // lib/main.dart
 import 'dart:convert';
+import 'dart:async';
 import 'dart:developer' show log;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -58,129 +59,227 @@ Future _firebaseBackgroundMessage(RemoteMessage message) async {
 
 final NotificationsStore notificationsStore = NotificationsStore();
 
+// === Lightweight bootstrap state so macOS (and any platform) shows UI even if init stalls ===
+final ValueNotifier<bool> _bootCompleted = ValueNotifier(false);
+final ValueNotifier<String?> _bootError = ValueNotifier(null);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Initialize notifications after Firebase. On iOS Simulator, FCM token
-  // may not be immediately available due to missing APNs; our init handles it.
-  await Notifications().init();
-  await notificationsStore.init();
-  if (!kIsWeb) {
-    await Notifications().initLocalNotifications();
-  }
+  // Render a minimal placeholder immediately (prevents blank/black window on macOS)
+  runApp(const _BootstrapHost());
 
-  // Ensure FCM auto-init and foreground presentation (iOS)
+  // Perform the heavy initialization asynchronously
+  unawaited(_doBootstrap());
+}
+
+Future<void> _doBootstrap() async {
   try {
-    await FirebaseMessaging.instance.setAutoInitEnabled(true);
-    await FirebaseMessaging.instance
-        .setForegroundNotificationPresentationOptions(
-          alert: true,
-          badge: true,
-          sound: true,
-        );
-  } catch (_) {}
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
 
-  // Register/save FCM token to backend when signed-in user is available.
-  // If a user is already signed in, save immediately; also listen for changes.
-  try {
-    final current = FirebaseAuth.instance.currentUser;
-    if (current != null) {
-      await Notifications().getDeviceToken();
-    }
-    FirebaseAuth.instance.authStateChanges().listen((user) async {
-      if (user != null) {
-        await Notifications().getDeviceToken();
-      }
-    });
-  } catch (_) {}
-
-  if (!kIsWeb) {
-    // Not supported on web; web uses a service worker.
-    FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
-  }
-
-  FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
-    if (message.notification != null) {
-      log('Background message clicked!');
-      final ctx = _rootNavigatorKey.currentContext;
-      if (ctx != null) {
-        ctx.push('/notifications'); // GoRouter navigation
-      }
-    }
-  });
-
-  FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
-    final hasNotif = message.notification != null;
-    final payloadData = message.data.isEmpty ? null : jsonEncode(message.data);
-    if (hasNotif && !kIsWeb) {
+    // Initialize notifications after Firebase
+    await Notifications().init();
+    await notificationsStore.init();
+    // Local notifications: supported on Android/iOS/macOS; skip on others
+    final supportsLocalNotifs =
+        (!kIsWeb &&
+        (defaultTargetPlatform == TargetPlatform.android ||
+            defaultTargetPlatform == TargetPlatform.iOS ||
+            defaultTargetPlatform == TargetPlatform.macOS));
+    if (supportsLocalNotifs) {
       try {
-        await Notifications.showSimpleNotifications(
-          title: message.notification!.title ?? 'Notification',
-          body: message.notification!.body ?? '',
-          payload: payloadData ?? '{}',
-        );
+        await Notifications().initLocalNotifications();
       } catch (e) {
-        log('local notif error: $e');
+        log('Local notifications init skipped: $e');
       }
     }
-  });
 
-  // handling terminated state
-  final remoteMessage = await FirebaseMessaging.instance.getInitialMessage();
-  if (remoteMessage != null) {
-    log('App opened from terminated state via notification');
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final ctx = _rootNavigatorKey.currentContext;
-      if (ctx != null) {
-        ctx.push('/notifications'); // GoRouter navigation
+    // FCM currently only meaningful on mobile (Android/iOS); guard desktop platforms
+    final supportsFcm =
+        (defaultTargetPlatform == TargetPlatform.android ||
+        defaultTargetPlatform == TargetPlatform.iOS);
+
+    if (supportsFcm) {
+      // Ensure FCM auto-init and foreground presentation (iOS)
+      try {
+        await FirebaseMessaging.instance.setAutoInitEnabled(true);
+        await FirebaseMessaging.instance
+            .setForegroundNotificationPresentationOptions(
+              alert: true,
+              badge: true,
+              sound: true,
+            );
+      } catch (e) {
+        log('FCM presentation options error: $e');
       }
+
+      // Register/save FCM token
+      try {
+        final current = FirebaseAuth.instance.currentUser;
+        if (current != null) {
+          await Notifications().getDeviceToken();
+        }
+        FirebaseAuth.instance.authStateChanges().listen((user) async {
+          if (user != null) {
+            await Notifications().getDeviceToken();
+          }
+        });
+      } catch (e) {
+        log('FCM token init error: $e');
+      }
+
+      // Background handler (not web)
+      if (!kIsWeb) {
+        try {
+          FirebaseMessaging.onBackgroundMessage(_firebaseBackgroundMessage);
+        } catch (e) {
+          log('Background message handler set error: $e');
+        }
+      }
+
+      // Foreground click / message listeners
+      try {
+        FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+          if (message.notification != null) {
+            log('Background message clicked!');
+            final ctx = _rootNavigatorKey.currentContext;
+            if (ctx != null) {
+              ctx.push('/notifications');
+            }
+          }
+        });
+
+        FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+          final hasNotif = message.notification != null;
+          final payloadData = message.data.isEmpty
+              ? null
+              : jsonEncode(message.data);
+          if (hasNotif && !kIsWeb) {
+            try {
+              await Notifications.showSimpleNotifications(
+                title: message.notification!.title ?? 'Notification',
+                body: message.notification!.body ?? '',
+                payload: payloadData ?? '{}',
+              );
+            } catch (e) {
+              log('local notif error: $e');
+            }
+          }
+        });
+
+        final remoteMessage = await FirebaseMessaging.instance
+            .getInitialMessage();
+        if (remoteMessage != null) {
+          log('App opened from terminated state via notification');
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final ctx = _rootNavigatorKey.currentContext;
+            if (ctx != null) {
+              ctx.push('/notifications');
+            }
+          });
+        }
+      } catch (e) {
+        log('Foreground messaging wiring error: $e');
+      }
+    }
+
+    const androidEmuBase = 'https://sr.visioncit.com/api/';
+    const prodBase = 'https://sr.visioncit.com/api/';
+    const envBase = String.fromEnvironment('API_BASE_URL'); // optional override
+
+    final baseUrl = kIsWeb
+        ? (envBase.isNotEmpty ? envBase : prodBase)
+        : ((defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
+              ? androidEmuBase
+              : (envBase.isNotEmpty ? envBase : prodBase));
+
+    Api.init(baseUrl: baseUrl);
+
+    await AuthStore.instance.init();
+    await sessionManager.enforceNow();
+    await sessionManager.startFreshSession();
+
+    AuthUser? lastUser = AuthStore.instance.user.value;
+    AuthStore.instance.user.addListener(() async {
+      final currentUser = AuthStore.instance.user.value;
+      if (lastUser == null && currentUser != null) {
+        await sessionManager.startFreshSession();
+      }
+      if (lastUser != null && currentUser == null) {
+        await sessionManager.enforceNow();
+      }
+      lastUser = currentUser;
     });
+
+    await AppPrefs.instance.init();
+  } catch (e, st) {
+    log('Bootstrap failure: $e\n$st');
+    _bootError.value = e.toString();
+  } finally {
+    _bootCompleted.value = true;
   }
+}
 
-  const androidEmuBase = 'https://sr.visioncit.com/api/';
-  const prodBase = 'https://sr.visioncit.com/api/';
-  const envBase = String.fromEnvironment('API_BASE_URL'); // optional override
+/// Minimal host that swaps itself for the real app when bootstrap completes.
+class _BootstrapHost extends StatelessWidget {
+  const _BootstrapHost();
 
-  final baseUrl = kIsWeb
-      // On web, default to same-origin to avoid CORS: https://<host>/api/...
-      ? (envBase.isNotEmpty ? envBase : prodBase)
-      : ((defaultTargetPlatform == TargetPlatform.android && !kIsWeb)
-            ? androidEmuBase
-            : (envBase.isNotEmpty ? envBase : prodBase));
-
-  Api.init(baseUrl: baseUrl);
-
-  await AuthStore.instance.init();
-
-  // If already logged in at boot, enforce existing window OR create one if missing.
-  await sessionManager.enforceNow();
-  await sessionManager
-      .startFreshSession(); // safe: won't overwrite if key exists
-
-  // Seed lastUser BEFORE attaching the listener
-  AuthUser? _lastUser = AuthStore.instance.user.value;
-
-  AuthStore.instance.user.addListener(() async {
-    final currentUser = AuthStore.instance.user.value;
-
-    // null -> non-null: user just logged in (runtime flow)
-    if (_lastUser == null && currentUser != null) {
-      await sessionManager
-          .startFreshSession(); // safe: won't refresh existing key
-    }
-
-    // non-null -> null: user just logged out
-    if (_lastUser != null && currentUser == null) {
-      await sessionManager.enforceNow(); // cancels timer if key was removed
-    }
-
-    _lastUser = currentUser;
-  });
-
-  await AppPrefs.instance.init();
-
-  runApp(const HeavyApp());
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<bool>(
+      valueListenable: _bootCompleted,
+      builder: (_, done, __) {
+        if (done) {
+          return const HeavyApp();
+        }
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Builder(
+            builder: (_) => Container(
+              color: Colors.white,
+              alignment: Alignment.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Attempt to show splash asset if present
+                  Image.asset(
+                    'lib/assets/1.png',
+                    width: 160,
+                    height: 160,
+                    errorBuilder: (_, __, ___) => const SizedBox(),
+                  ),
+                  const SizedBox(height: 24),
+                  const CircularProgressIndicator(),
+                  ValueListenableBuilder<String?>(
+                    valueListenable: _bootError,
+                    builder: (_, err, __) => err == null
+                        ? const SizedBox.shrink()
+                        : Padding(
+                            padding: const EdgeInsets.only(
+                              top: 16.0,
+                              left: 24,
+                              right: 24,
+                            ),
+                            child: Text(
+                              'Startup issue: $err',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.red,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
 }
 
 class HeavyApp extends StatelessWidget {

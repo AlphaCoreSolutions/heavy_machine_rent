@@ -4,13 +4,17 @@ import 'package:flutter/foundation.dart'
 import 'package:sensors_plus/sensors_plus.dart';
 
 bool get sensorsSupported {
-  if (kIsWeb) return true; // sensors_plus_web
+  if (kIsWeb) return true; // web impl OK
   switch (defaultTargetPlatform) {
     case TargetPlatform.android:
     case TargetPlatform.iOS:
-    case TargetPlatform.macOS: // supported by sensors_plus_macos
       return true;
-    default: // windows, linux, fuchsia
+    case TargetPlatform.macOS:
+      // Temporarily disabled: macOS build throwing MissingPluginException for
+      // setAccelerationSamplingPeriod (plugin not wired / version mismatch).
+      // Returning false prevents subscription & platform channel calls.
+      return false;
+    default:
       return false;
   }
 }
@@ -25,10 +29,17 @@ Stream<AccelerometerEvent> accelerometer$({
     return const Stream<AccelerometerEvent>.empty();
   }
   try {
-    // Newer sensors_plus
-    return accelerometerEventStream(samplingPeriod: samplingPeriod);
+    // Attempt newer API
+    return accelerometerEventStream(
+      samplingPeriod: samplingPeriod,
+    ).handleError((_) {});
   } catch (_) {
-    // Older sensors_plus fallback
-    return accelerometerEvents.handleError((_) {});
+    try {
+      // Fallback to legacy stream
+      return accelerometerEvents.handleError((_) {});
+    } catch (_) {
+      // Final safeguard
+      return const Stream<AccelerometerEvent>.empty();
+    }
   }
 }

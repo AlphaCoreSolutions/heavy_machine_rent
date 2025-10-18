@@ -4,5 +4,17 @@
 <dict>
 	<key>com.apple.security.app-sandbox</key>
 	<true/>
+	<!-- Outbound network for HTTP/HTTPS -->
+	<key>com.apple.security.network.client</key>
+	<true/>
+	<!-- Inbound (if you run a local server / WebSocket) -->
+	<key>com.apple.security.network.server</key>
+	<true/>
+	<!-- Optional file read/write for user-chosen downloads -->
+	<key>com.apple.security.files.downloads.read-write</key>
+	<true/>
+	<!-- Optional location if geolocator used -->
+	<key>com.apple.security.personal-information.location</key>
+	<true/>
 </dict>
 </plist>
