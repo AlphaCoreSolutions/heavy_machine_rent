@@ -23,6 +23,7 @@ import 'package:heavy_new/l10n/app_localizations.dart';
 
 // Shell & screens
 import 'package:heavy_new/screens/app/app_shell.dart';
+import 'package:heavy_new/screens/app/calendar_screen.dart';
 import 'package:heavy_new/screens/chat_screens/chat_list_screen.dart';
 import 'package:heavy_new/screens/chat_screens/chat_thread_screen.dart';
 import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
@@ -285,6 +286,14 @@ final GoRouter _router = GoRouter(
           sharedAxisX(child: const MyRequestsScreen()),
     ),
     GoRoute(
+      path: '/calendar',
+      name: AppRoutes.calendar,
+      pageBuilder: (context, state) {
+        final id = int.tryParse(state.pathParameters['vendorId'] ?? '');
+        return sharedAxisX(child: RequestCalendarScreen(vendorId: id ?? 0));
+      },
+    ),
+    GoRoute(
       path: '/settings/app',
       name: AppRoutes.settingsApp,
       pageBuilder: (context, state) =>
@@ -365,6 +374,7 @@ class AppRoutes {
   static const settingsApp = 'settings_app';
   static const profile = 'profile';
   static const employees = 'employees';
+  static const calendar = 'calendar';
 
   static const organization = 'organization';
   static const myEquipment = 'my_equipment';
@@ -382,6 +392,7 @@ extension AppNav on BuildContext {
 
   // Requests
   void goToRequests() => go('/requests');
+  void goToCalendar(int vendorId) => go('/calendar/$vendorId');
 
   // Settings hub + subpages
   void goToSettings() => go('/settings');

@@ -4546,6 +4546,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Images'**
   String get common_images;
+
+  /// No description provided for @calendarTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get calendarTitle;
+
+  /// No description provided for @noCalendarEvents.
+  ///
+  /// In en, this message translates to:
+  /// **'No calendar events'**
+  String get noCalendarEvents;
+
+  /// No description provided for @event_eventOnDate.
+  ///
+  /// In en, this message translates to:
+  /// **'{event} on {date}'**
+  String event_eventOnDate(String event, String date);
+
+  /// No description provided for @calendarSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your upcoming rentals and requests'**
+  String get calendarSubtitle;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

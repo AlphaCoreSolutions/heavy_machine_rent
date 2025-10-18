@@ -2392,4 +2392,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get common_images => 'Images';
+
+  @override
+  String get calendarTitle => 'Calendar';
+
+  @override
+  String get noCalendarEvents => 'No calendar events';
+
+  @override
+  String event_eventOnDate(String event, String date) {
+    return '$event on $date';
+  }
+
+  @override
+  String get calendarSubtitle => 'Your upcoming rentals and requests';
 }

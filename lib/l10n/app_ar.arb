@@ -1031,5 +1031,20 @@
     "details_notFound_org": "تعذر تحميل تفاصيل المؤسسة.",
     "details_notFound_equipment": "تعذر تحميل تفاصيل المعدّة.",
     "common_image": "صورة",
-    "common_images": "صور"
+    "common_images": "صور",
+    "calendarTitle": "التقويم",
+    "noCalendarEvents": "لا توجد أحداث في التقويم.",
+    "event_eventOnDate": "{event} on {date}",
+    "@event_eventOnDate": {
+        "placeholders": {
+            "event": {
+                "type": "String"
+            },
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "calendarSubtitle": "الأحداث والمواعيد الهامة",
+    "eventAdded": "تمت إضافة الحدث إلى التقويم"
 }

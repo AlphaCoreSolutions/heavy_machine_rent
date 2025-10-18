@@ -76,9 +76,11 @@ dependencies:
   dynamic_color: 
   provider: 
   flutter_gen: 
+  syncfusion_flutter_calendar:
   #image_compression_flutter: 
   flutter_localizations:
     sdk: flutter
+  table_calendar: ^3.2.0
 
 dev_dependencies:
   flutter_test:

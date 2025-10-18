@@ -1064,5 +1064,19 @@
     "details_notFound_org": "Organization details could not be loaded.",
     "details_notFound_equipment": "Equipment details could not be loaded.",
     "common_image": "Image",
-    "common_images": "Images"
+    "common_images": "Images",
+    "calendarTitle": "Calendar",
+    "noCalendarEvents": "No calendar events",
+    "event_eventOnDate": "{event} on {date}",
+    "@event_eventOnDate": {
+        "placeholders": {
+            "event": {
+                "type": "String"
+            },
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "calendarSubtitle": "Your upcoming rentals and requests"
 }

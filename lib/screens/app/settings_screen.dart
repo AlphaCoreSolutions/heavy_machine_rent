@@ -6,6 +6,7 @@ import 'package:heavy_new/foundation/ui/app_icons.dart';
 import 'package:heavy_new/foundation/ui/ui_extras.dart';
 import 'package:heavy_new/foundation/ui/ui_kit.dart';
 import 'package:heavy_new/screens/app/app_settings_screen.dart';
+import 'package:heavy_new/screens/app/calendar_screen.dart';
 import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
 import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
 import 'package:heavy_new/screens/request_screens/my_requests_screen.dart';
@@ -314,6 +315,18 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => const SuperAdminHubScreen(),
+                        ),
+                      ),
+                      width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,
+                    ),
+                  if (isCompleted)
+                    _ActionCard(
+                      icon: AppGlyph.calendar,
+                      title: L10nX(context).l10n.calendarTitle,
+                      subtitle: L10nX(context).l10n.calendarSubtitle,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => RequestCalendarScreen(vendorId: 1),
                         ),
                       ),
                       width: twoUp ? (c.maxWidth - 12) / 2 : c.maxWidth,

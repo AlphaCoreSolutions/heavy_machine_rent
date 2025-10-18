@@ -2396,4 +2396,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get common_images => 'صور';
+
+  @override
+  String get calendarTitle => 'التقويم';
+
+  @override
+  String get noCalendarEvents => 'لا توجد أحداث في التقويم.';
+
+  @override
+  String event_eventOnDate(String event, String date) {
+    return '$event on $date';
+  }
+
+  @override
+  String get calendarSubtitle => 'الأحداث والمواعيد الهامة';
 }
