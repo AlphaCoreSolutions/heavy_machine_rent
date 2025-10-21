@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:heavy_new/foundation/localization/l10n_extensions.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
@@ -164,14 +165,16 @@ class _RequestCalendarScreenState extends State<RequestCalendarScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Request Calendar'),
+        title: Text(context.l10n.requestCalendar),
         actions: [
           IconButton(
             icon: const Icon(Icons.filter_alt),
+            tooltip: context.l10n.filterByEquipment,
             onPressed: _selectEquipment,
           ),
           IconButton(
             icon: const Icon(Icons.date_range),
+            tooltip: context.l10n.filterByDate,
             onPressed: _selectDateRange,
           ),
         ],
@@ -222,25 +225,38 @@ class _RequestCalendarScreenState extends State<RequestCalendarScreen> {
                         Theme.of(context).colorScheme.primary;
                     bgColor = color.withOpacity(0.4);
 
+                    final isArabic =
+                        Directionality.of(context) == TextDirection.rtl;
                     final pos = getDayPosition(day, request);
+
                     switch (pos) {
                       case DayPosition.single:
                         radius = BorderRadius.circular(20);
                         break;
                       case DayPosition.start:
-                        radius = const BorderRadius.horizontal(
-                          left: Radius.circular(20),
-                          right: Radius.circular(0),
-                        );
+                        radius = isArabic
+                            ? const BorderRadius.horizontal(
+                                right: Radius.circular(20),
+                                left: Radius.circular(0),
+                              )
+                            : const BorderRadius.horizontal(
+                                left: Radius.circular(20),
+                                right: Radius.circular(0),
+                              );
                         break;
                       case DayPosition.middle:
                         radius = BorderRadius.zero;
                         break;
                       case DayPosition.end:
-                        radius = const BorderRadius.horizontal(
-                          left: Radius.circular(0),
-                          right: Radius.circular(20),
-                        );
+                        radius = isArabic
+                            ? const BorderRadius.horizontal(
+                                right: Radius.circular(0),
+                                left: Radius.circular(20),
+                              )
+                            : const BorderRadius.horizontal(
+                                left: Radius.circular(0),
+                                right: Radius.circular(20),
+                              );
                         break;
                       default:
                         radius = BorderRadius.circular(8);
@@ -280,7 +296,7 @@ class _RequestCalendarScreenState extends State<RequestCalendarScreen> {
                 valueListenable: _selectedEvents,
                 builder: (_, events, __) {
                   if (events.isEmpty) {
-                    return const Center(child: Text('No requests'));
+                    return Center(child: Text(context.l10n.noRequests));
                   }
                   return ListView.builder(
                     itemCount: events.length,
@@ -367,9 +383,9 @@ class _EquipmentFilterBottomSheetState
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            const Text(
-              'Select Equipment',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.selectEquipment,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
 
@@ -377,9 +393,9 @@ class _EquipmentFilterBottomSheetState
             if (_isLoading)
               const Center(child: CircularProgressIndicator())
             else if (_error != null)
-              Center(child: Text(_error!))
+              Center(child: Text(context.l10n.failedToLoadEquipments))
             else if (_equipments.isEmpty)
-              const Center(child: Text('No equipment found'))
+              Center(child: Text(context.l10n.noEquipmentFound))
             else
               Expanded(
                 child: ListView.separated(
@@ -400,7 +416,7 @@ class _EquipmentFilterBottomSheetState
             const SizedBox(height: 8),
             TextButton(
               onPressed: () => Navigator.pop(context, null),
-              child: const Text('Clear Filter'),
+              child: Text(context.l10n.clearFilter),
             ),
           ],
         ),

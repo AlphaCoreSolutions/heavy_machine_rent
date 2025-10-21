@@ -4570,6 +4570,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your upcoming rentals and requests'**
   String get calendarSubtitle;
+
+  /// No description provided for @requestCalendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Request Calendar'**
+  String get requestCalendar;
+
+  /// No description provided for @filterByEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Equipment'**
+  String get filterByEquipment;
+
+  /// No description provided for @filterByDate.
+  ///
+  /// In en, this message translates to:
+  /// **'Filter by Date Range'**
+  String get filterByDate;
+
+  /// No description provided for @noRequests.
+  ///
+  /// In en, this message translates to:
+  /// **'No requests'**
+  String get noRequests;
+
+  /// No description provided for @selectEquipment.
+  ///
+  /// In en, this message translates to:
+  /// **'Select Equipment'**
+  String get selectEquipment;
+
+  /// No description provided for @noEquipmentFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No equipment found'**
+  String get noEquipmentFound;
+
+  /// No description provided for @failedToLoadEquipments.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load equipments'**
+  String get failedToLoadEquipments;
+
+  /// No description provided for @clearFilter.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear Filter'**
+  String get clearFilter;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -9,6 +9,7 @@ import 'package:heavy_new/core/auth/auth_store.dart';
 
 // MODELS
 import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:heavy_new/core/models/equipment/equipment_list.dart';
 import 'package:heavy_new/core/models/user/auth.dart';
 import 'package:heavy_new/foundation/localization/l10n_extensions.dart';
 
@@ -36,11 +37,25 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   late Future<List<Equipment>> _futureTop;
   int? _hoveredCard;
+  List<EquipmentListModel> _equipmentLists = [];
+  int? _selectedListId; // null = All
 
   @override
   void initState() {
     super.initState();
     _futureTop = api.Api.getEquipments();
+    _loadEquipmentLists();
+  }
+
+  Future<void> _loadEquipmentLists() async {
+    try {
+      final lists = await api.Api.getEquipmentLists();
+      setState(() {
+        _equipmentLists = lists;
+      });
+    } catch (e) {
+      debugPrint('Failed to load equipment lists: $e');
+    }
   }
 
   // Compute responsive knobs from width
@@ -282,7 +297,66 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 2),
+                      if (_equipmentLists.isNotEmpty) ...[
+                        SizedBox(height: 10),
+                        SizedBox(
+                          height: 45,
+                          child: ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _equipmentLists.length + 1,
+                            itemBuilder: (context, index) {
+                              final isAll = index == 0;
+                              final item = isAll
+                                  ? null
+                                  : _equipmentLists[index - 1];
+                              final isSelected = isAll
+                                  ? _selectedListId == null
+                                  : _selectedListId == item?.equipmentListId;
+
+                              final isArabic =
+                                  Directionality.of(context) ==
+                                  TextDirection.rtl;
+
+                              return Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                ),
+                                child: ChoiceChip(
+                                  label: Text(
+                                    isAll
+                                        ? context.l10n.all
+                                        : (isArabic
+                                              ? (item!.nameArabic ??
+                                                    item.nameEnglish ??
+                                                    '—')
+                                              : (item!.nameEnglish ??
+                                                    item.nameArabic ??
+                                                    '—')),
+                                  ),
+                                  selected: isSelected,
+                                  onSelected: (_) {
+                                    setState(() {
+                                      _selectedListId = isAll
+                                          ? null
+                                          : item!.equipmentListId;
+                                      if (_selectedListId == null) {
+                                        _futureTop = api.Api.getEquipments();
+                                      } else {
+                                        _futureTop =
+                                            api.Api.advanceSearchEquipments(
+                                              'select * from Equipments where equipmentListId = $_selectedListId',
+                                            );
+                                      }
+                                    });
+                                  },
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 12),
+                      ],
 
                       // EQUIPMENT GRID — adaptive max-extent grid with hover scale + glow
                       FutureBuilder<List<Equipment>>(
@@ -443,11 +517,29 @@ class _HomeScreenState extends State<HomeScreen> {
                                           child: RowEquipmentCard(
                                             title: e.title,
                                             subtitle:
-                                                e.category?.detailNameEnglish ??
-                                                e
-                                                    .equipmentList
-                                                    ?.primaryUseEnglish ??
-                                                '—',
+                                                context.l10n.localeName == 'ar'
+                                                ? e
+                                                          .category
+                                                          ?.detailNameArabic ??
+                                                      e
+                                                          .equipmentList
+                                                          ?.primaryUseArabic ??
+                                                      '—'
+                                                : e
+                                                          .category
+                                                          ?.detailNameEnglish ??
+                                                      e
+                                                          .equipmentList
+                                                          ?.primaryUseEnglish ??
+                                                      '—',
+                                            eqListTitle:
+                                                context.l10n.localeName == 'ar'
+                                                ? e.equipmentList?.nameArabic ??
+                                                      '—'
+                                                : e
+                                                          .equipmentList
+                                                          ?.nameEnglish ??
+                                                      '—',
                                             pricePerDay:
                                                 e.rentPerDayDouble ?? 0,
                                             distanceKm: e.distanceKilo
@@ -828,6 +920,7 @@ class RowEquipmentCard extends StatelessWidget {
     super.key,
     required this.title,
     required this.subtitle,
+    required this.eqListTitle,
     required this.pricePerDay,
     required this.image,
     this.distanceKm,
@@ -837,6 +930,7 @@ class RowEquipmentCard extends StatelessWidget {
 
   final String title;
   final String subtitle;
+  final String eqListTitle;
   final double pricePerDay;
   final double? distanceKm;
   final Widget image;
@@ -856,7 +950,7 @@ class RowEquipmentCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
-          color: cs.surface.withOpacity(0.92), // slight translucency
+          color: cs.surface.withOpacity(0.92),
           border: Border.all(color: cs.outlineVariant.withOpacity(0.35)),
           boxShadow: [
             BoxShadow(
@@ -864,7 +958,6 @@ class RowEquipmentCard extends StatelessWidget {
               blurRadius: 18,
               offset: const Offset(0, 10),
             ),
-            // soft highlight (top edge) for glassiness
             BoxShadow(
               color: Colors.white.withOpacity(0.15),
               blurRadius: 0,
@@ -873,25 +966,19 @@ class RowEquipmentCard extends StatelessWidget {
             ),
           ],
         ),
-
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
           child: LayoutBuilder(
             builder: (context, bc) {
               final w = bc.maxWidth;
-
-              // Responsive density flags (tuned for 4-up on desktop)
-              final ultraTight = w < 260; // hide extras
-              final compact = w < 300; // reduce paddings
-              final comfy = w >= 340; // show everything
-
-              // Left image width: proportion + clamps so it never dominates
+              final ultraTight = w < 260;
+              final compact = w < 300;
+              final comfy = w >= 340;
               final imgW = (w * (compact ? 0.42 : 0.40)).clamp(130.0, 210.0);
 
               return Row(
                 children: [
-                  // LEFT: Image
                   SizedBox(
                     width: imgW,
                     child: DecoratedBox(
@@ -901,9 +988,7 @@ class RowEquipmentCard extends StatelessWidget {
                       child: Stack(
                         fit: StackFit.expand,
                         children: [
-                          // use what you already pass in from the grid (FallbackNetworkImage with BoxFit.cover)
                           image,
-                          // optional soft top gradient
                           IgnorePointer(
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -922,8 +1007,6 @@ class RowEquipmentCard extends StatelessWidget {
                       ),
                     ),
                   ),
-
-                  // RIGHT: Content
                   Expanded(
                     child: Padding(
                       padding: EdgeInsets.fromLTRB(
@@ -935,7 +1018,6 @@ class RowEquipmentCard extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Title
                           Text(
                             title,
                             maxLines: 2,
@@ -946,27 +1028,22 @@ class RowEquipmentCard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 3),
-
-                          // Subtitle (hide on ultra tight)
                           if (!ultraTight)
                             Text(
-                              subtitle,
+                              '$subtitle - $eqListTitle',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: t.bodySmall?.copyWith(
                                 color: cs.onSurfaceVariant,
                               ),
                             ),
-
                           SizedBox(height: compact ? 1 : 2),
-
                           Text(
                             context.l10n.from,
                             style: t.labelSmall?.copyWith(
                               color: cs.onSurfaceVariant,
                             ),
                           ),
-
                           Row(
                             children: [
                               Text(

@@ -1078,5 +1078,13 @@
             }
         }
     },
-    "calendarSubtitle": "Your upcoming rentals and requests"
+    "calendarSubtitle": "Your upcoming rentals and requests",
+    "requestCalendar": "Request Calendar",
+    "filterByEquipment": "Filter by Equipment",
+    "filterByDate": "Filter by Date Range",
+    "noRequests": "No requests",
+    "selectEquipment": "Select Equipment",
+    "noEquipmentFound": "No equipment found",
+    "failedToLoadEquipments": "Failed to load equipments",
+    "clearFilter": "Clear Filter"
 }

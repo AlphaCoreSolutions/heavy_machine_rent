@@ -2410,4 +2410,28 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get calendarSubtitle => 'الأحداث والمواعيد الهامة';
+
+  @override
+  String get requestCalendar => 'تقويم الطلبات';
+
+  @override
+  String get filterByEquipment => 'تصفية حسب المعدات';
+
+  @override
+  String get filterByDate => 'تصفية حسب التاريخ';
+
+  @override
+  String get noRequests => 'لا توجد طلبات';
+
+  @override
+  String get selectEquipment => 'اختر المعدات';
+
+  @override
+  String get noEquipmentFound => 'لا توجد معدات';
+
+  @override
+  String get failedToLoadEquipments => 'فشل تحميل المعدات';
+
+  @override
+  String get clearFilter => 'مسح التصفية';
 }

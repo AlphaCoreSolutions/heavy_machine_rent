@@ -606,10 +606,16 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
     _deb?.cancel();
     _deb = Timer(const Duration(milliseconds: 350), () {
       final q = _qCtrl.text.trim();
+
       setState(() {
-        _future = q.isEmpty
-            ? api.Api.getOrganizationFiles()
-            : api.Api.advanceSearchOrganizationFiles(q);
+        if (q.isEmpty) {
+          _future = api.Api.getOrganizationFiles();
+        } else {
+          // Using LIKE for partial matching and making it case-insensitive (optional)
+          final sql =
+              "select * from OrganizationFiles where descFileType LIKE '%$q%'";
+          _future = api.Api.advanceSearchOrganizationFiles(sql);
+        }
       });
     });
   }
@@ -666,10 +672,15 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
 
   void _preview(OrganizationFileModel f) {
     final url = _fileUrl(f.fileName);
+
     showDialog(
       context: context,
-      builder: (_) {
-        final cs = Theme.of(context).colorScheme;
+      builder: (dialogContext) {
+        // 🛑 Use dialogContext so closing only affects dialog
+        final cs = Theme.of(dialogContext).colorScheme;
+
+        final isPdf = (f.fileName?.toLowerCase().endsWith('.pdf') ?? false);
+
         return Dialog(
           child: Glass(
             radius: 12,
@@ -687,10 +698,29 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.close),
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => Navigator.of(dialogContext).pop(), // ✅ FIX
                   ),
                 ),
-                if (f.isImage == true)
+
+                // ✅ Show PDF Viewer or Image
+                if (isPdf)
+                  SizedBox(
+                    height: 400,
+                    child: Center(
+                      child: FilledButton.icon(
+                        icon: const Icon(Icons.picture_as_pdf),
+                        label: const Text("Open PDF"),
+                        onPressed: () async {
+                          // open in in-app browser
+                          await launchUrl(
+                            Uri.parse(url),
+                            mode: LaunchMode.inAppBrowserView,
+                          );
+                        },
+                      ),
+                    ),
+                  )
+                else if (f.isImage == true)
                   AspectRatio(
                     aspectRatio: 16 / 10,
                     child: FallbackNetworkImage(
@@ -704,6 +734,7 @@ class _OrgFilesTabState extends State<_OrgFilesTab> {
                     padding: const EdgeInsets.all(16),
                     child: SelectableText(url),
                   ),
+
                 const SizedBox(height: 8),
               ],
             ),
@@ -890,10 +921,29 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
   }
 
   Future<void> _delete(OrganizationUser u) async {
+    // Guard: no id, no delete
+    final id = u.organizationUserId;
+    if (id == null) {
+      AppSnack.error(context, context.l10n.common_deleteFailed);
+      return;
+    }
+
+    // Show confirm dialog; IMPORTANT: use the dialog's context to pop
     final yes = await showDialog<bool>(
       context: context,
-      builder: (_) => AlertDialog(
-        title: Text(context.l10n.orgUsers_remove_title),
+      barrierDismissible: true,
+      builder: (dialogCtx) => AlertDialog(
+        title: Row(
+          children: [
+            Expanded(child: Text(context.l10n.orgUsers_remove_title)),
+            IconButton(
+              tooltip: context.l10n.action_cancel,
+              icon: const Icon(Icons.close),
+              onPressed: () =>
+                  Navigator.of(dialogCtx).pop(false), // ✅ closes only dialog
+            ),
+          ],
+        ),
         content: Text(
           context.l10n.orgUsers_remove_message(
             (u.applicationUserId ?? '').toString(),
@@ -902,24 +952,28 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context, false),
+            onPressed: () => Navigator.of(dialogCtx).pop(false), // ✅
             child: Text(context.l10n.action_cancel),
           ),
           FilledButton(
-            onPressed: () => Navigator.pop(context, true),
+            onPressed: () => Navigator.of(dialogCtx).pop(true), // ✅
             child: Text(context.l10n.action_remove),
           ),
         ],
       ),
     );
+
     if (yes != true) return;
+
     try {
-      await api.Api.deleteOrganizationUser(u.organizationUserId ?? 0);
+      await api.Api.deleteOrganizationUser(id);
+      if (!mounted) return;
       AppSnack.success(context, context.l10n.common_removed);
       setState(() {
         _future = api.Api.getOrganizationUsers();
       });
     } catch (_) {
+      if (!mounted) return;
       AppSnack.error(context, context.l10n.common_removeFailed);
     }
   }
@@ -1010,12 +1064,19 @@ class _OrgUsersTabState extends State<_OrgUsersTab> {
                           onSelected: (v) {
                             if (v == 'toggle') _toggleActive(u);
                             if (v == 'open-org') {
+                              if (u.organizationId == null) return;
                               Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => OrganizationScreen(),
+                                  builder: (_) =>
+                                      OrganizationDetailsActivationScreen(
+                                        organizationId: u.organizationId!,
+                                        initial: null,
+                                        readOnly: true,
+                                      ),
                                 ),
                               );
                             }
+
                             if (v == 'delete') _delete(u);
                           },
                           itemBuilder: (_) => [
@@ -1083,9 +1144,13 @@ class _RequestsOrdersTabState extends State<_RequestsOrdersTab> {
     _deb = Timer(const Duration(milliseconds: 350), () {
       final q = _qCtrl.text.trim();
       setState(() {
-        _future = q.isEmpty
-            ? api.Api.getRequests()
-            : api.Api.advanceSearchRequests(q);
+        if (q.isEmpty) {
+          _future = api.Api.getRequests();
+        } else {
+          // ✅ Partial match using LIKE
+          final sql = "select * from Requests where requestId like '%$q%'";
+          _future = api.Api.advanceSearchRequests(sql);
+        }
       });
     });
   }
@@ -1226,11 +1291,28 @@ class _InactiveEquipmentsTabState extends State<_InactiveEquipmentsTab> {
   }
 
   void _onQ() {
-    // Same as org: ignore user text and always send the exact SQL.
     _deb?.cancel();
     _deb = Timer(const Duration(milliseconds: 350), () {
+      final q = _qCtrl.text.trim();
+
       setState(() {
-        _future = api.Api.advanceSearchEquipments(_kEquipmentsFILTER);
+        if (q.isEmpty) {
+          // Default filter
+          _future = api.Api.advanceSearchEquipments(_kEquipmentsFILTER);
+        } else {
+          // ✅ Search with partial match + inactive filter
+          final sql =
+              """
+          select * from Equipments
+          where isActive = 0 
+          and (
+            descEnglish like '%$q%' 
+            or descArabic like '%$q%'
+            or equipmentId like '%$q%'
+          )
+        """;
+          _future = api.Api.advanceSearchEquipments(sql);
+        }
       });
     });
   }
@@ -1456,11 +1538,29 @@ class _InactiveOrganizationsTabState extends State<_InactiveOrganizationsTab> {
   }
 
   void _onQ() {
-    // You asked to send the exact SQL; ignore user text.
     _deb?.cancel();
     _deb = Timer(const Duration(milliseconds: 350), () {
+      final q = _qCtrl.text.trim();
+
       setState(() {
-        _future = api.Api.advanceSearchOrganization(_kOrganizationsFILTER);
+        if (q.isEmpty) {
+          // Default inactive filter
+          _future = api.Api.advanceSearchOrganization(_kOrganizationsFILTER);
+        } else {
+          // ✅ Search across fields while still filtering inactive organizations
+          final sql =
+              """
+          select * from Organizations
+          where isActive = 0
+          and (
+            nameEnglish like '%$q%' 
+            or nameArabic like '%$q%'
+            or organizationCode like '%$q%'
+            or cast(organizationId as nvarchar) like '%$q%'
+          )
+        """;
+          _future = api.Api.advanceSearchOrganization(sql);
+        }
       });
     });
   }
@@ -1592,14 +1692,16 @@ class _InactiveOrganizationsTabState extends State<_InactiveOrganizationsTab> {
 
 // ====================== ORGANIZATION DETAILS SCREEN ======================
 class OrganizationDetailsActivationScreen extends StatefulWidget {
-  const OrganizationDetailsActivationScreen({
-    required this.organizationId,
-    this.initial,
-    super.key,
-  });
-
   final int organizationId;
   final OrganizationSummary? initial;
+  final bool readOnly; // ✅ Add this
+
+  const OrganizationDetailsActivationScreen({
+    super.key,
+    required this.organizationId,
+    this.initial,
+    this.readOnly = false, // ✅ default false
+  });
 
   @override
   State<OrganizationDetailsActivationScreen> createState() =>
@@ -2040,7 +2142,7 @@ class _OrganizationDetailsActivationScreenState
 
                 const SizedBox(height: 12),
 
-                if (!isActive)
+                if (!widget.readOnly && !isActive)
                   Align(
                     alignment: Alignment.centerRight,
                     child: FilledButton.icon(
@@ -2752,12 +2854,41 @@ class StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
+    final width = MediaQuery.of(context).size.width;
+
+    // 🔥 Responsive layout behavior
+    bool isDesktop = width >= 1024;
+    bool isTablet = width >= 600 && width < 1024;
+    bool isPhone = width < 600;
+
+    // 🔹 Always two per row for tablets & phones unless very small
+    double cardWidth;
+    if (isDesktop) {
+      cardWidth = (width - 80) / 4; // 4 per row
+    } else if (isTablet) {
+      cardWidth = (width - 48) / 2; // 2 per row
+    } else {
+      // On phones: try 2 per row if enough space, otherwise fallback to full width
+      if (width > 400) {
+        cardWidth = (width - 36) / 2;
+      } else {
+        cardWidth = width - 24;
+      }
+    }
+
+    // 🔹 Responsive padding
+    final edgePadding = isDesktop
+        ? const EdgeInsets.all(16)
+        : isTablet
+        ? const EdgeInsets.all(12)
+        : const EdgeInsets.all(8);
+
     return SizedBox(
-      width: 260,
+      width: cardWidth,
       child: Glass(
-        radius: 16,
+        radius: isPhone ? 12 : 16,
         child: Padding(
-          padding: const EdgeInsets.all(12),
+          padding: edgePadding,
           child: Row(
             children: [
               CircleAvatar(
@@ -2773,17 +2904,21 @@ class StatCard extends StatelessWidget {
                       label,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: cs.onSurfaceVariant,
+                        fontSize: isPhone ? 12 : 14,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       value,
                       style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.w800),
+                          ?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: isPhone ? 18 : null,
+                          ),
                     ),
                     const SizedBox(height: 8),
                     SizedBox(
-                      height: 28,
+                      height: isPhone ? 22 : 28,
                       child: Sparkline(
                         values: trend,
                         color: accent ?? cs.primary,

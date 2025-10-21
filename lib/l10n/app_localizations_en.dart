@@ -2406,4 +2406,28 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarSubtitle => 'Your upcoming rentals and requests';
+
+  @override
+  String get requestCalendar => 'Request Calendar';
+
+  @override
+  String get filterByEquipment => 'Filter by Equipment';
+
+  @override
+  String get filterByDate => 'Filter by Date Range';
+
+  @override
+  String get noRequests => 'No requests';
+
+  @override
+  String get selectEquipment => 'Select Equipment';
+
+  @override
+  String get noEquipmentFound => 'No equipment found';
+
+  @override
+  String get failedToLoadEquipments => 'Failed to load equipments';
+
+  @override
+  String get clearFilter => 'Clear Filter';
 }

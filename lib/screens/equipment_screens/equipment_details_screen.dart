@@ -814,24 +814,52 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                         spacing: 8,
                         runSpacing: 8,
                         children: [
-                          if (e.category?.detailNameEnglish != null)
+                          if (e.equipmentList != null)
                             TonalIconChip(
-                              label: e.category!.detailNameEnglish!,
+                              label: context.l10n.localeName == 'ar'
+                                  ? (e.equipmentList!.nameArabic ??
+                                        e.equipmentList!.nameEnglish ??
+                                        '—')
+                                  : (e.equipmentList!.nameEnglish ??
+                                        e.equipmentList!.nameArabic ??
+                                        '—'),
                               icon: AIcon(
                                 AppGlyph.truck,
                                 color: cs.onPrimaryContainer,
                               ),
                             ),
-                          if (e.organization?.nameEnglish != null)
+                          if (e.category != null)
                             TonalIconChip(
-                              label: e.organization!.nameEnglish!,
+                              label: context.l10n.localeName == 'ar'
+                                  ? (e.category!.detailNameArabic ??
+                                        e.category!.detailNameEnglish ??
+                                        '—')
+                                  : (e.category!.detailNameEnglish ??
+                                        e.category!.detailNameArabic ??
+                                        '—'),
+                              icon: AIcon(
+                                AppGlyph.truck,
+                                color: cs.onPrimaryContainer,
+                              ),
+                            ),
+                          if (e.organization != null)
+                            TonalIconChip(
+                              label: context.l10n.localeName == 'ar'
+                                  ? (e.organization!.nameArabic ??
+                                        e.organization!.nameEnglish ??
+                                        '—')
+                                  : (e.organization!.nameEnglish ??
+                                        e.organization!.nameArabic ??
+                                        '—'),
                               icon: AIcon(
                                 AppGlyph.organization,
                                 color: cs.onPrimaryContainer,
                               ),
                             ),
                           TonalIconChip(
-                            label: context.l10n.miniAvailable(avail),
+                            label: context.l10n.miniAvailable(
+                              avail,
+                            ), // Already localized via l10n
                             icon: AIcon(
                               AppGlyph.info,
                               color: cs.onPrimaryContainer,
@@ -997,9 +1025,7 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                           }
                         },
 
-                        title: Text(
-                          context.l10n.sameDropoffForAll,
-                        ), // add to ARB
+                        title: Text(context.l10n.sameDropoffForAll),
                         controlAffinity: ListTileControlAffinity.leading,
                       ),
                       const SizedBox(height: 8),

@@ -504,9 +504,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     const SizedBox(width: 4),
                   ],
                   bottom: PreferredSize(
-                    preferredSize: const Size.fromHeight(78),
+                    preferredSize: const Size.fromHeight(92),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                       child: Column(
                         children: [
                           TextField(

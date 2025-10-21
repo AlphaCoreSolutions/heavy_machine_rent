@@ -1046,5 +1046,13 @@
         }
     },
     "calendarSubtitle": "الأحداث والمواعيد الهامة",
-    "eventAdded": "تمت إضافة الحدث إلى التقويم"
+    "eventAdded": "تمت إضافة الحدث إلى التقويم",
+    "requestCalendar": "تقويم الطلبات",
+    "filterByEquipment": "تصفية حسب المعدات",
+    "filterByDate": "تصفية حسب التاريخ",
+    "noRequests": "لا توجد طلبات",
+    "selectEquipment": "اختر المعدات",
+    "noEquipmentFound": "لا توجد معدات",
+    "failedToLoadEquipments": "فشل تحميل المعدات",
+    "clearFilter": "مسح التصفية"
 }
