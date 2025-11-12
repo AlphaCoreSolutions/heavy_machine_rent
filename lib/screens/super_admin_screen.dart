@@ -2082,7 +2082,7 @@ class _OrganizationDetailsActivationScreenState
                                 overflow: TextOverflow.ellipsis,
                               ),
                               subtitle: Text(
-                                '${context.l10n.common_orgNumber((u.organizationId ?? '').toString())}',
+                                context.l10n.common_orgNumber((u.organizationId ?? '').toString()),
                               ),
                             ),
                           ),
@@ -3126,7 +3126,7 @@ class _SearchResultsViewState extends State<_SearchResultsView> {
                           overflow: TextOverflow.ellipsis,
                         ),
                         subtitle: Text(
-                          '${context.l10n.common_orgNumber((u.organizationId ?? '').toString())}',
+                          context.l10n.common_orgNumber((u.organizationId ?? '').toString()),
                         ),
                       ),
                     ),

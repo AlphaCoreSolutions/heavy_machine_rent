@@ -98,12 +98,14 @@ class _RequestCalendarScreenState extends State<RequestCalendarScreen> {
 
         if (_filterRange != null &&
             (day.isBefore(_normalizeDate(_filterRange!.start)) ||
-                day.isAfter(_normalizeDate(_filterRange!.end))))
+                day.isAfter(_normalizeDate(_filterRange!.end)))) {
           continue;
+        }
 
         if (_selectedEquipment != null &&
-            request.equipmentId != _selectedEquipment!.equipmentId)
+            request.equipmentId != _selectedEquipment!.equipmentId) {
           continue;
+        }
 
         _eventsMap.putIfAbsent(day, () => []).add(request);
       }
