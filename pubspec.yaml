@@ -102,40 +102,40 @@ flutter:
 
   assets:
     - lib/assets/hero.jpg
-    - lib/assets/logo.png
+    - lib/assets/alogo.png
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "lib/assets/logo.png"
+  image_path: "lib/assets/alogo.png"
   web:
     generate: true
-    image_path: "lib/assets/logo.png"
+    image_path: "lib/assets/alogo.png"
     background_color: "#FFFFFF"
     theme_color: "#FFFFFF"
   windows:
     generate: true
-    image_path: "lib/assets/logo.png"
+    image_path: "lib/assets/alogo.png"
     icon_size: 48
   macos:
     generate: true
-    image_path: "lib/assets/logo.png"
+    image_path: "lib/assets/alogo.png"
 
 # Native splash screen configuration
 flutter_native_splash:
   # Global settings
   color: "#FFFFFF"            # Background color (light)
-  image: lib/assets/logo.png      # Center image for splash (provide a transparent PNG if possible)
+  image: lib/assets/alogo.png      # Center image for splash (provide a transparent PNG if possible)
   # Optional: Dark theme background
   color_dark: "#121212"
-  image_dark: lib/assets/logo.png
+  image_dark: lib/assets/alogo.png
 
   # Android 12+ requires a separate section
   android_12:
     color: "#FFFFFF"
-    image: lib/assets/logo.png
+    image: lib/assets/alogo.png
     color_dark: "#121212"
-    image_dark: lib/assets/logo.png
+    image_dark: lib/assets/alogo.png
 
   android: true
   ios: true
