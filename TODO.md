@@ -1,17 +1,20 @@
-# Replace 1.png with logo.png and Prepare for Publishing
+# App Name Standardization to "Ajjara"
 
-## Code Changes
-- [x] Update pubspec.yaml: Replace 1.png with logo.png in assets and flutter_native_splash config
-- [x] Update lib/main.dart: Change Image.asset from 1.png to logo.png in _BootstrapHost
-- [x] Update lib/screens/contract_screens/contract_details_screen.dart: Change Image.asset from 1.png to logo.png in _LogoBox
+## Current Status
+- pubspec.yaml: "Ajjara" ✓
+- Android: "Ajjara" ✓
+- iOS: "Ajjara" ✓
+- macOS: "$(PRODUCT_NAME)" (will inherit from pubspec) ✓
+- Web: Title "Ajjara", manifest "Ajjara", apple-mobile-web-app-title "Ajjara" ✓
+- Windows: "Ajjara" ✓
+- Linux: "Ajjara" ✓
 
-## Build and Publish Preparation
-- [x] Run flutter pub get to update dependencies
-- [x] Build Android APK: flutter build apk --release
-- [x] Build Android App Bundle: flutter build appbundle --release
-- [ ] Build iOS (if on macOS): flutter build ios --release
-- [x] Build Web: flutter build web --release
-- [x] Build macOS: flutter build macos --release
-- [x] Build Windows: flutter build windows --release
-- [x] Verify all platform configurations are correct
-- [x] Test builds on respective platforms if possible
+## Tasks
+- [x] Update pubspec.yaml name to "Ajjara"
+- [x] Update AndroidManifest.xml android:label to "Ajjara"
+- [x] Update iOS Info.plist CFBundleDisplayName and CFBundleName to "Ajjara"
+- [x] Update macOS Info.plist CFBundleName to "Ajjara" (if not using $(PRODUCT_NAME))
+- [x] Update web/index.html title and apple-mobile-web-app-title to "Ajjara"
+- [x] Update web/manifest.json name and short_name to "Ajjara"
+- [x] Update windows/runner/main.cpp window title to "Ajjara"
+- [x] Update linux/runner/my_application.cc titles to "Ajjara"

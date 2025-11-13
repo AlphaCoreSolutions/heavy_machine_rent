@@ -11,7 +11,7 @@
 
 
     <application
-        android:label="ajjara"
+        android:label="Ajjara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
          <meta-data
