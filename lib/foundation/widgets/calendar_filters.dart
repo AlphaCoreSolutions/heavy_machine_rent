@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/api/api_handler.dart' as api;
 import '../../core/models/equipment/equipment.dart';
 
 class CalendarEquipmentFilter extends StatelessWidget {

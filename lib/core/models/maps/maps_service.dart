@@ -9,7 +9,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
 import 'package:uuid/uuid.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
 
 // Conditional import for web interop
 import 'places_web_stub.dart' if (dart.library.html) 'places_web.dart';

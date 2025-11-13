@@ -3,20 +3,20 @@ import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ajjara/core/api/api_handler.dart' as api;
-import 'package:ajjara/core/models/contracts/contract.dart';
-import 'package:ajjara/core/models/contracts/contract_slice.dart';
-import 'package:ajjara/core/models/contracts/contract_slice_sheet.dart';
-import 'package:ajjara/core/models/admin/request.dart';
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/models/contracts/contract.dart';
+import 'package:Ajjara/core/models/contracts/contract_slice.dart';
+import 'package:Ajjara/core/models/contracts/contract_slice_sheet.dart';
+import 'package:Ajjara/core/models/admin/request.dart';
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
 
 // ▶ for role detection
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/core/models/organization/organization_user.dart';
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/core/models/organization/organization_user.dart';
 
 // l10n
-import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

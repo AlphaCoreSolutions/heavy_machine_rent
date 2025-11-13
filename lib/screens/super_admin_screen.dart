@@ -3,29 +3,29 @@
 
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
-import 'package:ajjara/core/models/admin/domain.dart';
-import 'package:ajjara/core/models/admin/factory.dart';
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/models/admin/domain.dart';
+import 'package:Ajjara/core/models/admin/factory.dart';
 
-import 'package:ajjara/core/models/admin/request.dart';
-import 'package:ajjara/core/models/organization/organization_file.dart';
-import 'package:ajjara/core/models/organization/organization_user.dart';
+import 'package:Ajjara/core/models/admin/request.dart';
+import 'package:Ajjara/core/models/organization/organization_file.dart';
+import 'package:Ajjara/core/models/organization/organization_user.dart';
 // ⬇️ Add these imports (adjust paths if needed)
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/models/organization/organization_summary.dart';
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/models/organization/organization_summary.dart';
 
-import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/screens/app/app_settings_screen.dart'
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/screens/app/app_settings_screen.dart'
     show AppSettingsScreen;
-import 'package:ajjara/screens/organization_screens/organization_hub_screen.dart';
-import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:Ajjara/screens/organization_screens/organization_hub_screen.dart';
+import 'package:Ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
 
 // ⬇️ Localization
-import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
 
 // --- Feature flags for backend-less mode ---
 const bool kEnableSettingsTab = false; // set true when backend is ready

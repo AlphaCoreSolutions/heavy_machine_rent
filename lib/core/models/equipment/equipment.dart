@@ -1,5 +1,5 @@
-import 'package:ajjara/core/models/organization/organization_summary.dart';
-import 'package:ajjara/core/utils/model_utils.dart';
+import 'package:Ajjara/core/models/organization/organization_summary.dart';
+import 'package:Ajjara/core/utils/model_utils.dart';
 
 class DomainDetailRef {
   final int? domainDetailId;

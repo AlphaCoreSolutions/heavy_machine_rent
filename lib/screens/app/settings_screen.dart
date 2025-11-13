@@ -1,21 +1,21 @@
 // lib/screens/settings_screen.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/screens/app/app_settings_screen.dart';
-import 'package:ajjara/screens/app/calendar_screen.dart';
-import 'package:ajjara/screens/contract_screens/contracts_screen.dart';
-import 'package:ajjara/screens/equipment_screens/equipment_management_screen.dart';
-import 'package:ajjara/screens/request_screens/my_requests_screen.dart';
-import 'package:ajjara/screens/request_screens/orders_history_screen.dart';
-import 'package:ajjara/screens/organization_screens/organization_hub_screen.dart';
-import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
-import 'package:ajjara/screens/auth_profile_screens/profile_screen.dart';
-import 'package:ajjara/screens/super_admin_screen.dart';
-//import 'package:ajjara/screens/super_admin_screen.dart';
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/screens/app/app_settings_screen.dart';
+import 'package:Ajjara/screens/app/calendar_screen.dart';
+import 'package:Ajjara/screens/contract_screens/contracts_screen.dart';
+import 'package:Ajjara/screens/equipment_screens/equipment_management_screen.dart';
+import 'package:Ajjara/screens/request_screens/my_requests_screen.dart';
+import 'package:Ajjara/screens/request_screens/orders_history_screen.dart';
+import 'package:Ajjara/screens/organization_screens/organization_hub_screen.dart';
+import 'package:Ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:Ajjara/screens/auth_profile_screens/profile_screen.dart';
+import 'package:Ajjara/screens/super_admin_screen.dart';
+//import 'package:Ajjara/screens/super_admin_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});

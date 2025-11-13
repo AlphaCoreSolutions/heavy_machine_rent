@@ -1,9 +1,9 @@
 // organization_summary.dart
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/models/organization/organization_user.dart';
-import 'package:ajjara/core/models/organization/organization_file.dart';
-import 'package:ajjara/core/models/user/city.dart';
-import 'package:ajjara/core/utils/model_utils.dart'; // City
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/models/organization/organization_user.dart';
+import 'package:Ajjara/core/models/organization/organization_file.dart';
+import 'package:Ajjara/core/models/user/city.dart';
+import 'package:Ajjara/core/utils/model_utils.dart'; // City
 
 class OrganizationSummary {
   final int? organizationId;

@@ -1,15 +1,15 @@
 // lib/screens/auth_profile_screens/profile_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/core/models/user/user_account.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/core/models/user/user_account.dart';
 
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart'; // Glass, AppSnack, PressableScale
-import 'package:ajjara/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart'; // Glass, AppSnack, PressableScale
+import 'package:Ajjara/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

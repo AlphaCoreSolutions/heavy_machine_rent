@@ -3,13 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/foundation/session_manager.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
-import 'package:ajjara/screens/app/notification_screen.dart';
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/foundation/session_manager.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/screens/app/notification_screen.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

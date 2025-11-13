@@ -1,4 +1,4 @@
-import 'package:ajjara/core/utils/model_utils.dart';
+import 'package:Ajjara/core/utils/model_utils.dart';
 
 class Brand {
   final int? id;

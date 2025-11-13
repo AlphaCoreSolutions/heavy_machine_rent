@@ -2,7 +2,7 @@ import 'dart:developer';
 
 import 'package:flutter/foundation.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/api/api_handler.dart' as api;
 
 /// UI model used by the bell & list
 class NotifItem {

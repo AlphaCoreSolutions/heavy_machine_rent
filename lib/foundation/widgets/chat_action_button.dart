@@ -1,7 +1,7 @@
 // ---- Compact chat button
 import 'package:flutter/material.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/screens/chat_screens/chat_list_screen.dart';
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/screens/chat_screens/chat_list_screen.dart';
 
 class ChatActionButton extends StatelessWidget {
   const ChatActionButton({super.key});

@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:ajjara/core/models/user/auth.dart';
-import 'package:ajjara/core/models/user/user_account.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/models/user/auth.dart';
+import 'package:Ajjara/core/models/user/user_account.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
 
 class AuthStore {
   AuthStore._();

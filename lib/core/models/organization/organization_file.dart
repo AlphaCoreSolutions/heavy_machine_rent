@@ -1,6 +1,6 @@
 // organization_file.dart
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/utils/model_utils.dart'; // for dt() if you use it elsewhere
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/utils/model_utils.dart'; // for dt() if you use it elsewhere
 
 class OrganizationFileModel {
   final int? organizationFileId;

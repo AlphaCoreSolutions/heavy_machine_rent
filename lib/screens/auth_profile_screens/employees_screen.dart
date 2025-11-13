@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ajjara/core/models/admin/employee.dart';
+import 'package:Ajjara/core/models/admin/employee.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart'; // Glass, PressableScale, AppSnack
-import 'package:ajjara/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
-import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart'; // Glass, PressableScale, AppSnack
+import 'package:Ajjara/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
+import 'package:Ajjara/core/api/api_handler.dart' as api;
 
 /// Minimal employee model (adjust to your real model)
 class EmployeeModel {

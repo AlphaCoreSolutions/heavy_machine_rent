@@ -4,29 +4,29 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 // === API ===
-import 'package:ajjara/core/api/api_handler.dart' as api;
-import 'package:ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/auth/auth_store.dart';
 
 // MODELS
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/models/equipment/equipment_list.dart';
-import 'package:ajjara/core/models/user/auth.dart';
-import 'package:ajjara/foundation/localization/l10n_extensions.dart';
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/models/equipment/equipment_list.dart';
+import 'package:Ajjara/core/models/user/auth.dart';
+import 'package:Ajjara/foundation/localization/l10n_extensions.dart';
 
 // UI kit bits
-import 'package:ajjara/foundation/ui/ui_extras.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/foundation/ui/app_icons.dart';
 
 // Actions
-import 'package:ajjara/foundation/widgets/chat_action_button.dart';
-import 'package:ajjara/foundation/widgets/notification_bell.dart';
+import 'package:Ajjara/foundation/widgets/chat_action_button.dart';
+import 'package:Ajjara/foundation/widgets/notification_bell.dart';
 
 // Screens
-import 'package:ajjara/screens/equipment_screens/equipment_list_screen.dart';
-import 'package:ajjara/screens/equipment_screens/equipment_details_screen.dart';
-import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
-import 'package:ajjara/screens/super_admin_screen.dart';
+import 'package:Ajjara/screens/equipment_screens/equipment_list_screen.dart';
+import 'package:Ajjara/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:Ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:Ajjara/screens/super_admin_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

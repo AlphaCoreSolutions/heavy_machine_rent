@@ -5,9 +5,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:ajjara/foundation/ui/app_icons.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart'; // Glass, PressableScale, AppSnack
-import 'package:ajjara/foundation/ui/ui_kit.dart'; // AIcon
+import 'package:Ajjara/foundation/ui/app_icons.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart'; // Glass, PressableScale, AppSnack
+import 'package:Ajjara/foundation/ui/ui_kit.dart'; // AIcon
 
 class ModernNavItem {
   const ModernNavItem({required this.glyph, required this.label});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 extension L10nX on BuildContext {

@@ -1,7 +1,7 @@
-import 'package:ajjara/core/models/admin/request_driver_location.dart';
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/models/organization/organization_summary.dart';
-import 'package:ajjara/core/utils/model_utils.dart';
+import 'package:Ajjara/core/models/admin/request_driver_location.dart';
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/models/organization/organization_summary.dart';
+import 'package:Ajjara/core/utils/model_utils.dart';
 
 class RequestFileModel {
   final int? requestFileId;

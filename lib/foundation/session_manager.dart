@@ -2,10 +2,10 @@ import 'dart:async';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ajjara/core/auth/auth_store.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
-import 'package:ajjara/main.dart' show navigatorKey;
+import 'package:Ajjara/core/auth/auth_store.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/main.dart' show navigatorKey;
 
 class SessionManager {
   static const _kLoginFlag = 'is_logged_in'; // simple durable flag

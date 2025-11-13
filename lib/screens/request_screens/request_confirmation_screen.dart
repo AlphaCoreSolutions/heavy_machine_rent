@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Clipboard
 import 'package:intl/intl.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
-import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

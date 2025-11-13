@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ajjara/foundation/ui/pressable_scale.dart';
-import 'package:ajjara/foundation/ui/ui_extras.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart' hide PressableScale;
+import 'package:Ajjara/foundation/ui/pressable_scale.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart' hide PressableScale;
 
 import 'package:provider/provider.dart';
 import 'l10n_extensions.dart';

@@ -10,14 +10,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:ajjara/core/api/api_handler.dart' as api;
-import 'package:ajjara/core/models/equipment/equipment.dart';
-import 'package:ajjara/core/models/equipment/equipment_list.dart';
+import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/core/models/equipment/equipment.dart';
+import 'package:Ajjara/core/models/equipment/equipment_list.dart';
 
-import 'package:ajjara/foundation/ui/ui_extras.dart';
-import 'package:ajjara/foundation/ui/ui_kit.dart';
-import 'package:ajjara/l10n/app_localizations.dart';
-import 'package:ajjara/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:Ajjara/foundation/ui/ui_extras.dart';
+import 'package:Ajjara/foundation/ui/ui_kit.dart';
+import 'package:Ajjara/l10n/app_localizations.dart';
+import 'package:Ajjara/screens/equipment_screens/equipment_details_screen.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;
