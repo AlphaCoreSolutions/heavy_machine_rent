@@ -1,7 +1,4 @@
-<!DOCTYPE html>
-<html>
-
-<head>
+<!DOCTYPE html><html><head>
   <!--
     If you are serving your web app in a path other than the root, change the
     href value below to reflect the base path you are serving from.
@@ -28,9 +25,7 @@
 
   <!-- google_maps_flutter_web will auto-load the Maps JavaScript API using the meta key above. -->
   <!-- Ensure google.maps is available early to avoid 'undefined maps' errors on web -->
-  <script id="gmaps-js"
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw&libraries=places"
-    defer></script>
+  <script id="gmaps-js" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDNIu49-9h5zA8KrVrJpTdTe42MZJwlrbw&amp;libraries=places" defer=""></script>
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -45,6 +40,9 @@
   <link rel="manifest" href="manifest.json">
 
 
+  
+  
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
   <style id="splash-screen-style">
     html {
       height: 100%
@@ -53,12 +51,8 @@
     body {
       margin: 0;
       min-height: 100%;
-      background: linear-gradient(180deg, #0EA5E9 0%, #6366F1 100%);
-      background-attachment: fixed;
-      background-size: cover;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
-        Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, Arial, sans-serif;
+      background-color: #FFFFFF;
+          background-size: 100% 100%;
     }
 
     .center {
@@ -71,22 +65,19 @@
     }
 
     .contain {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
       object-fit: contain;
     }
 
     .stretch {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
     }
 
     .cover {
-      display: block;
-      width: 100%;
-      height: 100%;
+      display:block;
+      width:100%; height:100%;
       object-fit: cover;
     }
 
@@ -112,31 +103,8 @@
 
     @media (prefers-color-scheme: dark) {
       body {
-        background: linear-gradient(180deg, #0B1220 0%, #1F2937 100%);
-      }
-    }
-
-    #system-name {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-      line-height: 1.2;
-      text-shadow: 0 2px 16px rgba(0, 0, 0, 0.35);
-      padding: 0 24px;
-    }
-
-    #system-name .title {
-      font-size: 36px;
-    }
-
-    #system-name .subtitle {
-      margin-top: 8px;
-      font-size: 14px;
-      opacity: 0.85;
+        background-color: #121212;
+          }
     }
   </style>
   <script id="splash-screen-script">
@@ -146,16 +114,15 @@
       document.body.style.background = "transparent";
     }
   </script>
-  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">
 </head>
 
 <body>
-  <div id="splash">
-    <div id="system-name" aria-hidden="true">
-      <div class="title">ServicesRQ</div>
-      <div class="subtitle">Rental Platform</div>
-    </div>
-  </div>
+  <picture id="splash">
+      <source srcset="splash/img/light-1x.png 1x, splash/img/light-2x.png 2x, splash/img/light-3x.png 3x, splash/img/light-4x.png 4x" media="(prefers-color-scheme: light)">
+      <source srcset="splash/img/dark-1x.png 1x, splash/img/dark-2x.png 2x, splash/img/dark-3x.png 3x, splash/img/dark-4x.png 4x" media="(prefers-color-scheme: dark)">
+      <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
+  </picture>
+  
   <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.min.mjs" type="module"></script>
   <script type="module">
     var { pdfjsLib } = globalThis;
@@ -194,6 +161,6 @@
   </script>
 
 
-</body>
 
-</html>
+
+</body></html>

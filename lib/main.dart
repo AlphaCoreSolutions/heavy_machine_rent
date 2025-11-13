@@ -245,7 +245,7 @@ class _BootstrapHost extends StatelessWidget {
                 children: [
                   // Attempt to show splash asset if present
                   Image.asset(
-                    'lib/assets/1.png',
+                    'lib/assets/logo.png',
                     width: 160,
                     height: 160,
                     errorBuilder: (_, __, ___) => const SizedBox(),

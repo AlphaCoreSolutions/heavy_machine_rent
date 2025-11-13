@@ -102,23 +102,23 @@ flutter:
 
   assets:
     - lib/assets/hero.jpg
-    - lib/assets/1.png
+    - lib/assets/logo.png
 
 # Native splash screen configuration
 flutter_native_splash:
   # Global settings
   color: "#FFFFFF"            # Background color (light)
-  image: lib/assets/1.png      # Center image for splash (provide a transparent PNG if possible)
+  image: lib/assets/logo.png      # Center image for splash (provide a transparent PNG if possible)
   # Optional: Dark theme background
   color_dark: "#121212"
-  image_dark: lib/assets/1.png
+  image_dark: lib/assets/logo.png
 
   # Android 12+ requires a separate section
   android_12:
     color: "#FFFFFF"
-    image: lib/assets/1.png
+    image: lib/assets/logo.png
     color_dark: "#121212"
-    image_dark: lib/assets/1.png
+    image_dark: lib/assets/logo.png
 
   android: true
   ios: true

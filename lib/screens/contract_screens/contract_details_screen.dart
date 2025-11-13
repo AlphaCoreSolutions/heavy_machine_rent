@@ -625,7 +625,7 @@ class _LogoBox extends StatelessWidget {
         SizedBox(
           height: 150,
           child: Image.asset(
-            'lib/assets/1.png',
+            'lib/assets/logo.png',
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => Container(
               height: 70,
