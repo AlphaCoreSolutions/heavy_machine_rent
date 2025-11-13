@@ -2,7 +2,7 @@ name: Ajjara
 description: "an app that opens opportunities for companies to rent their machines in the construction industry."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+1
 
 environment:
   sdk: ^3.9.0
