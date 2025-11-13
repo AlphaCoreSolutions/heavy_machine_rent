@@ -1,5 +1,5 @@
 // city.dart
-import 'package:heavy_new/core/utils/model_utils.dart';
+import 'package:ajjara/core/utils/model_utils.dart';
 
 class CountryRef {
   final int? nationalityId;

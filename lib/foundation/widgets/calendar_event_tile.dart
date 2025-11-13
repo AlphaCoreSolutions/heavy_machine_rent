@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:heavy_new/core/models/admin/request.dart';
+import 'package:ajjara/core/models/admin/request.dart';
 
 class CalendarEventTile extends StatelessWidget {
   final RequestModel request;

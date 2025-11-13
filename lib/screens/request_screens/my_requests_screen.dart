@@ -2,18 +2,18 @@
 // ignore_for_file: unused_field
 
 import 'package:flutter/material.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
-import 'package:heavy_new/screens/request_screens/request_details_screen.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:ajjara/screens/request_screens/request_details_screen.dart';
 import 'package:intl/intl.dart';
 
-import 'package:heavy_new/core/utils/model_utils.dart';
-import 'package:heavy_new/core/auth/auth_store.dart';
-import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:ajjara/core/utils/model_utils.dart';
+import 'package:ajjara/core/auth/auth_store.dart';
+import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
 
-import 'package:heavy_new/core/api/api_handler.dart' as api;
-import 'package:heavy_new/core/models/admin/request.dart';
-import 'package:heavy_new/core/models/organization/organization_user.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/models/admin/request.dart';
+import 'package:ajjara/core/models/organization/organization_user.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

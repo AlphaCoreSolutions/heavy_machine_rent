@@ -1,24 +1,24 @@
 // lib/screens/request_details_screen.dart
 import 'dart:developer' as dev;
 import 'package:flutter/material.dart';
-import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:ajjara/core/models/equipment/equipment.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
-import 'package:heavy_new/core/api/api_handler.dart' as api;
-import 'package:heavy_new/core/api/envelope.dart';
-import 'package:heavy_new/core/auth/auth_store.dart';
-import 'package:heavy_new/core/models/admin/request.dart';
-import 'package:heavy_new/core/models/admin/request_driver_location.dart';
-import 'package:heavy_new/core/models/organization/organization_user.dart';
-import 'package:heavy_new/core/models/organization/organization_summary.dart';
-import 'package:heavy_new/core/models/user/nationality.dart';
-import 'package:heavy_new/core/utils/model_utils.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/api/envelope.dart';
+import 'package:ajjara/core/auth/auth_store.dart';
+import 'package:ajjara/core/models/admin/request.dart';
+import 'package:ajjara/core/models/admin/request_driver_location.dart';
+import 'package:ajjara/core/models/organization/organization_user.dart';
+import 'package:ajjara/core/models/organization/organization_summary.dart';
+import 'package:ajjara/core/models/user/nationality.dart';
+import 'package:ajjara/core/utils/model_utils.dart';
 
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
 
-import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
+import 'package:ajjara/screens/contract_screens/contracts_screen.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

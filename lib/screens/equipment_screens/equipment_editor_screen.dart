@@ -1,18 +1,18 @@
 // lib/screens/equipment_editor_screen.dart
 import 'package:flutter/material.dart';
-import 'package:heavy_new/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/api/api_handler.dart' as api;
 
 // Models
-import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/core/models/equipment/equipment_list.dart' as elist;
-import 'package:heavy_new/core/models/admin/factory.dart' as fmodels;
-import 'package:heavy_new/core/models/admin/domain.dart'; // DomainDetail
+import 'package:ajjara/core/models/equipment/equipment.dart';
+import 'package:ajjara/core/models/equipment/equipment_list.dart' as elist;
+import 'package:ajjara/core/models/admin/factory.dart' as fmodels;
+import 'package:ajjara/core/models/admin/domain.dart'; // DomainDetail
 
 // UI bits
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
 import 'package:intl/intl.dart' show Bidi;
 
 extension _L10nX on BuildContext {

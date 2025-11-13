@@ -1,11 +1,11 @@
 // lib/screens/chat_list_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
-import 'package:heavy_new/core/api/api_handler.dart' as api;
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
 
 // If you have an ApiEnvelope type, import it; otherwise the code below
 // simply treats unknown shapes defensively.

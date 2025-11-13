@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
-import 'package:heavy_new/screens/app/app_prefs.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:ajjara/screens/app/app_prefs.dart';
 import 'package:intl/intl.dart';
 
 extension L10nX on BuildContext {

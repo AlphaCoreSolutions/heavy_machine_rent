@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:heavy_new/foundation/ui/bottom_bar.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:ajjara/foundation/ui/bottom_bar.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
 
 class AppShell extends StatelessWidget {
   const AppShell({super.key, required this.child, required this.path});

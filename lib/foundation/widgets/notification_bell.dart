@@ -1,10 +1,10 @@
 // lib/widgets/notifications_bell.dart
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/widgets/notifications_store.dart';
-import 'package:heavy_new/main.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/widgets/notifications_store.dart';
+import 'package:ajjara/main.dart';
 
 enum _MenuAction { seeAll }
 

@@ -9,10 +9,10 @@ import 'package:flex_color_scheme/flex_color_scheme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:heavy_new/foundation/formatting/money.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/foundation/ui/app_theme.dart';
-import 'package:heavy_new/foundation/ui/sensor_compat.dart';
+import 'package:ajjara/foundation/formatting/money.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/app_theme.dart';
+import 'package:ajjara/foundation/ui/sensor_compat.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:sensors_plus/sensors_plus.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -805,7 +805,8 @@ class _FallbackNetworkImageState extends State<FallbackNetworkImage> {
   @override
   Widget build(BuildContext context) {
     final bg =
-        widget.placeholderColor ?? Theme.of(context).colorScheme.surfaceContainerHighest;
+        widget.placeholderColor ??
+        Theme.of(context).colorScheme.surfaceContainerHighest;
 
     if (widget.candidates.isEmpty) {
       return Container(color: bg, child: const Icon(Icons.broken_image));

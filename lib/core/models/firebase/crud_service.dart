@@ -1,10 +1,10 @@
 import 'dart:developer' as dev show log;
 
-import 'package:heavy_new/core/auth/auth_store.dart';
+import 'package:ajjara/core/auth/auth_store.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
-import 'package:heavy_new/core/api/api_handler.dart';
-import 'package:heavy_new/core/models/admin/notifications_model.dart';
+import 'package:ajjara/core/api/api_handler.dart';
+import 'package:ajjara/core/models/admin/notifications_model.dart';
 
 class CrudService {
   /// Ensure the current user's FCM [token] is present in the backend.

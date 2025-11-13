@@ -1,6 +1,6 @@
 // organization_user.dart
-import 'package:heavy_new/core/models/user/auth.dart';
-import 'package:heavy_new/core/utils/model_utils.dart';
+import 'package:ajjara/core/models/user/auth.dart';
+import 'package:ajjara/core/utils/model_utils.dart';
 
 class OrganizationUser {
   final int? organizationUserId;

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:heavy_new/foundation/localization/l10n_extensions.dart';
+import 'package:ajjara/foundation/localization/l10n_extensions.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 
-import 'package:heavy_new/core/api/api_handler.dart' as api;
-import 'package:heavy_new/core/models/admin/request.dart';
-import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/foundation/widgets/calendar_event_tile.dart';
-import 'package:heavy_new/screens/request_screens/request_details_screen.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/models/admin/request.dart';
+import 'package:ajjara/core/models/equipment/equipment.dart';
+import 'package:ajjara/foundation/widgets/calendar_event_tile.dart';
+import 'package:ajjara/screens/request_screens/request_details_screen.dart';
 
 class RequestCalendarScreen extends StatefulWidget {
   final int vendorId;

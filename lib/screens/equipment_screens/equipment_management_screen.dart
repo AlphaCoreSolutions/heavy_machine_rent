@@ -1,18 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:heavy_new/core/auth/auth_store.dart';
-import 'package:heavy_new/core/api/api_handler.dart' as api;
-import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/core/models/admin/domain.dart'; // DomainDetail
-import 'package:heavy_new/core/models/organization/organization_user.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:ajjara/core/auth/auth_store.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/models/equipment/equipment.dart';
+import 'package:ajjara/core/models/admin/domain.dart'; // DomainDetail
+import 'package:ajjara/core/models/organization/organization_user.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
 
-import 'package:heavy_new/screens/equipment_screens/equipment_editor_screen.dart';
-import 'package:heavy_new/screens/equipment_screens/equipment_settings_screen.dart';
-import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
-import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_editor_screen.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_settings_screen.dart';
+import 'package:ajjara/screens/organization_screens/organization_hub_screen.dart';
+import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;

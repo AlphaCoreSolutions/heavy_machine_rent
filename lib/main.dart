@@ -6,48 +6,48 @@ import 'dart:developer' show log;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:heavy_new/core/auth/auth_store.dart';
-import 'package:heavy_new/core/models/user/auth.dart';
-import 'package:heavy_new/foundation/session_manager.dart';
+import 'package:ajjara/core/auth/auth_store.dart';
+import 'package:ajjara/core/models/user/auth.dart';
+import 'package:ajjara/foundation/session_manager.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:heavy_new/core/api/api_handler.dart';
-import 'package:heavy_new/firebase_options.dart';
-import 'package:heavy_new/foundation/ui/app_theme.dart';
-import 'package:heavy_new/foundation/ui/scroll_behavior.dart';
-import 'package:heavy_new/foundation/ui/transitions.dart';
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/widgets/notifications_store.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
+import 'package:ajjara/core/api/api_handler.dart';
+import 'package:ajjara/firebase_options.dart';
+import 'package:ajjara/foundation/ui/app_theme.dart';
+import 'package:ajjara/foundation/ui/scroll_behavior.dart';
+import 'package:ajjara/foundation/ui/transitions.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/widgets/notifications_store.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
 
 // Shell & screens
-import 'package:heavy_new/screens/app/app_shell.dart';
-import 'package:heavy_new/screens/app/calendar_screen.dart';
-import 'package:heavy_new/screens/chat_screens/chat_list_screen.dart';
-import 'package:heavy_new/screens/chat_screens/chat_thread_screen.dart';
-import 'package:heavy_new/screens/contract_screens/contracts_screen.dart';
-import 'package:heavy_new/screens/app/home_screen.dart';
-import 'package:heavy_new/screens/equipment_screens/equipment_list_screen.dart';
-import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
-import 'package:heavy_new/screens/request_screens/my_requests_screen.dart';
-import 'package:heavy_new/screens/app/notification_screen.dart';
-import 'package:heavy_new/screens/request_screens/orders_history_screen.dart';
-import 'package:heavy_new/screens/auth_profile_screens/profile_screen.dart';
-import 'package:heavy_new/screens/app/settings_screen.dart';
-import 'package:heavy_new/screens/app/app_settings_screen.dart';
-import 'package:heavy_new/screens/organization_screens/organization_hub_screen.dart';
-import 'package:heavy_new/screens/equipment_screens/equipment_management_screen.dart';
-import 'package:heavy_new/screens/auth_profile_screens/employees_screen.dart';
-import 'package:heavy_new/screens/auth_profile_screens/phone_auth_screen.dart';
+import 'package:ajjara/screens/app/app_shell.dart';
+import 'package:ajjara/screens/app/calendar_screen.dart';
+import 'package:ajjara/screens/chat_screens/chat_list_screen.dart';
+import 'package:ajjara/screens/chat_screens/chat_thread_screen.dart';
+import 'package:ajjara/screens/contract_screens/contracts_screen.dart';
+import 'package:ajjara/screens/app/home_screen.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_list_screen.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:ajjara/screens/request_screens/my_requests_screen.dart';
+import 'package:ajjara/screens/app/notification_screen.dart';
+import 'package:ajjara/screens/request_screens/orders_history_screen.dart';
+import 'package:ajjara/screens/auth_profile_screens/profile_screen.dart';
+import 'package:ajjara/screens/app/settings_screen.dart';
+import 'package:ajjara/screens/app/app_settings_screen.dart';
+import 'package:ajjara/screens/organization_screens/organization_hub_screen.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_management_screen.dart';
+import 'package:ajjara/screens/auth_profile_screens/employees_screen.dart';
+import 'package:ajjara/screens/auth_profile_screens/phone_auth_screen.dart';
 
 // Models
-import 'package:heavy_new/core/models/equipment/equipment.dart';
+import 'package:ajjara/core/models/equipment/equipment.dart';
 
 // ===== NEW: localization + prefs bindings =====
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:heavy_new/screens/app/app_prefs.dart';
+import 'package:ajjara/screens/app/app_prefs.dart';
 
 final navigatorKey = GlobalKey<NavigatorState>();
 Future _firebaseBackgroundMessage(RemoteMessage message) async {

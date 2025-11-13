@@ -10,14 +10,14 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:heavy_new/core/api/api_handler.dart' as api;
-import 'package:heavy_new/core/models/equipment/equipment.dart';
-import 'package:heavy_new/core/models/equipment/equipment_list.dart';
+import 'package:ajjara/core/api/api_handler.dart' as api;
+import 'package:ajjara/core/models/equipment/equipment.dart';
+import 'package:ajjara/core/models/equipment/equipment_list.dart';
 
-import 'package:heavy_new/foundation/ui/ui_extras.dart';
-import 'package:heavy_new/foundation/ui/ui_kit.dart';
-import 'package:heavy_new/l10n/app_localizations.dart';
-import 'package:heavy_new/screens/equipment_screens/equipment_details_screen.dart';
+import 'package:ajjara/foundation/ui/ui_extras.dart';
+import 'package:ajjara/foundation/ui/ui_kit.dart';
+import 'package:ajjara/l10n/app_localizations.dart';
+import 'package:ajjara/screens/equipment_screens/equipment_details_screen.dart';
 
 extension _L10nX on BuildContext {
   AppLocalizations get l10n => AppLocalizations.of(this)!;
@@ -592,7 +592,9 @@ class _EquipmentListTile extends StatelessWidget {
         pricePerDay: e.rentPerDayDouble ?? 0,
         imageWidget: FallbackNetworkImage(
           candidates: thumbCandidates,
-          placeholderColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+          placeholderColor: Theme.of(
+            context,
+          ).colorScheme.surfaceContainerHighest,
           fit: BoxFit.cover,
         ),
         distanceKm: e.distanceKilo?.toDouble(),

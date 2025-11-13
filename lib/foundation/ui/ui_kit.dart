@@ -6,7 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:heavy_new/foundation/ui/app_icons.dart';
+import 'package:ajjara/foundation/ui/app_icons.dart';
 
 // ————————————————————————————————————————————————————————————————
 // THEME ROLES (success, warning, info) + gradient helper
