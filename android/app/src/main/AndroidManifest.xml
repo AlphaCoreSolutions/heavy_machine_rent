@@ -11,7 +11,7 @@
 
 
     <application
-        android:label="ServicesRQ"
+        android:label="ajjara"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
          <meta-data
