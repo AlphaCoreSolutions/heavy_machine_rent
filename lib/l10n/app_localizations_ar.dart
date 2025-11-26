@@ -229,40 +229,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String get emailUpdates => 'تحديثات البريد الإلكتروني';
 
   @override
-  String get sound => 'الصوت';
+  String get sound => 'Sound';
 
   @override
-  String get quietHours => 'ساعات الهدوء';
+  String get quietHours => 'Quiet hours';
 
   @override
-  String get from => 'من';
+  String get from => 'From';
 
   @override
-  String get to => 'إلى';
+  String get to => 'To';
 
   @override
-  String get quietHoursHint => 'خلال ساعات الهدوء يتم كتم الأصوات. (تجريبي — اربطه بمزوّد الإشعارات لاحقًا)';
+  String get quietHoursHint => 'During quiet hours, sounds are muted. (Demo—wire to your push provider later.)';
 
   @override
-  String get settingsTitle => 'الإعدادات';
+  String get settingsTitle => 'Settings';
 
   @override
-  String get notAvailableTitle => 'غير متاح';
+  String get notAvailableTitle => 'Not available';
 
   @override
-  String get signInRequiredTitle => 'يلزم تسجيل الدخول';
+  String get signInRequiredTitle => 'Sign in required';
 
   @override
-  String get restrictedPageMessage => 'هذه الصفحة متاحة فقط للحسابات ذات نوع المستخدم ‎#17 أو ‎#20.';
+  String get restrictedPageMessage => 'This page is only available for accounts with user type #17 or #20.';
 
   @override
-  String get signInPrompt => 'يرجى تسجيل الدخول للمتابعة.';
+  String get signInPrompt => 'Please sign in to continue.';
 
   @override
-  String get accountTitle => 'الحساب';
+  String get accountTitle => 'Account';
 
   @override
-  String get statusCompleted => 'مكتمل';
+  String get statusCompleted => 'Completed';
 
   @override
   String get statusIncomplete => 'غير مكتمل';
@@ -1905,7 +1905,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deleteImageTitle => 'حذف الصورة';
 
   @override
-  String get deleteImageBody => 'هل تريد إزالة هذه الصورة من الإعلان؟';
+  String get deleteImageBody => 'هل تريد إزالة هذه الصورة من القائمة؟';
 
   @override
   String get deleteTermQ => 'حذف الشرط؟';
@@ -2434,4 +2434,93 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get clearFilter => 'مسح التصفية';
+
+  @override
+  String get leaveChoiceSave => 'حفظ';
+
+  @override
+  String get leaveChoiceDiscard => 'تجاهل';
+
+  @override
+  String get leaveChoiceCancel => 'إلغاء';
+
+  @override
+  String get deleteTermTitle => 'حذف الشرط؟';
+
+  @override
+  String get deleteEmployeeTitle => 'حذف الموظف؟';
+
+  @override
+  String deleteEmployeeBody(String name) {
+    return 'سيؤدي هذا إلى إزالة $name.';
+  }
+
+  @override
+  String get employeeAdded => 'تم إضافة الموظف';
+
+  @override
+  String get employeeUpdated => 'تم تحديث الموظف';
+
+  @override
+  String get employeeDeleted => 'تم حذف الموظف';
+
+  @override
+  String get couldNotSaveEmployee => 'تعذر حفظ الموظف';
+
+  @override
+  String get couldNotDeleteEmployee => 'تعذر حذف الموظف';
+
+  @override
+  String get employeesTitle => 'الموظفين';
+
+  @override
+  String get searchEmployeesHint => 'بحث عن موظفين';
+
+  @override
+  String get searchHintEmployees => 'مثال: الاسم، البريد الإلكتروني، الدور...';
+
+  @override
+  String get addEmployeeTitle => 'إضافة موظف';
+
+  @override
+  String get editEmployeeTitle => 'تعديل موظف';
+
+  @override
+  String get roleTitleLabel => 'الدور / المسمى الوظيفي';
+
+  @override
+  String get actionClear => 'مسح';
+
+  @override
+  String get requiredField => 'Required';
+
+  @override
+  String get statusHidden => 'Hidden';
+
+  @override
+  String get failedToLoadEmployees => 'Failed to load employees';
+
+  @override
+  String get noEmployeesYet => 'No employees yet.';
+
+  @override
+  String get newEmployee => 'New employee';
+
+  @override
+  String get mobileLabel => 'Mobile';
+
+  @override
+  String get pleaseCompleteForm => 'يرجى إكمال النموذج';
+
+  @override
+  String get openPdf => 'فتح PDF';
+
+  @override
+  String get noNotificationsTitle => 'لا توجد إشعارات';
+
+  @override
+  String get noNotificationsBody => 'أنت مطلع على كل شيء.';
+
+  @override
+  String get seeAllNotifications => 'عرض كل الإشعارات';
 }

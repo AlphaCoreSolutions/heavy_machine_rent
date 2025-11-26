@@ -3,13 +3,101 @@
 //   <meta name="google_maps_api_key" content="...">
 // and loads Maps JS with libraries=places (our template already does this).
 
-// ignore_for_file: avoid_dynamic_calls
-
 import 'dart:async';
-import 'dart:js' as js;
-import 'dart:js_util' as jsu;
+import 'dart:js_interop';
+import 'dart:js_interop_unsafe';
+
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+// -----------------------------------------------------------------------------
+// JS Interop Definitions
+// -----------------------------------------------------------------------------
+
+@JS('google.maps.places.AutocompleteService')
+extension type AutocompleteService._(JSObject _) implements JSObject {
+  external AutocompleteService();
+  external void getPlacePredictions(
+    AutocompleteRequest request,
+    JSFunction callback,
+  );
+}
+
+@JS('google.maps.places.PlacesService')
+extension type PlacesService._(JSObject _) implements JSObject {
+  external PlacesService(JSObject divOrMap);
+  external void getDetails(PlaceDetailsRequest request, JSFunction callback);
+}
+
+@JS('google.maps.Geocoder')
+extension type Geocoder._(JSObject _) implements JSObject {
+  external Geocoder();
+  external void geocode(GeocoderRequest request, JSFunction callback);
+}
+
+@JS()
+@anonymous
+extension type AutocompleteRequest._(JSObject _) implements JSObject {
+  external factory AutocompleteRequest({
+    String input,
+    JSObject? componentRestrictions,
+    JSObject? locationBias,
+  });
+}
+
+@JS()
+@anonymous
+extension type PlaceDetailsRequest._(JSObject _) implements JSObject {
+  external factory PlaceDetailsRequest({
+    String placeId,
+    JSArray<JSString> fields,
+  });
+}
+
+@JS()
+@anonymous
+extension type GeocoderRequest._(JSObject _) implements JSObject {
+  external factory GeocoderRequest({
+    JSObject location, // {lat: ..., lng: ...}
+  });
+}
+
+@JS()
+@anonymous
+extension type AutocompletePrediction._(JSObject _) implements JSObject {
+  external String? get description;
+  external String? get place_id;
+}
+
+@JS()
+@anonymous
+extension type PlaceResult._(JSObject _) implements JSObject {
+  external PlaceGeometry? get geometry;
+  external String? get formatted_address;
+}
+
+@JS()
+@anonymous
+extension type PlaceGeometry._(JSObject _) implements JSObject {
+  external LatLngLiteral? get location;
+}
+
+@JS()
+@anonymous
+extension type LatLngLiteral._(JSObject _) implements JSObject {
+  external num lat();
+  external num lng();
+}
+
+@JS()
+@anonymous
+extension type GeocoderResult._(JSObject _) implements JSObject {
+  external String? get formatted_address;
+}
+
+// -----------------------------------------------------------------------------
+// Dart Models
+// -----------------------------------------------------------------------------
 
 class WebPlaceSuggestion {
   WebPlaceSuggestion({required this.description, required this.placeId});
@@ -17,28 +105,48 @@ class WebPlaceSuggestion {
   final String placeId;
 }
 
-Object? _placesService;
-Object? _geocoder;
+// -----------------------------------------------------------------------------
+// Implementation
+// -----------------------------------------------------------------------------
+
+PlacesService? _placesService;
+Geocoder? _geocoder;
+
+/// Checks if `google.maps` is available in the global context.
+bool get _isGoogleMapsLoaded {
+  final google = globalContext['google'];
+  if (google == null || google.isUndefined || google.isNull) return false;
+  final maps = (google as JSObject)['maps'];
+  return maps != null && !maps.isUndefined && !maps.isNull;
+}
 
 Future<void> _ensureInit() async {
   if (!kIsWeb) return;
+
   // Wait until google.maps is available
   int attempts = 0;
-  while (jsu.getProperty(jsu.getProperty(js.context, 'window'), 'google') ==
-          null &&
-      attempts < 60) {
+  while (!_isGoogleMapsLoaded && attempts < 60) {
     await Future<void>.delayed(const Duration(milliseconds: 100));
     attempts++;
   }
-  final maps = jsu.getProperty(jsu.getProperty(js.context, 'google'), 'maps');
-  if (maps == null) {
+
+  if (!_isGoogleMapsLoaded) {
     throw StateError('Google Maps JS not available on web');
   }
-  _placesService ??= jsu.callConstructor(
-    jsu.getProperty(jsu.getProperty(maps, 'places'), 'PlacesService'),
-    [jsu.getProperty(js.context, 'document')],
-  );
-  _geocoder ??= jsu.callConstructor(jsu.getProperty(maps, 'Geocoder'), []);
+
+  // Initialize services if needed
+  if (_placesService == null) {
+    // We need a dummy div or map for PlacesService.
+    // Usually passing document.createElement('div') works.
+    final div =
+        (globalContext['document'] as JSObject).callMethod(
+              'createElement'.toJS,
+              'div'.toJS,
+            )
+            as JSObject;
+    _placesService = PlacesService(div);
+  }
+  _geocoder ??= Geocoder();
 }
 
 Future<List<WebPlaceSuggestion>> webAutocomplete(
@@ -48,34 +156,35 @@ Future<List<WebPlaceSuggestion>> webAutocomplete(
 }) async {
   await _ensureInit();
   final completer = Completer<List<WebPlaceSuggestion>>();
-  final maps = jsu.getProperty(jsu.getProperty(js.context, 'google'), 'maps');
-  final request = jsu.jsify({
-    'input': query,
-    if (countryCode2 != null)
-      'componentRestrictions': {'country': countryCode2},
-    'locationBias': {
-      'center': {'lat': center.latitude, 'lng': center.longitude},
-      'radius': 50000,
-    },
-  });
 
-  // Prefer AutocompleteService for lightweight predictions
-  final svc = jsu.callConstructor(
-    jsu.getProperty(jsu.getProperty(maps, 'places'), 'AutocompleteService'),
-    [],
+  final request = AutocompleteRequest(
+    input: query,
+    componentRestrictions: countryCode2 != null
+        ? {'country': countryCode2.toJS}.jsify() as JSObject
+        : null,
+    locationBias:
+        {
+              'center': {
+                'lat': center.latitude,
+                'lng': center.longitude,
+              }.jsify(),
+              'radius': 50000,
+            }.jsify()
+            as JSObject,
   );
-  jsu.callMethod(svc, 'getPlacePredictions', [
+
+  final svc = AutocompleteService();
+
+  svc.getPlacePredictions(
     request,
-    js.allowInterop((preds, status) {
-      final st = status?.toString() ?? '';
-      if (st.contains('OK') && preds != null) {
+    (JSArray<AutocompletePrediction>? predictions, JSString? status) {
+      final st = status?.toDart ?? '';
+      if (st.contains('OK') && predictions != null) {
         final list = <WebPlaceSuggestion>[];
-        final len = jsu.getProperty(preds, 'length') as int? ?? 0;
-        for (var i = 0; i < len; i++) {
-          final p = jsu.getProperty(preds, i);
-          final description =
-              jsu.getProperty(p, 'description')?.toString() ?? '';
-          final placeId = jsu.getProperty(p, 'place_id')?.toString() ?? '';
+        final dartPreds = predictions.toDart;
+        for (final p in dartPreds) {
+          final description = p.description ?? '';
+          final placeId = p.place_id ?? '';
           if (placeId.isNotEmpty) {
             list.add(
               WebPlaceSuggestion(description: description, placeId: placeId),
@@ -86,66 +195,75 @@ Future<List<WebPlaceSuggestion>> webAutocomplete(
       } else {
         completer.complete(<WebPlaceSuggestion>[]);
       }
-    }),
-  ]);
+    }.toJS,
+  );
+
   return completer.future;
 }
 
 Future<(LatLng, String?)?> webPlaceDetails(String placeId) async {
   await _ensureInit();
   final completer = Completer<(LatLng, String?)?>();
-  final req = jsu.jsify({
-    'placeId': placeId,
-    'fields': ['geometry.location', 'formatted_address'],
-  });
-  jsu.callMethod(_placesService!, 'getDetails', [
-    req,
-    js.allowInterop((result, status) {
-      final st = status?.toString() ?? '';
+
+  final request = PlaceDetailsRequest(
+    placeId: placeId,
+    fields: [
+      'geometry.location',
+      'formatted_address',
+    ].map((e) => e.toJS).toList().toJS,
+  );
+
+  _placesService!.getDetails(
+    request,
+    (PlaceResult? result, JSString? status) {
+      final st = status?.toDart ?? '';
       if (!st.contains('OK') || result == null) {
         completer.complete(null);
         return;
       }
-      final geom = jsu.getProperty(
-        jsu.getProperty(result, 'geometry'),
-        'location',
-      );
-      final lat = jsu.callMethod(geom, 'lat', []) as num?;
-      final lng = jsu.callMethod(geom, 'lng', []) as num?;
-      final addr = jsu.getProperty(result, 'formatted_address')?.toString();
-      if (lat != null && lng != null) {
-        completer.complete((LatLng(lat.toDouble(), lng.toDouble()), addr));
+
+      final geom = result.geometry;
+      final loc = geom?.location;
+
+      if (loc != null) {
+        final lat = loc.lat().toDouble();
+        final lng = loc.lng().toDouble();
+        final addr = result.formatted_address;
+        completer.complete((LatLng(lat, lng), addr));
       } else {
         completer.complete(null);
       }
-    }),
-  ]);
+    }.toJS,
+  );
+
   return completer.future;
 }
 
 Future<String?> webReverseGeocode(LatLng p) async {
   await _ensureInit();
   final completer = Completer<String?>();
-  final req = jsu.jsify({
-    'location': {'lat': p.latitude, 'lng': p.longitude},
-  });
-  jsu.callMethod(_geocoder!, 'geocode', [
-    req,
-    js.allowInterop((results, status) {
-      final st = status?.toString() ?? '';
+
+  final request = GeocoderRequest(
+    location: {'lat': p.latitude, 'lng': p.longitude}.jsify() as JSObject,
+  );
+
+  _geocoder!.geocode(
+    request,
+    (JSArray<GeocoderResult>? results, JSString? status) {
+      final st = status?.toDart ?? '';
       if (!st.contains('OK') || results == null) {
         completer.complete(null);
         return;
       }
-      final len = jsu.getProperty(results, 'length') as int? ?? 0;
-      if (len > 0) {
-        final first = jsu.getProperty(results, 0);
-        final addr = jsu.getProperty(first, 'formatted_address')?.toString();
-        completer.complete(addr);
+
+      final dartResults = results.toDart;
+      if (dartResults.isNotEmpty) {
+        completer.complete(dartResults.first.formatted_address);
       } else {
         completer.complete(null);
       }
-    }),
-  ]);
+    }.toJS,
+  );
+
   return completer.future;
 }

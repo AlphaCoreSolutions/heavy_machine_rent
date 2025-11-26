@@ -791,10 +791,18 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
               padding: const EdgeInsets.fromLTRB(3, 12, 3, 28),
               children: [
                 _Gallery(
-                  images: (e.equipmentImages ?? [])
-                      .map((i) => i.equipmentPath ?? '')
-                      .where((p) => p.isNotEmpty)
-                      .toList(),
+                  images: () {
+                    final list = (e.equipmentImages ?? [])
+                        .map((i) => i.equipmentPath ?? '')
+                        .where((p) => p.isNotEmpty)
+                        .toList();
+                    if (list.isNotEmpty) return list;
+                    // Fallback to category (equipmentList) image if available
+                    if (e.equipmentList?.imagePath?.isNotEmpty == true) {
+                      return [e.equipmentList!.imagePath!];
+                    }
+                    return <String>[];
+                  }(),
                 ),
                 const SizedBox(height: 14),
 
@@ -857,9 +865,11 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                               ),
                             ),
                           TonalIconChip(
-                            label: context.l10n.miniAvailable(
-                              avail,
-                            ), // Already localized via l10n
+                            label: avail > 0
+                                ? context.l10n.miniAvailable(avail)
+                                : context
+                                      .l10n
+                                      .notAvailableTitle, // Already localized via l10n
                             icon: AIcon(
                               AppGlyph.info,
                               color: cs.onPrimaryContainer,
@@ -991,7 +1001,11 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          _MiniPill(text: context.l10n.miniAvailable(avail)),
+                          _MiniPill(
+                            text: avail > 0
+                                ? context.l10n.miniAvailable(avail)
+                                : context.l10n.notAvailableTitle,
+                          ),
                         ],
                       ),
                     ],
@@ -1155,7 +1169,9 @@ class _EquipmentDetailsScreenState extends State<EquipmentDetailsScreen> {
 
                       const SizedBox(height: 14),
                       BrandButton(
-                        onPressed: _submitting ? null : () => _submit(e),
+                        onPressed: (_submitting || avail < 1)
+                            ? null
+                            : () => _submit(e),
                         icon: _submitting
                             ? const SizedBox(
                                 height: 18,

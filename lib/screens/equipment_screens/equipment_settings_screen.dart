@@ -15,11 +15,7 @@ import 'package:Ajjara/core/models/user/nationality.dart';
 import 'package:Ajjara/foundation/ui/app_icons.dart';
 import 'package:Ajjara/foundation/ui/ui_extras.dart';
 import 'package:Ajjara/foundation/ui/ui_kit.dart';
-import 'package:Ajjara/l10n/app_localizations.dart';
-
-extension _L10nX on BuildContext {
-  AppLocalizations get l10n => AppLocalizations.of(this)!;
-}
+import 'package:Ajjara/l10n/l10n.dart';
 
 class EquipmentSettingsScreen extends StatefulWidget {
   const EquipmentSettingsScreen({super.key, required this.equipmentId});
@@ -146,31 +142,29 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
     final choice = await showDialog<_LeaveChoice>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Unsaved changes'),
-        content: const Text(
-          'You have unsaved changes. Save them before leaving?',
-        ),
+        title: Text(context.l10n.unsavedChangesTitle),
+        content: Text(context.l10n.unsavedChangesBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(
               dialogCtx,
               rootNavigator: true,
             ).pop(_LeaveChoice.cancel),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.leaveChoiceCancel),
           ),
           TextButton(
             onPressed: () => Navigator.of(
               dialogCtx,
               rootNavigator: true,
             ).pop(_LeaveChoice.discard),
-            child: const Text('Discard'),
+            child: Text(context.l10n.leaveChoiceDiscard),
           ),
           FilledButton(
             onPressed: () => Navigator.of(
               dialogCtx,
               rootNavigator: true,
             ).pop(_LeaveChoice.save),
-            child: const Text('Save'),
+            child: Text(context.l10n.leaveChoiceSave),
           ),
         ],
       ),
@@ -360,7 +354,7 @@ class _EquipmentSettingsScreenState extends State<EquipmentSettingsScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Failed to load equipment'),
+                        Text(context.l10n.msg_failedLoadEquipment),
                         const SizedBox(height: 8),
                         Text(
                           '${snap.error}',
@@ -694,16 +688,16 @@ class _ImagesTabState extends State<_ImagesTab> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (dialogCtx) => AlertDialog(
-        title: const Text('Delete image'),
-        content: const Text('Remove this image from the listing?'),
+        title: Text(context.l10n.deleteImageTitle),
+        content: Text(context.l10n.deleteImageBody),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogCtx, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(dialogCtx, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),
@@ -1904,7 +1898,7 @@ class _DriversTabState extends State<_DriversTab> {
                                     setSB(() {});
                                   },
                             icon: const Icon(Icons.close_rounded),
-                            label: const Text('Clear'),
+                            label: Text(context.l10n.actionClear),
                           ),
                         ],
                       ),
@@ -1938,7 +1932,9 @@ class _DriversTabState extends State<_DriversTab> {
                         onChanged: saving
                             ? null
                             : (v) => setSB(() => typeId = v),
-                        validator: (_) => (typeId == null) ? 'Required' : null,
+                        validator: (_) => (typeId == null)
+                            ? context.l10n.requiredField
+                            : null,
                       ),
                       const SizedBox(height: 12),
 
@@ -2660,8 +2656,9 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                         labelText: context.l10n.nameEnRequired,
                       ),
                       onChanged: (v) => nameEn = v,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? context.l10n.requiredField
+                          : null,
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -2670,8 +2667,9 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                         labelText: context.l10n.nameArRequired,
                       ),
                       onChanged: (v) => nameAr = v,
-                      validator: (v) =>
-                          (v == null || v.trim().isEmpty) ? 'Required' : null,
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? context.l10n.requiredField
+                          : null,
                     ),
                     const SizedBox(height: 12),
 
@@ -2697,7 +2695,8 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                             }).toList()
                           : const [],
                       onChanged: saving ? null : (v) => typeId = v,
-                      validator: (_) => (typeId == null) ? 'Required' : null,
+                      validator: (_) =>
+                          (typeId == null) ? context.l10n.requiredField : null,
                     ),
                     const SizedBox(height: 12),
 
@@ -2715,8 +2714,9 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                             onTap: saving
                                 ? null
                                 : () => pickDate(isIssue: true),
-                            validator: (_) =>
-                                (issueDt == null) ? 'Required' : null,
+                            validator: (_) => (issueDt == null)
+                                ? context.l10n.requiredField
+                                : null,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -2732,8 +2732,9 @@ class _CertificatesTabState extends State<_CertificatesTab> {
                             onTap: saving
                                 ? null
                                 : () => pickDate(isIssue: false),
-                            validator: (_) =>
-                                (expireDt == null) ? 'Required' : null,
+                            validator: (_) => (expireDt == null)
+                                ? context.l10n.requiredField
+                                : null,
                           ),
                         ),
                       ],
@@ -3208,7 +3209,7 @@ class _StatusChip extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final bg = active ? cs.secondaryContainer : cs.surfaceContainerHighest;
     final fg = active ? cs.onSecondaryContainer : cs.onSurfaceVariant;
-    final label = active ? 'Active' : 'Hidden';
+    final label = active ? context.l10n.active : context.l10n.statusHidden;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -3259,7 +3260,7 @@ class _ActionsPill extends StatelessWidget {
           IconButton.filledTonal(
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline, size: 18),
-            tooltip: 'Delete',
+            tooltip: context.l10n.actionDelete,
             style: ButtonStyle(
               minimumSize: WidgetStateProperty.all(const Size(36, 36)),
               padding: WidgetStateProperty.all(EdgeInsets.zero),

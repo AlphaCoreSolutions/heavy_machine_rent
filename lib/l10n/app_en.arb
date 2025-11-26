@@ -1086,5 +1086,51 @@
     "selectEquipment": "Select Equipment",
     "noEquipmentFound": "No equipment found",
     "failedToLoadEquipments": "Failed to load equipments",
-    "clearFilter": "Clear Filter"
+    "clearFilter": "Clear Filter",
+    "actionLogin": "Login",
+    "@actionLogin": {
+        "description": "Login button text in app bar."
+    },
+    "unsavedChangesTitle": "Unsaved changes",
+    "unsavedChangesBody": "You have unsaved changes. Save them before leaving?",
+    "actionDiscard": "Discard",
+    "leaveChoiceSave": "Save",
+    "leaveChoiceDiscard": "Discard",
+    "leaveChoiceCancel": "Cancel",
+    "deleteImageTitle": "Delete image",
+    "deleteImageBody": "Remove this image from the listing?",
+    "deleteTermTitle": "Delete term?",
+    "deleteEmployeeTitle": "Delete employee?",
+    "deleteEmployeeBody": "This will remove {name}.",
+    "@deleteEmployeeBody": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "employeeAdded": "Employee added",
+    "employeeUpdated": "Employee updated",
+    "employeeDeleted": "Employee deleted",
+    "couldNotSaveEmployee": "Could not save employee",
+    "couldNotDeleteEmployee": "Could not delete employee",
+    "employeesTitle": "Employees",
+    "searchEmployeesHint": "Search employees",
+    "searchHintEmployees": "e.g. Name, email, role…",
+    "addEmployeeTitle": "Add employee",
+    "editEmployeeTitle": "Edit employee",
+    "roleTitleLabel": "Role / Title",
+    "actionClear": "Clear",
+    "requiredField": "Required",
+    "statusHidden": "Hidden",
+    "failedToLoadEmployees": "Failed to load employees",
+    "noEmployeesYet": "No employees yet.",
+    "actionAdd": "Add",
+    "newEmployee": "New employee",
+    "mobileLabel": "Mobile",
+    "pleaseCompleteForm": "Please complete the form",
+    "openPdf": "Open PDF",
+    "noNotificationsTitle": "No notifications",
+    "noNotificationsBody": "You’re all caught up.",
+    "seeAllNotifications": "See all notifications"
 }

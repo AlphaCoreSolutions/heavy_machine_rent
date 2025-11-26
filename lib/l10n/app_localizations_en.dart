@@ -2430,4 +2430,93 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get clearFilter => 'Clear Filter';
+
+  @override
+  String get leaveChoiceSave => 'Save';
+
+  @override
+  String get leaveChoiceDiscard => 'Discard';
+
+  @override
+  String get leaveChoiceCancel => 'Cancel';
+
+  @override
+  String get deleteTermTitle => 'Delete term?';
+
+  @override
+  String get deleteEmployeeTitle => 'Delete employee?';
+
+  @override
+  String deleteEmployeeBody(String name) {
+    return 'This will remove $name.';
+  }
+
+  @override
+  String get employeeAdded => 'Employee added';
+
+  @override
+  String get employeeUpdated => 'Employee updated';
+
+  @override
+  String get employeeDeleted => 'Employee deleted';
+
+  @override
+  String get couldNotSaveEmployee => 'Could not save employee';
+
+  @override
+  String get couldNotDeleteEmployee => 'Could not delete employee';
+
+  @override
+  String get employeesTitle => 'Employees';
+
+  @override
+  String get searchEmployeesHint => 'Search employees';
+
+  @override
+  String get searchHintEmployees => 'e.g. Name, email, role…';
+
+  @override
+  String get addEmployeeTitle => 'Add employee';
+
+  @override
+  String get editEmployeeTitle => 'Edit employee';
+
+  @override
+  String get roleTitleLabel => 'Role / Title';
+
+  @override
+  String get actionClear => 'Clear';
+
+  @override
+  String get requiredField => 'Required';
+
+  @override
+  String get statusHidden => 'Hidden';
+
+  @override
+  String get failedToLoadEmployees => 'Failed to load employees';
+
+  @override
+  String get noEmployeesYet => 'No employees yet.';
+
+  @override
+  String get newEmployee => 'New employee';
+
+  @override
+  String get mobileLabel => 'Mobile';
+
+  @override
+  String get pleaseCompleteForm => 'Please complete the form';
+
+  @override
+  String get openPdf => 'Open PDF';
+
+  @override
+  String get noNotificationsTitle => 'No notifications';
+
+  @override
+  String get noNotificationsBody => 'You’re all caught up.';
+
+  @override
+  String get seeAllNotifications => 'See all notifications';
 }

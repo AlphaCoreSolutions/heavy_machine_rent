@@ -5,6 +5,7 @@ import 'package:Ajjara/foundation/ui/app_icons.dart';
 import 'package:Ajjara/foundation/ui/ui_extras.dart';
 import 'package:Ajjara/foundation/widgets/notifications_store.dart';
 import 'package:Ajjara/main.dart';
+import 'package:Ajjara/l10n/l10n.dart';
 
 enum _MenuAction { seeAll }
 
@@ -32,7 +33,7 @@ class _NotificationsBellState extends State<NotificationsBell> {
           children: [
             IconButton(
               key: _btnKey,
-              tooltip: 'Notifications',
+              tooltip: context.l10n.notificationsTitle,
               icon: AIcon(AppGlyph.bell, color: cs.primary),
               onPressed: _showDropdown,
             ),
@@ -93,8 +94,8 @@ class _NotificationsBellState extends State<NotificationsBell> {
               radius: 12,
               child: ListTile(
                 dense: true,
-                title: const Text('No notifications'),
-                subtitle: const Text('You’re all caught up.'),
+                title: Text(context.l10n.noNotificationsTitle),
+                subtitle: Text(context.l10n.noNotificationsBody),
               ),
             ),
           ),
@@ -107,7 +108,7 @@ class _NotificationsBellState extends State<NotificationsBell> {
               child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.inbox_outlined),
-                title: const Text('See all notifications'),
+                title: Text(context.l10n.seeAllNotifications),
               ),
             ),
           ),
@@ -156,7 +157,7 @@ class _NotificationsBellState extends State<NotificationsBell> {
               child: ListTile(
                 dense: true,
                 leading: const Icon(Icons.inbox_outlined),
-                title: const Text('See all notifications'),
+                title: Text(context.l10n.seeAllNotifications),
               ),
             ),
           ),
@@ -195,9 +196,9 @@ class _NotificationsBellState extends State<NotificationsBell> {
 
   String _fmtAgo(DateTime t) {
     final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'now';
-    if (d.inMinutes < 60) return '${d.inMinutes}m';
-    if (d.inHours < 24) return '${d.inHours}h';
-    return '${d.inDays}d';
+    if (d.inMinutes < 1) return context.l10n.timeNow;
+    if (d.inMinutes < 60) return context.l10n.timeMinutesShort(d.inMinutes);
+    if (d.inHours < 24) return context.l10n.timeHoursShort(d.inHours);
+    return context.l10n.timeDaysShort(d.inDays);
   }
 }

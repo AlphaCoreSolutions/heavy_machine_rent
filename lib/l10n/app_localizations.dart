@@ -3383,7 +3383,7 @@ abstract class AppLocalizations {
   /// **'Lng: {value}'**
   String mapLngLabel(String value);
 
-  /// Label for the auth button to sign in on the AppBar.
+  /// Login button text in app bar.
   ///
   /// In en, this message translates to:
   /// **'Login'**
@@ -4618,6 +4618,180 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Clear Filter'**
   String get clearFilter;
+
+  /// No description provided for @leaveChoiceSave.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get leaveChoiceSave;
+
+  /// No description provided for @leaveChoiceDiscard.
+  ///
+  /// In en, this message translates to:
+  /// **'Discard'**
+  String get leaveChoiceDiscard;
+
+  /// No description provided for @leaveChoiceCancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get leaveChoiceCancel;
+
+  /// No description provided for @deleteTermTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete term?'**
+  String get deleteTermTitle;
+
+  /// No description provided for @deleteEmployeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete employee?'**
+  String get deleteEmployeeTitle;
+
+  /// No description provided for @deleteEmployeeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This will remove {name}.'**
+  String deleteEmployeeBody(String name);
+
+  /// No description provided for @employeeAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee added'**
+  String get employeeAdded;
+
+  /// No description provided for @employeeUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee updated'**
+  String get employeeUpdated;
+
+  /// No description provided for @employeeDeleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Employee deleted'**
+  String get employeeDeleted;
+
+  /// No description provided for @couldNotSaveEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save employee'**
+  String get couldNotSaveEmployee;
+
+  /// No description provided for @couldNotDeleteEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not delete employee'**
+  String get couldNotDeleteEmployee;
+
+  /// No description provided for @employeesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Employees'**
+  String get employeesTitle;
+
+  /// No description provided for @searchEmployeesHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search employees'**
+  String get searchEmployeesHint;
+
+  /// No description provided for @searchHintEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Name, email, role…'**
+  String get searchHintEmployees;
+
+  /// No description provided for @addEmployeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add employee'**
+  String get addEmployeeTitle;
+
+  /// No description provided for @editEmployeeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit employee'**
+  String get editEmployeeTitle;
+
+  /// No description provided for @roleTitleLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Role / Title'**
+  String get roleTitleLabel;
+
+  /// No description provided for @actionClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get actionClear;
+
+  /// No description provided for @requiredField.
+  ///
+  /// In en, this message translates to:
+  /// **'Required'**
+  String get requiredField;
+
+  /// No description provided for @statusHidden.
+  ///
+  /// In en, this message translates to:
+  /// **'Hidden'**
+  String get statusHidden;
+
+  /// No description provided for @failedToLoadEmployees.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load employees'**
+  String get failedToLoadEmployees;
+
+  /// No description provided for @noEmployeesYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No employees yet.'**
+  String get noEmployeesYet;
+
+  /// No description provided for @newEmployee.
+  ///
+  /// In en, this message translates to:
+  /// **'New employee'**
+  String get newEmployee;
+
+  /// No description provided for @mobileLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Mobile'**
+  String get mobileLabel;
+
+  /// No description provided for @pleaseCompleteForm.
+  ///
+  /// In en, this message translates to:
+  /// **'Please complete the form'**
+  String get pleaseCompleteForm;
+
+  /// No description provided for @openPdf.
+  ///
+  /// In en, this message translates to:
+  /// **'Open PDF'**
+  String get openPdf;
+
+  /// No description provided for @noNotificationsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No notifications'**
+  String get noNotificationsTitle;
+
+  /// No description provided for @noNotificationsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re all caught up.'**
+  String get noNotificationsBody;
+
+  /// No description provided for @seeAllNotifications.
+  ///
+  /// In en, this message translates to:
+  /// **'See all notifications'**
+  String get seeAllNotifications;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

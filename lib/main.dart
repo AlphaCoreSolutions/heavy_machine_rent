@@ -304,8 +304,10 @@ class HeavyApp extends StatelessWidget {
               darkTheme: AppTheme.dark(),
               scrollBehavior: const AppScrollBehavior(),
               routerConfig: _router,
-              builder: (context, child) =>
-                  OfflineBanner(child: child ?? const SizedBox.shrink()),
+              builder: (context, child) => GestureDetector(
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                child: OfflineBanner(child: child ?? const SizedBox.shrink()),
+              ),
               themeMode: prefs.themeMode.value,
               locale: prefs.locale.value, // null => follow system
               supportedLocales: const [Locale('en'), Locale('ar')],

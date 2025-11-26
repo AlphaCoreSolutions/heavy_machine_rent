@@ -8,6 +8,7 @@ import 'package:Ajjara/foundation/ui/app_icons.dart';
 import 'package:Ajjara/foundation/ui/ui_extras.dart'; // Glass, PressableScale, AppSnack
 import 'package:Ajjara/foundation/ui/ui_kit.dart'; // AInput, BrandButton, GhostButton
 import 'package:Ajjara/core/api/api_handler.dart' as api;
+import 'package:Ajjara/l10n/l10n.dart';
 
 /// Minimal employee model (adjust to your real model)
 class EmployeeModel {
@@ -113,15 +114,15 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
         // Add
         // If you have a typed model in your Api, convert accordingly
         await api.Api.addEmployee(result.toJson() as Employee);
-        AppSnack.success(context, 'Employee added');
+        AppSnack.success(context, context.l10n.employeeAdded);
       } else {
         // Update
         await api.Api.updateEmployee(result.toJson() as Employee);
-        AppSnack.success(context, 'Employee updated');
+        AppSnack.success(context, context.l10n.employeeUpdated);
       }
       _load();
     } catch (_) {
-      AppSnack.error(context, 'Could not save employee');
+      AppSnack.error(context, context.l10n.couldNotSaveEmployee);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -131,16 +132,16 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: const Text('Delete employee?'),
-        content: Text('This will remove ${m.fullName}.'),
+        title: Text(context.l10n.deleteEmployeeTitle),
+        content: Text(context.l10n.deleteEmployeeBody(m.fullName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancel'),
+            child: Text(context.l10n.actionCancel),
           ),
           FilledButton(
             onPressed: () => Navigator.pop(context, true),
-            child: const Text('Delete'),
+            child: Text(context.l10n.actionDelete),
           ),
         ],
       ),
@@ -150,10 +151,10 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     try {
       setState(() => _busy = true);
       await api.Api.deleteEmployee(m.employeeId ?? 0);
-      AppSnack.success(context, 'Employee deleted');
+      AppSnack.success(context, context.l10n.employeeDeleted);
       _load();
     } catch (_) {
-      AppSnack.error(context, 'Could not delete employee');
+      AppSnack.error(context, context.l10n.couldNotDeleteEmployee);
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -164,7 +165,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
     final cs = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Employees')),
+      appBar: AppBar(title: Text(context.l10n.employeesTitle)),
       body: Stack(
         children: [
           if (_busy) const LinearProgressIndicator(minHeight: 2),
@@ -174,8 +175,8 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
                 child: AInput(
                   controller: _searchCtrl,
-                  label: 'Search employees',
-                  hint: 'e.g. Name, email, role…',
+                  label: context.l10n.searchEmployeesHint,
+                  hint: context.l10n.searchHintEmployees,
                   glyph: AppGlyph.search,
                   textInputAction: TextInputAction.search,
                   onSubmitted: (_) => _doSearch(),
@@ -195,13 +196,13 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
                         color: Colors.white,
                         selected: true,
                       ),
-                      child: const Text('Search'),
+                      child: Text(context.l10n.common_search),
                     ),
                     const SizedBox(width: 10),
                     GhostButton(
                       onPressed: _load,
                       icon: AIcon(AppGlyph.refresh, color: cs.primary),
-                      child: const Text('Reset'),
+                      child: Text(context.l10n.actionClear),
                     ),
                   ],
                 ),
@@ -271,7 +272,7 @@ class _EmployeesScreenState extends State<EmployeesScreen> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _addOrEdit(),
         icon: const Icon(Icons.add),
-        label: const Text('Add'),
+        label: Text(context.l10n.actionAdd),
       ),
     );
   }
@@ -322,12 +323,12 @@ class _EmployeeTile extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                tooltip: 'Edit',
+                tooltip: context.l10n.actionEdit,
                 onPressed: onEdit,
                 icon: Icon(Icons.edit, color: cs.primary),
               ),
               IconButton(
-                tooltip: 'Delete',
+                tooltip: context.l10n.actionDelete,
                 onPressed: onDelete,
                 icon: Icon(Icons.delete_outline, color: cs.error),
               ),
@@ -408,10 +409,14 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
       padding: EdgeInsets.only(bottom: bottom),
       child: Scaffold(
         appBar: AppBar(
-          title: Text(widget.model == null ? 'Add employee' : 'Edit employee'),
+          title: Text(
+            widget.model == null
+                ? context.l10n.addEmployeeTitle
+                : context.l10n.editEmployeeTitle,
+          ),
           actions: [
             IconButton(
-              tooltip: 'Save',
+              tooltip: context.l10n.actionSave,
               onPressed: _save,
               icon: const Icon(Icons.check),
             ),
@@ -467,7 +472,9 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        _name.text.isEmpty ? 'New employee' : _name.text,
+                        _name.text.isEmpty
+                            ? context.l10n.newEmployee
+                            : _name.text,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.titleMedium
@@ -489,35 +496,36 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
                     children: [
                       AInput(
                         controller: _name,
-                        label: 'Full name',
+                        label: context.l10n.fullName,
                         glyph: AppGlyph.user,
                         textInputAction: TextInputAction.next,
-                        validator: (v) =>
-                            (v == null || v.trim().isEmpty) ? 'Required' : null,
+                        validator: (v) => (v == null || v.trim().isEmpty)
+                            ? context.l10n.requiredField
+                            : null,
                       ),
                       const SizedBox(height: 8),
                       AInput(
                         controller: _title,
-                        label: 'Role / Title',
+                        label: context.l10n.roleTitleLabel,
                         glyph: AppGlyph.info,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: 8),
                       AInput(
                         controller: _email,
-                        label: 'Email',
+                        label: context.l10n.email,
                         glyph: AppGlyph.mail,
                         keyboardType: TextInputType.emailAddress,
                         textInputAction: TextInputAction.next,
                         validator: (v) =>
                             (v == null || v.isEmpty || !v.contains('@'))
-                            ? 'Enter a valid email'
+                            ? context.l10n.validationEmail
                             : null,
                       ),
                       const SizedBox(height: 8),
                       AInput(
                         controller: _phone,
-                        label: 'Mobile',
+                        label: context.l10n.mobileLabel,
                         glyph: AppGlyph.phone,
                         keyboardType: TextInputType.phone,
                         textInputAction: TextInputAction.done,
@@ -533,7 +541,7 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
                                 color: Colors.white,
                                 selected: true,
                               ),
-                              child: const Text('Save'),
+                              child: Text(context.l10n.actionSave),
                             ),
                           ),
                           const SizedBox(width: 10),
@@ -544,7 +552,7 @@ class _EmployeeFormSheetState extends State<_EmployeeFormSheet> {
                                 AppGlyph.close,
                                 color: Theme.of(context).colorScheme.primary,
                               ),
-                              child: const Text('Cancel'),
+                              child: Text(context.l10n.actionCancel),
                             ),
                           ),
                         ],

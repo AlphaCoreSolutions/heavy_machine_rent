@@ -203,10 +203,13 @@ class _InlineMapPickerState extends State<InlineMapPicker> {
       LatLng center = widget.initialCenter;
       if (perm != LocationPermission.denied &&
           perm != LocationPermission.deniedForever) {
-        final pos = await Geolocator.getCurrentPosition().timeout(
-          const Duration(seconds: 2),
-          onTimeout: () => throw 'timeout',
-        );
+        final pos =
+            await Geolocator.getCurrentPosition(
+              desiredAccuracy: LocationAccuracy.high,
+            ).timeout(
+              const Duration(seconds: 10),
+              onTimeout: () => throw 'timeout',
+            );
         center = LatLng(pos.latitude, pos.longitude);
       }
       if (_usesInlineMap) {

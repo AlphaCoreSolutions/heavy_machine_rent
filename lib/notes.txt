@@ -1,0 +1,5 @@
+1- not everything is localized ---DONE---
+2- if the equipment does not have a photo, it will show the photo of the category ---DONE---
+3- in equipment details, the quantity side, if the quantity is 0, it will show "Not available" and prevent the user from buying it. ---DONE---
+4- in ios, the keyboard does not hide when the user clicks outside of it. ---DONE---
+5- the maps is set to start in jordan not in the users current country or location. ---DONE---
